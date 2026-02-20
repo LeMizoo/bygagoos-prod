@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hors ligne - ByGagoos Ink</title>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #eff6ff 0%, #f1f5f9 100%);
+            color: #334155;
+        }
+        
+        .offline-container {
+            text-align: center;
+            padding: 3rem;
+            max-width: 500px;
+            background: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+        }
+        
+        .offline-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            color: #64748b;
+        }
+        
+        h1 {
+            color: #1e293b;
+            margin-bottom: 1rem;
+            font-size: 2rem;
+        }
+        
+        p {
+            color: #64748b;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+        
+        .retry-button {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            border: none;
+            padding: 0.875rem 2rem;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+        }
+        
+        .retry-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.4);
+        }
+        
+        .tip {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 0.75rem;
+            border: 1px solid #e2e8f0;
+            font-size: 0.875rem;
+            color: #475569;
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="offline-icon">📶</div>
+        <h1>Vous êtes hors ligne</h1>
+        <p>
+            Impossible de se connecter au serveur. Vérifiez votre connexion Internet 
+            et réessayez. Vous pouvez continuer à utiliser certaines fonctionnalités 
+            en mode hors ligne.
+        </p>
+        <button class="retry-button" onclick="window.location.reload()">
+            Réessayer la connexion
+        </button>
+        <div class="tip">
+            💡 <strong>Astuce :</strong> Les données récentes sont disponibles en mode hors ligne. 
+            Les modifications seront synchronisées automatiquement une fois reconnecté.
+        </div>
+    </div>
+</body>
+</html>

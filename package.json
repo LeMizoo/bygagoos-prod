@@ -1,0 +1,11 @@
+{
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0"
+  }
+}

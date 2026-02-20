@@ -1,0 +1,38 @@
+import { useEffect, useState } from "react";
+import { useAuthStore } from "../../stores/authStore";
+
+export default function AuthProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const { checkAuth, isLoading, isAuthenticated } = useAuthStore();
+  const [isChecking, setIsChecking] = useState(true);
+
+  useEffect(() => {
+    const initializeAuth = async () => {
+      try {
+        await checkAuth();
+      } catch (error) {
+        console.error("Auth check failed:", error);
+      } finally {
+        setIsChecking(false);
+      }
+    };
+
+    initializeAuth();
+  }, [checkAuth]);
+
+  if (isChecking || isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-gray-600">Chargement de la session...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+}

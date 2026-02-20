@@ -1,0 +1,77 @@
+{
+  "compilerOptions": {
+    /* Langue et Environnement */
+    "target": "ES2022",
+    "module": "commonjs",
+    "lib": ["ES2022"],
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+
+    /* Sortie et Structure */
+    "outDir": "./dist",
+    "rootDir": "./src",
+
+    /* Résolution de modules */
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@config/*": ["src/config/*"],
+      "@core/*": ["src/core/*"],
+      "@middlewares/*": ["src/middlewares/*"],
+      "@modules/*": ["src/modules/*"],
+      "@utils/*": ["src/utils/*"],
+      "@types/*": ["src/types/*"],
+      "@redis/*": ["src/core/config/*"]
+    },
+    "resolveJsonModule": true,
+
+    /* Interop et compatibilité */
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "typeRoots": ["./node_modules/@types", "./src/types"],
+    "types": ["node", "jest"],
+
+    /* Source Maps et Debug */
+    "sourceMap": true,
+    "removeComments": true,
+    "noEmitOnError": false,
+    "incremental": true,
+
+    /* Vérification stricte */
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": false,
+    "noUncheckedIndexedAccess": false,
+    "allowUnreachableCode": true,
+    "allowUnusedLabels": true,
+
+    /* Redis Specific */
+    "strictPropertyInitialization": false,
+    "strictNullChecks": false
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "coverage",
+    "scripts"
+  ],
+  "ts-node": {
+    "files": true,
+    "require": ["tsconfig-paths/register"],
+    "transpileOnly": true,
+    "compilerOptions": {
+      "module": "commonjs",
+      "target": "ES2020",
+      "strict": false,
+      "noImplicitAny": false
+    }
+  }
+}
