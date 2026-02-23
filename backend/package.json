@@ -23,7 +23,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "seed": "ts-node -r tsconfig-paths/register src/utils/seed/index.ts",
-    "prepare": "husky install",
+    "prepare": "node -e \"try { if (process.env.NODE_ENV !== 'production') { require('child_process').execSync('husky install', { stdio: 'inherit' }); } } catch (e) { console.log('Husky installation skipped:', e.message); }\"",
     "prebuild": "npm run clean",
     "redis:start": "node scripts/start-redis.js",
     "redis:stop": "node scripts/stop-redis.js",
