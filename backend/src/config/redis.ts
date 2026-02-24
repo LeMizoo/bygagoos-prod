@@ -41,28 +41,26 @@ redisClient.on('end', () => {
 // =============================
 // CONNEXION
 // =============================
-
 export const connectRedis = async (): Promise<void> => {
   try {
-    // Évite l’erreur "The client is closed"
     if (!redisClient.isOpen) {
       await redisClient.connect();
       logger.info('✅ Redis connecté avec succès');
     }
   } catch (error) {
     logger.error('❌ Erreur connexion Redis:', error);
-    // Redis est optionnel → on continue sans crash
+    // IMPORTANT : On ne relance pas l'erreur pour permettre au serveur de démarrer
+    logger.warn('⚠️ Le serveur continue sans Redis (mode dégradé)');
   }
 };
 
 // =============================
 // DECONNEXION
 // =============================
-
 export const disconnectRedis = async (): Promise<void> => {
   try {
     if (redisClient.isOpen) {
-      await redisClient.quit(); // plus propre que disconnect()
+      await redisClient.quit();
       logger.info('✅ Redis déconnecté proprement');
     }
   } catch (error) {
