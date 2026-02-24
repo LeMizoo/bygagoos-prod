@@ -3,18 +3,25 @@
 import { createClient } from 'redis';
 import logger from '../core/utils/logger';
 
+// =============================
+// CONFIGURATION REDIS
+// =============================
+
+// À CHANGER : Utilise process.env pour l'URL (plus sécurisé)
+const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+const useTLS = process.env.REDIS_TLS === 'true' || redisUrl.startsWith('rediss://');
+
 const redisClient = createClient({
+  url: redisUrl,
   socket: {
-    host: process.env.REDIS_HOST || 'localhost',
-    port: parseInt(process.env.REDIS_PORT || '6379', 10),
+    tls: useTLS,
+    rejectUnauthorized: false, // utile pour les certificats Upstash
   },
-  password: process.env.REDIS_PASSWORD || undefined,
 });
 
 // =============================
 // EVENTS
 // =============================
-
 redisClient.on('error', (err) => {
   logger.error('❌ Erreur Redis:', err);
 });
