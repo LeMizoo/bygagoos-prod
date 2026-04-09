@@ -4,6 +4,8 @@ import { apiResponse } from '../../core/utils/apiResponse';
 import { HTTP_STATUS } from '../../core/constants/httpStatus';
 import logger from '../../core/utils/logger';
 import DashboardService from './dashboard.service';
+import { getCache, setCache } from '../../core/utils/cache';
+import { env } from '../../config/env';
 
 /**
  * Récupérer les statistiques pour Super Admin
@@ -11,9 +13,22 @@ import DashboardService from './dashboard.service';
 export const getSuperAdminStats = async (req: AuthRequest, res: Response) => {
   try {
     logger.info('📊 Récupération des stats Super Admin');
-    
-    const stats = await DashboardService.getSuperAdminStats();
-    
+
+    const cacheKey = 'dashboard:super-admin-stats';
+    let stats: any;
+    if (env.REDIS_CACHE_ENABLED) {
+      stats = await getCache(cacheKey);
+      if (stats) {
+        return apiResponse.success(res, stats, 'Stats Super Admin récupérées (cache)');
+      }
+    }
+
+    stats = await DashboardService.getSuperAdminStats();
+
+    if (env.REDIS_CACHE_ENABLED) {
+      await setCache(cacheKey, stats);
+    }
+
     apiResponse.success(res, stats, 'Stats Super Admin récupérées');
   } catch (error: any) {
     logger.error('❌ Erreur stats Super Admin:', error);
@@ -31,9 +46,22 @@ export const getSuperAdminStats = async (req: AuthRequest, res: Response) => {
 export const getAdminStats = async (req: AuthRequest, res: Response) => {
   try {
     logger.info('📊 Récupération des stats Admin');
-    
-    const stats = await DashboardService.getAdminStats();
-    
+
+    const cacheKey = 'dashboard:admin-stats';
+    let stats: any;
+    if (env.REDIS_CACHE_ENABLED) {
+      stats = await getCache(cacheKey);
+      if (stats) {
+        return apiResponse.success(res, stats, 'Stats Admin récupérées (cache)');
+      }
+    }
+
+    stats = await DashboardService.getAdminStats();
+
+    if (env.REDIS_CACHE_ENABLED) {
+      await setCache(cacheKey, stats);
+    }
+
     apiResponse.success(res, stats, 'Stats Admin récupérées');
   } catch (error: any) {
     logger.error('❌ Erreur stats Admin:', error);

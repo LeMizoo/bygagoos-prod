@@ -16,13 +16,31 @@ import {
   Users,
 } from "lucide-react";
 import { adminClientsApi } from "../../api/adminClients.api";
-import { Client as ClientType } from "../../api/adminClients.api";
+import { Client } from "../../types/client";
 import toast from "react-hot-toast";
+import dev from '../../utils/devLogger';
+
+// Composant Plus pour compléter
+const Plus = ({ className }: { className?: string }) => (
+  <svg
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M12 4v16m8-8H4"
+    />
+  </svg>
+);
 
 const ClientDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [client, setClient] = useState<ClientType | null>(null);
+  const [client, setClient] = useState<Client | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -43,7 +61,7 @@ const ClientDetailPage: React.FC = () => {
     } catch (err: any) {
       setError(err.message || "Erreur lors du chargement du client");
       toast.error("Erreur lors du chargement du client");
-      console.error(err);
+      dev.error(err);
     } finally {
       setLoading(false);
     }
@@ -59,7 +77,7 @@ const ClientDetailPage: React.FC = () => {
       navigate("/admin/clients");
     } catch (err: any) {
       toast.error(err.message || "Erreur lors de la suppression du client");
-      console.error(err);
+      dev.error(err);
     } finally {
       setDeleting(false);
       setShowDeleteModal(false);
@@ -70,44 +88,35 @@ const ClientDetailPage: React.FC = () => {
     if (!id || !client) return;
 
     try {
-      const newStatus = client.status === "active" ? "inactive" : "active";
-      const updatedClient = await adminClientsApi.toggleStatus(
-        id,
-        newStatus as "active" | "inactive",
-      );
+      const newStatus = !client.isActive;
+      const updatedClient = await adminClientsApi.toggleStatus(id, newStatus);
       setClient(updatedClient);
       toast.success(
-        `Statut ${newStatus === "active" ? "activé" : "désactivé"}`,
+        `Statut ${newStatus ? "activé" : "désactivé"}`,
       );
     } catch (err: any) {
       toast.error(err.message || "Erreur lors du changement de statut");
     }
   };
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString("fr-FR", {
+  const formatDate = (date?: string | Date): string => {
+    if (!date) return "N/A";
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    return dateObj.toLocaleDateString("fr-FR", {
       day: "numeric",
       month: "long",
       year: "numeric",
     });
   };
 
-  const getClientName = (client: ClientType) => {
+  const getClientName = (client: Client) => {
     return `${client.firstName} ${client.lastName}`.trim();
   };
 
-  const getStatusColor = (status?: string) => {
-    switch (status) {
-      case "active":
-        return "bg-green-100 text-green-800";
-      case "inactive":
-        return "bg-red-100 text-red-800";
-      case "pending":
-        return "bg-yellow-100 text-yellow-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
+  const getStatusColor = (isActive: boolean) => {
+    return isActive
+      ? "bg-green-100 text-green-800"
+      : "bg-red-100 text-red-800";
   };
 
   const formatCurrency = (amount: number = 0) => {
@@ -170,22 +179,13 @@ const ClientDetailPage: React.FC = () => {
           <button
             onClick={handleToggleStatus}
             className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-              client.status === "active"
+              client.isActive
                 ? "bg-green-100 text-green-800 hover:bg-green-200"
                 : "bg-red-100 text-red-800 hover:bg-red-200"
             }`}
           >
-            {client.status === "active" ? (
-              <>
-                <User className="w-4 h-4 mr-2" />
-                Désactiver
-              </>
-            ) : (
-              <>
-                <User className="w-4 h-4 mr-2" />
-                Activer
-              </>
-            )}
+            <User className="w-4 h-4 mr-2" />
+            {client.isActive ? "Désactiver" : "Activer"}
           </button>
 
           <Link
@@ -246,7 +246,9 @@ const ClientDetailPage: React.FC = () => {
               <p className="text-sm text-gray-600">Dernière commande</p>
               <p className="text-lg font-bold text-gray-900">
                 {client.totalOrders && client.totalOrders > 0
-                  ? "Récente"
+                  ? client.lastOrderDate 
+                    ? formatDate(client.lastOrderDate)
+                    : "Récente"
                   : "Aucune"}
               </p>
             </div>
@@ -257,33 +259,21 @@ const ClientDetailPage: React.FC = () => {
           <div className="flex items-center">
             <div
               className={`p-3 rounded-full mr-4 ${
-                client.status === "active"
-                  ? "bg-green-100"
-                  : client.status === "inactive"
-                    ? "bg-red-100"
-                    : "bg-yellow-100"
+                client.isActive ? "bg-green-100" : "bg-red-100"
               }`}
             >
               <User
                 className={`h-6 w-6 ${
-                  client.status === "active"
-                    ? "text-green-600"
-                    : client.status === "inactive"
-                      ? "text-red-600"
-                      : "text-yellow-600"
+                  client.isActive ? "text-green-600" : "text-red-600"
                 }`}
               />
             </div>
             <div>
               <p className="text-sm text-gray-600">Statut</p>
               <span
-                className={`px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(client.status)}`}
+                className={`px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(client.isActive)}`}
               >
-                {client.status === "active"
-                  ? "Actif"
-                  : client.status === "inactive"
-                    ? "Inactif"
-                    : "En attente"}
+                {client.isActive ? "Actif" : "Inactif"}
               </span>
             </div>
           </div>
@@ -356,6 +346,9 @@ const ClientDetailPage: React.FC = () => {
                       </p>
                       <p className="text-gray-900 whitespace-pre-line">
                         {client.address}
+                        {client.city && <>, {client.city}</>}
+                        {client.postalCode && <>, {client.postalCode}</>}
+                        {client.country && <>, {client.country}</>}
                       </p>
                     </div>
                   </div>
@@ -568,22 +561,5 @@ const ClientDetailPage: React.FC = () => {
     </div>
   );
 };
-
-// Composant Plus pour compléter
-const Plus = ({ className }: { className?: string }) => (
-  <svg
-    className={className}
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M12 4v16m8-8H4"
-    />
-  </svg>
-);
 
 export default ClientDetailPage;

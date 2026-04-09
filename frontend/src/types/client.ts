@@ -1,121 +1,87 @@
 // frontend/src/types/client.ts
-export type ClientStatus = "active" | "inactive" | "pending";
 
 export interface Client {
-  _id: string;
-  name: string;
+  _id?: string;
+  id?: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone?: string;
   company?: string;
-  address?: {
-    street?: string;
-    city?: string;
-    postalCode?: string;
-    country?: string;
-  };
-  taxId?: string; // Numéro d'identification fiscale
+  address?: string;
+  city?: string;
+  postalCode?: string;
+  country?: string;
+  isActive: boolean;
   notes?: string;
-  status: ClientStatus;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
+  avatar?: string;
+  
+  // Champs optionnels supplémentaires
+  website?: string;
+  siret?: string;
+  vatNumber?: string;
+  contactPerson?: string;
+  contactPhone?: string;
+  contactEmail?: string;
   tags?: string[];
-  preferredContactMethod?: "email" | "phone" | "whatsapp";
-  lastOrderDate?: string;
+  
+  // Statistiques (peuvent être calculées côté serveur)
   totalOrders?: number;
   totalSpent?: number;
-  createdAt: string;
-  updatedAt: string;
-  createdBy?: string;
-}
-
-export interface CreateClientDto {
-  name: string;
-  email: string;
-  phone?: string;
-  company?: string;
-  address?: {
-    street?: string;
-    city?: string;
-    postalCode?: string;
-    country?: string;
+  lastOrderDate?: string | Date;
+  averageOrderValue?: number;
+  
+  // Préférences
+  preferences?: {
+    newsletter?: boolean;
+    marketing?: boolean;
+    language?: string;
+    currency?: string;
   };
-  taxId?: string;
-  notes?: string;
-  tags?: string[];
-  preferredContactMethod?: "email" | "phone" | "whatsapp";
-  status?: ClientStatus;
-}
-
-export interface UpdateClientDto extends Partial<CreateClientDto> {
-  status?: ClientStatus;
-}
-
-// Interface pour la réponse de l'API
-export interface ApiClient {
-  _id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  company?: string;
-  address?: {
-    street?: string;
-    city?: string;
-    postalCode?: string;
-    country?: string;
+  
+  // Adresse de livraison/facturation supplémentaires
+  billingAddress?: {
+    address: string;
+    city: string;
+    postalCode: string;
+    country: string;
   };
-  taxId?: string;
-  notes?: string;
-  status: string;
-  tags?: string[];
-  preferredContactMethod?: string;
-  lastOrderDate?: string;
-  totalOrders?: number;
-  totalSpent?: number;
-  createdAt: string;
-  updatedAt: string;
-  createdBy?: string;
+  shippingAddress?: {
+    address: string;
+    city: string;
+    postalCode: string;
+    country: string;
+  };
 }
 
-// Fonction utilitaire pour convertir ApiClient en Client
-export const apiToClient = (apiData: ApiClient): Client => ({
-  _id: apiData._id,
-  name: apiData.name,
-  email: apiData.email,
-  phone: apiData.phone,
-  company: apiData.company,
-  address: apiData.address,
-  taxId: apiData.taxId,
-  notes: apiData.notes,
-  status: apiData.status as ClientStatus,
-  tags: apiData.tags || [],
-  preferredContactMethod: apiData.preferredContactMethod as
-    | "email"
-    | "phone"
-    | "whatsapp"
-    | undefined,
-  lastOrderDate: apiData.lastOrderDate,
-  totalOrders: apiData.totalOrders || 0,
-  totalSpent: apiData.totalSpent || 0,
-  createdAt: apiData.createdAt,
-  updatedAt: apiData.updatedAt,
-  createdBy: apiData.createdBy,
-});
+export interface ClientFilters {
+  searchTerm?: string;
+  city?: string;
+  isActive?: boolean;
+  hasCompany?: boolean;
+  tags?: string[];
+  createdFrom?: string;
+  createdTo?: string;
+  minSpent?: number;
+  maxSpent?: number;
+  page?: number;
+  limit?: number;
+  sortBy?: keyof Client;
+  sortOrder?: 'asc' | 'desc';
+}
 
-// Interface pour les statistiques clients
 export interface ClientStats {
   total: number;
   active: number;
   inactive: number;
-  newThisMonth: number;
-  totalRevenue: number;
-  averageOrderValue: number;
-}
-
-// Interface pour les filtres clients
-export interface ClientFilters {
-  search?: string;
-  status?: ClientStatus;
-  tags?: string[];
-  minOrders?: number;
-  maxOrders?: number;
-  dateFrom?: string;
-  dateTo?: string;
+  withCompany: number;
+  withoutCompany: number;
+  topCities: Array<{ city: string; count: number }>;
+  recentClients: Client[];
+  withPhone: number;
+  withEmail: number;
+  totalSpent: number;
+  averageSpent: number;
 }

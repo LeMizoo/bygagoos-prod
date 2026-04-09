@@ -15,10 +15,9 @@ export default defineConfig({
     strictPort: false,  // Allow Vite to use a different port if 3000 is taken
     proxy: {
       '/api': {
-        target: 'http://localhost:5000/api',
+        target: 'http://localhost:5000',
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path.replace(/^\/api/, '')  // Remove /api prefix so backend gets /auth/login
       }
     },
     // Désactiver l'overlay d'erreur HMR si gênant

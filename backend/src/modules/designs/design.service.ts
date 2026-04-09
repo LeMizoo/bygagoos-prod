@@ -122,7 +122,7 @@ export class DesignService {
   /**
    * Crée un nouveau design
    */
-  async create(userId: string, data: CreateDesignDto, createdBy: string): Promise<DesignResponseDTO> {
+  async create(userId: string, data: CreateDesignDto, createdBy: string | Types.ObjectId): Promise<DesignResponseDTO> {
     try {
       // Vérifier si le client existe (si fourni)
       if (data.clientId) {

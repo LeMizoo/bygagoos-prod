@@ -2,12 +2,10 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Save } from "lucide-react";
-import { adminClientsApi } from "../../api/adminClients.api";
-import {
-  Client as ClientType,
-  UpdateClientData,
-} from "../../api/adminClients.api";
+import { adminClientsApi, UpdateClientData } from "../../api/adminClients.api";
+import { Client } from "../../types/client";
 import toast from "react-hot-toast";
+import dev from '../../utils/devLogger';
 
 const EditClientPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -24,8 +22,11 @@ const EditClientPage: React.FC = () => {
     phone: "",
     company: "",
     address: "",
+    city: "",
+    postalCode: "",
+    country: "",
     notes: "",
-    status: "active",
+    isActive: true,
   });
 
   useEffect(() => {
@@ -48,13 +49,16 @@ const EditClientPage: React.FC = () => {
         phone: client.phone || "",
         company: client.company || "",
         address: client.address || "",
+        city: client.city || "",
+        postalCode: client.postalCode || "",
+        country: client.country || "",
         notes: client.notes || "",
-        status: client.status || "active",
+        isActive: client.isActive,
       });
     } catch (err: any) {
       setError(err.message || "Erreur lors du chargement du client");
       toast.error("Erreur lors du chargement du client");
-      console.error(err);
+      dev.error(err);
     } finally {
       setLoading(false);
     }
@@ -81,9 +85,16 @@ const EditClientPage: React.FC = () => {
         cleanedData.company = formData.company.trim();
       if (formData.address && formData.address.trim())
         cleanedData.address = formData.address.trim();
+      if (formData.city && formData.city.trim())
+        cleanedData.city = formData.city.trim();
+      if (formData.postalCode && formData.postalCode.trim())
+        cleanedData.postalCode = formData.postalCode.trim();
+      if (formData.country && formData.country.trim())
+        cleanedData.country = formData.country.trim();
       if (formData.notes && formData.notes.trim())
         cleanedData.notes = formData.notes.trim();
-      if (formData.status) cleanedData.status = formData.status;
+      if (formData.isActive !== undefined)
+        cleanedData.isActive = formData.isActive;
 
       await adminClientsApi.update(id, cleanedData);
       toast.success("Client mis à jour avec succès");
@@ -102,8 +113,14 @@ const EditClientPage: React.FC = () => {
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >,
   ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+    
+    if (type === 'checkbox') {
+      const checked = (e.target as HTMLInputElement).checked;
+      setFormData((prev) => ({ ...prev, [name]: checked }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   if (loading) {
@@ -245,17 +262,69 @@ const EditClientPage: React.FC = () => {
                 htmlFor="address"
                 className="block text-sm font-medium text-gray-700"
               >
-                Adresse complète
+                Adresse
               </label>
-              <textarea
+              <input
+                type="text"
                 id="address"
                 name="address"
-                rows={3}
                 value={formData.address}
                 onChange={handleChange}
                 className="block w-full px-3 py-2 mt-1 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Rue, numéro, code postal, ville..."
               />
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+              <div>
+                <label
+                  htmlFor="city"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Ville
+                </label>
+                <input
+                  type="text"
+                  id="city"
+                  name="city"
+                  value={formData.city}
+                  onChange={handleChange}
+                  className="block w-full px-3 py-2 mt-1 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="postalCode"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Code postal
+                </label>
+                <input
+                  type="text"
+                  id="postalCode"
+                  name="postalCode"
+                  value={formData.postalCode}
+                  onChange={handleChange}
+                  className="block w-full px-3 py-2 mt-1 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="country"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Pays
+                </label>
+                <input
+                  type="text"
+                  id="country"
+                  name="country"
+                  value={formData.country}
+                  onChange={handleChange}
+                  className="block w-full px-3 py-2 mt-1 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
             </div>
           </div>
 
@@ -279,24 +348,21 @@ const EditClientPage: React.FC = () => {
               />
             </div>
 
-            <div>
-              <label
-                htmlFor="status"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Statut
-              </label>
-              <select
-                id="status"
-                name="status"
-                value={formData.status}
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="isActive"
+                name="isActive"
+                checked={formData.isActive}
                 onChange={handleChange}
-                className="block w-full px-3 py-2 mt-1 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label
+                htmlFor="isActive"
+                className="ml-2 block text-sm text-gray-700"
               >
-                <option value="active">Actif</option>
-                <option value="inactive">Inactif</option>
-                <option value="pending">En attente</option>
-              </select>
+                Client actif
+              </label>
             </div>
           </div>
 

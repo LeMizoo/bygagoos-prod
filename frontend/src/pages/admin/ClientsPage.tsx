@@ -1,6 +1,6 @@
 // frontend/src/pages/admin/ClientsPage.tsx
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   PlusCircle,
   Search,
@@ -20,26 +20,14 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "../../stores/authStore";
 import { adminClientsApi } from "../../api/adminClients.api";
+import { Client } from "../../types/client";
 import toast from "react-hot-toast";
-
-interface Client {
-  _id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string;
-  address?: string;
-  company?: string;
-  notes?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  totalOrders?: number;
-  totalSpent?: number;
-  status?: "active" | "inactive" | "pending";
-}
+import dev from '../../utils/devLogger';
 
 const ClientsPage: React.FC = () => {
   const { isAuthenticated } = useAuthStore();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [clients, setClients] = useState<Client[]>([]);
   const [filteredClients, setFilteredClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,8 +44,14 @@ const ClientsPage: React.FC = () => {
 
   useEffect(() => {
     if (!isAuthenticated) return;
-    loadClients();
-  }, [isAuthenticated]);
+
+    if (location.state && (location.state as any).refresh) {
+      loadClients();
+      navigate(location.pathname, { replace: true, state: {} });
+    } else {
+      loadClients();
+    }
+  }, [isAuthenticated, location]);
 
   useEffect(() => {
     filterClients();
@@ -72,8 +66,8 @@ const ClientsPage: React.FC = () => {
 
       // Calculer les statistiques
       const total = data.length;
-      const active = data.filter((c) => c.status === "active").length;
-      const inactive = data.filter((c) => c.status === "inactive").length;
+      const active = data.filter((c) => c.isActive === true).length;
+      const inactive = data.filter((c) => c.isActive === false).length;
       const totalRevenue = data.reduce(
         (sum, client) => sum + (client.totalSpent || 0),
         0,
@@ -94,7 +88,7 @@ const ClientsPage: React.FC = () => {
         averageOrderValue,
       });
     } catch (error: any) {
-      console.error("Error loading clients:", error);
+      dev.error("Error loading clients:", error);
       toast.error("Erreur lors du chargement des clients");
     } finally {
       setLoading(false);
@@ -118,9 +112,13 @@ const ClientsPage: React.FC = () => {
       });
     }
 
-    // Filtre par statut
+    // Filtre par statut (basé sur isActive)
     if (filterStatus !== "all") {
-      filtered = filtered.filter((client) => client.status === filterStatus);
+      if (filterStatus === "active") {
+        filtered = filtered.filter((client) => client.isActive === true);
+      } else if (filterStatus === "inactive") {
+        filtered = filtered.filter((client) => client.isActive === false);
+      }
     }
 
     setFilteredClients(filtered);
@@ -144,27 +142,19 @@ const ClientsPage: React.FC = () => {
     }
   };
 
-  const handleToggleStatus = async (id: string, currentStatus: string) => {
+  const handleToggleStatus = async (id: string, currentStatus: boolean) => {
     try {
-      const newStatus = currentStatus === "active" ? "inactive" : "active";
-      await adminClientsApi.toggleStatus(
-        id,
-        newStatus as "active" | "inactive",
-      );
+      const newStatus = !currentStatus;
+      const updatedClient = await adminClientsApi.toggleStatus(id, newStatus);
 
       setClients((prev) =>
         prev.map((client) =>
-          client._id === id
-            ? {
-                ...client,
-                status: newStatus as "active" | "inactive" | "pending",
-              }
-            : client,
+          client._id === id ? { ...client, isActive: newStatus } : client,
         ),
       );
 
       toast.success(
-        `Statut ${newStatus === "active" ? "activé" : "désactivé"}`,
+        `Statut ${newStatus ? "activé" : "désactivé"}`,
       );
     } catch (error: any) {
       toast.error(error.message || "Erreur lors du changement de statut");
@@ -179,22 +169,16 @@ const ClientsPage: React.FC = () => {
     }).format(amount);
   };
 
-  const formatDate = (dateString?: string) => {
+  const formatDate = (dateString?: string | Date) => {
     if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString("fr-FR");
+    const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+    return date.toLocaleDateString("fr-FR");
   };
 
-  const getStatusColor = (status?: string) => {
-    switch (status) {
-      case "active":
-        return "bg-green-100 text-green-800";
-      case "inactive":
-        return "bg-red-100 text-red-800";
-      case "pending":
-        return "bg-yellow-100 text-yellow-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
+  const getStatusColor = (isActive: boolean) => {
+    return isActive
+      ? "bg-green-100 text-green-800"
+      : "bg-red-100 text-red-800";
   };
 
   const getClientName = (client: Client) => {
@@ -313,16 +297,19 @@ const ClientsPage: React.FC = () => {
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
                 className="appearance-none bg-white pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                aria-label="Filtrer par statut"
               >
                 <option value="all">Tous les statuts</option>
                 <option value="active">Actif</option>
                 <option value="inactive">Inactif</option>
-                <option value="pending">En attente</option>
               </select>
               <Filter className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
             </div>
 
-            <button className="flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
+            <button 
+              onClick={() => {/* TODO: Implémenter l'export */}}
+              className="flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+            >
               <Download className="h-4 w-4 mr-2" />
               Exporter
             </button>
@@ -451,25 +438,23 @@ const ClientsPage: React.FC = () => {
                       <button
                         onClick={() =>
                           handleToggleStatus(
-                            client._id,
-                            client.status || "active",
+                            client._id!,
+                            client.isActive,
                           )
                         }
-                        className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium transition-colors ${getStatusColor(client.status)} hover:opacity-80`}
-                        title={`Cliquer pour ${client.status === "active" ? "désactiver" : "activer"}`}
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium transition-colors ${getStatusColor(client.isActive)} hover:opacity-80`}
+                        title={`Cliquer pour ${client.isActive ? "désactiver" : "activer"}`}
                       >
-                        {client.status === "active" ? (
+                        {client.isActive ? (
                           <>
                             <UserCheck className="h-3 w-3 mr-1" />
                             Actif
                           </>
-                        ) : client.status === "inactive" ? (
+                        ) : (
                           <>
                             <UserX className="h-3 w-3 mr-1" />
                             Inactif
                           </>
-                        ) : (
-                          "En attente"
                         )}
                       </button>
                     </td>
@@ -491,7 +476,7 @@ const ClientsPage: React.FC = () => {
                         </Link>
                         <button
                           onClick={() =>
-                            handleDelete(client._id, getClientName(client))
+                            handleDelete(client._id!, getClientName(client))
                           }
                           className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded transition-colors"
                           title="Supprimer"

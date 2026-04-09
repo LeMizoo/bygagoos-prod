@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import dev from '../../utils/devLogger';
 import {
   ArrowLeft,
   Save,
@@ -105,7 +106,7 @@ export default function CreateOrderPage() {
         notes: formData.notes,
       };
 
-      console.log("Création de la commande:", orderData);
+      dev.log("Création de la commande:", orderData);
 
       // TODO: Implémenter l'API de création de commande
       // await createOrder(orderData)
@@ -117,7 +118,7 @@ export default function CreateOrderPage() {
       navigate("/admin/orders");
     } catch (error) {
       alert("Erreur lors de la création de la commande");
-      console.error(error);
+      dev.error(error);
     } finally {
       setLoading(false);
     }

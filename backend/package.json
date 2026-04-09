@@ -1,41 +1,71 @@
 {
   "name": "bygagoos-ink-backend",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Backend API pour ByGagoos-Ink - Gestion de designs, commandes et utilisateurs",
+  "private": true,
   "main": "dist/index.js",
+  "author": {
+    "name": "ByGagoos Family",
+    "email": "contact@bygagoos.com",
+    "url": "https://bygagoos.com"
+  },
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=18",
+    "npm": ">=9"
+  },
+
   "scripts": {
-    "dev": "nodemon --exec npx tsx -r tsconfig-paths/register src/index.ts",
-    "dev:with-redis": "concurrently \"npm:redis:start\" \"npm:dev\"",
-    "build": "tsc -p tsconfig.json",
+    "dev": "nodemon --exec tsx -r tsconfig-paths/register src/index.ts",
+    "dev:quiet": "set NODE_NO_WARNINGS=1 && nodemon --exec tsx -r tsconfig-paths/register src/index.ts",
+    "dev:redis": "concurrently \"npm run redis:start\" \"npm run dev\"",
+
+    "build": "tsc",
     "build:scripts": "tsc -p tsconfig.scripts.json",
+
     "start": "node dist/index.js",
     "start:prod": "NODE_ENV=production node dist/index.js",
+
     "clean": "rimraf dist",
-    "clean:all": "rimraf dist dist-scripts node_modules package-lock.json",
-    "clean:scripts": "rimraf dist-scripts",
+    "clean:all": "rimraf dist node_modules package-lock.json",
+
     "reinstall": "npm run clean:all && npm install",
-    "type-check": "tsc --noEmit -p tsconfig.json",
-    "type-check:scripts": "tsc --noEmit -p tsconfig.scripts.json",
+
+    "type-check": "tsc --noEmit",
+
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
+
     "format": "prettier --write \"src/**/*.ts\"",
+
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+
     "seed": "ts-node -r tsconfig-paths/register src/utils/seed/index.ts",
-    "prepare": "node -e \"try { if (process.env.NODE_ENV !== 'production') { require('child_process').execSync('husky install', { stdio: 'inherit' }); } } catch (e) { console.log('Husky installation skipped:', e.message); }\"",
-    "prebuild": "npm run clean",
+
+    "reset:password": "ts-node src/scripts/reset-password.ts",
+    "create:staff": "ts-node src/scripts/create-staff.ts",
+
     "redis:start": "node scripts/start-redis.js",
     "redis:stop": "node scripts/stop-redis.js",
     "redis:status": "node scripts/redis-status.js",
-    "redis:info": "node scripts/redis-info.js",
     "redis:test": "node scripts/test-redis-connection.js",
-    "redis:monitor": "node scripts/monitor-redis.js",
-    "redis:docker": "docker run -d --name redis-bygagoos -p 6379:6379 redis:alpine",
-    "redis:docker:stop": "docker stop redis-bygagoos && docker rm redis-bygagoos",
-    "check:users": "node scripts/check-user-model.js",
-    "migrate:roles": "node scripts/migrate-user-roles.js"
+
+    "cron:start": "node dist/jobs/emailReminders.js",
+    "cron:dev": "ts-node src/jobs/emailReminders.ts",
+
+    "upload:clean": "node scripts/clean-uploads.js",
+    "upload:optimize": "node scripts/optimize-uploads.js",
+
+    "email:test": "ts-node src/scripts/test-email.ts",
+
+    "prebuild": "npm run clean",
+    "postinstall": "npm run type-check",
+    "precommit": "lint-staged",
+    "prepush": "npm test"
   },
+
   "keywords": [
     "express",
     "mongodb",
@@ -50,19 +80,15 @@
     "bygagoos",
     "printing",
     "ecommerce",
-    "redis"
+    "redis",
+    "printing-shop",
+    "custom-designs",
+    "pdf-generation",
+    "email-notifications",
+    "file-upload",
+    "image-optimization"
   ],
-  "author": {
-    "name": "ByGagoos Family",
-    "email": "contact@bygagoos.com",
-    "url": "https://bygagoos.com"
-  },
-  "license": "UNLICENSED",
-  "private": true,
-  "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=9.0.0"
-  },
+
   "dependencies": {
     "axios": "^1.13.5",
     "bcrypt": "^5.1.1",
@@ -76,19 +102,25 @@
     "express": "^4.18.2",
     "express-mongo-sanitize": "^2.2.0",
     "express-rate-limit": "^7.1.5",
+    "googleapis": "^128.0.0",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.0.3",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
-    "nodemailer": "^8.0.1",
+    "node-cron": "^3.0.3",
+    "nodemailer": "^6.10.1",
+    "pdfkit": "^0.14.0",
     "redis": "^4.6.11",
+    "sharp": "^0.33.5",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.0",
+    "uuid": "^9.0.1",
     "winston": "^3.11.0",
     "winston-daily-rotate-file": "^4.7.1",
     "zod": "^3.22.4"
   },
+
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
     "@types/compression": "^1.7.5",
@@ -100,8 +132,11 @@
     "@types/morgan": "^1.9.9",
     "@types/multer": "^1.4.11",
     "@types/node": "^20.10.5",
-    "@types/nodemailer": "^6.4.14",
+    "@types/node-cron": "^3.0.11",
+    "@types/nodemailer": "^6.4.23",
+    "@types/pdfkit": "^0.13.9",
     "@types/supertest": "^6.0.2",
+    "@types/uuid": "^9.0.8",
     "@typescript-eslint/eslint-plugin": "^8.56.0",
     "@typescript-eslint/parser": "^8.56.0",
     "eslint": "^8.56.0",
@@ -120,22 +155,34 @@
     "tsx": "^4.21.0",
     "typescript": "^5.3.3"
   },
+
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "node",
-    "moduleNameMapper": {
-      "^@/(.*)$": "<rootDir>/src/$1",
-      "^@redis/(.*)$": "<rootDir>/src/core/config/$1"
-    },
     "setupFilesAfterEnv": [
       "<rootDir>/src/test/setup.ts"
     ],
     "coveragePathIgnorePatterns": [
       "/node_modules/",
       "/dist/",
-      "/dist-scripts/",
       "/src/test/",
-      "/src/scripts/"
+      "/src/scripts/",
+      "/src/jobs/"
+    ],
+    "testMatch": [
+      "**/__tests__/**/*.ts",
+      "**/?(*.)+(spec|test).ts"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.ts",
+      "!src/**/*.d.ts"
+    ]
+  },
+
+  "lint-staged": {
+    "*.ts": [
+      "eslint --fix",
+      "prettier --write"
     ]
   }
 }

@@ -1,9 +1,16 @@
 // frontend/src/pages/admin/CreateStaffPage.tsx
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Save, X } from "lucide-react";
-import { createStaff } from "../../api/adminStaff.api";
+// 🔥 CORRECTION: Importer l'objet API par défaut
+import adminStaffApi, { StaffApiError } from "../../api/adminStaff.api";
 import { StaffRole, StaffCategory } from "../../types/staff";
+import { useAuthStore } from "../../stores/authStore";
+import { UserRole, canCreate } from "../../types/roles";
+import { InlineError } from "../../components/ui/InlineError";
+import toast from "react-hot-toast";
+import dev from '../../utils/devLogger';
 
 interface FormData {
   firstName: string;
@@ -21,7 +28,9 @@ interface FormData {
 
 const CreateStaffPage: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuthStore();
   const [loading, setLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>({
     firstName: "",
     lastName: "",
@@ -36,8 +45,41 @@ const CreateStaffPage: React.FC = () => {
     category: "PRODUCTION",
   });
 
+  // 🔥 Vérifier les permissions
+  const userRole = user?.role as UserRole | undefined;
+  const isSuperAdmin = userRole === UserRole.SUPER_ADMIN;
+  const canCreateStaff = userRole ? canCreate(userRole, 'staff') || isSuperAdmin : false;
+
+  // Rediriger si pas de permission
+  useEffect(() => {
+    if (!canCreateStaff) {
+      toast.error("Vous n'avez pas les permissions nécessaires pour créer un membre");
+      navigate("/admin/staff");
+    }
+  }, [canCreateStaff, navigate]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(null);
+
+    // Validation côté client
+    if (!formData.firstName.trim() || !formData.lastName.trim()) {
+      setFormError("Le prénom et le nom sont requis");
+      return;
+    }
+
+    if (!formData.email.trim()) {
+      setFormError("L'email est requis");
+      return;
+    }
+
+    // Validation simple de l'email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setFormError("Format d'email invalide");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -59,13 +101,25 @@ const CreateStaffPage: React.FC = () => {
         category: formData.category,
       };
 
-      await createStaff(staffData);
+      // 🔥 CORRECTION: Utiliser adminStaffApi.create()
+      const newStaff = await adminStaffApi.create(staffData);
+      
+      toast.success(`Membre ${newStaff.firstName} ${newStaff.lastName} créé avec succès`);
       navigate("/admin/staff");
     } catch (error: any) {
-      console.error("Error creating staff:", error);
-      alert(
-        `Erreur lors de la création: ${error.message || "Veuillez vérifier les données"}`,
-      );
+      dev.error("Error creating staff:", error);
+      
+      if (error instanceof StaffApiError) {
+        if (error.status === 400) {
+          setFormError(`Données invalides: ${error.message}`);
+        } else if (error.status === 409) {
+          setFormError("Un membre avec cet email existe déjà");
+        } else {
+          setFormError(`Erreur lors de la création: ${error.message}`);
+        }
+      } else {
+        setFormError(`Erreur lors de la création: ${error.message || "Veuillez vérifier les données"}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -82,7 +136,14 @@ const CreateStaffPage: React.FC = () => {
       [name]:
         type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
     }));
+    // Effacer l'erreur quand l'utilisateur modifie un champ
+    if (formError) setFormError(null);
   };
+
+  // Si pas de permission, ne pas afficher le formulaire
+  if (!canCreateStaff) {
+    return null; // Ou un message d'erreur
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -93,6 +154,8 @@ const CreateStaffPage: React.FC = () => {
             <button
               onClick={() => navigate("/admin/staff")}
               className="flex items-center text-gray-600 hover:text-gray-900"
+              aria-label="Retour à la liste"
+              title="Retour"
             >
               <ArrowLeft className="h-5 w-5 mr-2" />
               Retour
@@ -106,6 +169,14 @@ const CreateStaffPage: React.FC = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Message d'erreur du formulaire */}
+        {formError && (
+          <InlineError 
+            message={formError} 
+            type="error"
+          />
+        )}
+
         {/* Informations de base */}
         <div className="bg-white rounded-xl shadow-lg p-8">
           <h2 className="text-xl font-bold text-gray-900 mb-6">
@@ -114,65 +185,74 @@ const CreateStaffPage: React.FC = () => {
 
           <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
                 Prénom *
               </label>
               <input
+                id="firstName"
                 type="text"
                 name="firstName"
                 value={formData.firstName}
                 onChange={handleChange}
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Jean"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
                 Nom *
               </label>
               <input
+                id="lastName"
                 type="text"
                 name="lastName"
                 value={formData.lastName}
                 onChange={handleChange}
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Dupont"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                 Email *
               </label>
               <input
+                id="email"
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="jean.dupont@exemple.com"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
                 Téléphone
               </label>
               <input
+                id="phone"
                 type="tel"
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
+                placeholder="+33 6 12 34 56 78"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
                 Rôle *
               </label>
               <select
+                id="role"
                 name="role"
                 value={formData.role}
                 onChange={handleChange}
@@ -196,10 +276,11 @@ const CreateStaffPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="department" className="block text-sm font-medium text-gray-700 mb-2">
                 Département *
               </label>
               <select
+                id="department"
                 name="department"
                 value={formData.department}
                 onChange={handleChange}
@@ -218,10 +299,11 @@ const CreateStaffPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
                 Catégorie
               </label>
               <select
+                id="category"
                 name="category"
                 value={formData.category}
                 onChange={handleChange}
@@ -233,10 +315,11 @@ const CreateStaffPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="position" className="block text-sm font-medium text-gray-700 mb-2">
                 Poste
               </label>
               <input
+                id="position"
                 type="text"
                 name="position"
                 value={formData.position}
@@ -269,10 +352,11 @@ const CreateStaffPage: React.FC = () => {
 
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
                 Description
               </label>
               <textarea
+                id="description"
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
@@ -283,10 +367,11 @@ const CreateStaffPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
                 Notes internes
               </label>
               <textarea
+                id="notes"
                 name="notes"
                 value={formData.notes}
                 onChange={handleChange}
@@ -304,6 +389,8 @@ const CreateStaffPage: React.FC = () => {
             type="button"
             onClick={() => navigate("/admin/staff")}
             className="flex items-center px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+            title="Annuler"
+            aria-label="Annuler"
           >
             <X className="h-4 w-4 mr-2" />
             Annuler
@@ -312,6 +399,8 @@ const CreateStaffPage: React.FC = () => {
             type="submit"
             disabled={loading}
             className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Créer"
+            aria-label="Créer"
           >
             <Save className="h-4 w-4 mr-2" />
             {loading ? "Création en cours..." : "Créer le membre"}

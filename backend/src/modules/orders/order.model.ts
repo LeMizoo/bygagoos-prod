@@ -1,34 +1,47 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document, Types } from 'mongoose';
 
+// --- ENUMS ---
 export enum OrderStatus {
   PENDING = 'PENDING',
-  CONFIRMED = 'CONFIRMED',
-  PROCESSING = 'PROCESSING',
-  COMPLETED = 'COMPLETED',
+  IN_PROGRESS = 'IN_PROGRESS',
+  REVIEW = 'REVIEW',
+  MODIFICATION = 'MODIFICATION',
+  VALIDATED = 'VALIDATED',
+  PRODUCTION = 'PRODUCTION',
+  SHIPPED = 'SHIPPED',
+  DELIVERED = 'DELIVERED',
   CANCELLED = 'CANCELLED',
-  REFUNDED = 'REFUNDED'
+  ARCHIVED = 'ARCHIVED'
+}
+
+export enum OrderPriority {
+  LOW = 'LOW',
+  MEDIUM = 'MEDIUM',
+  HIGH = 'HIGH',
+  URGENT = 'URGENT'
 }
 
 export enum PaymentStatus {
   PENDING = 'PENDING',
+  PARTIAL = 'PARTIAL',
   PAID = 'PAID',
-  PARTIALLY_PAID = 'PARTIALLY_PAID',
   REFUNDED = 'REFUNDED',
-  FAILED = 'FAILED'
+  CANCELLED = 'CANCELLED'
 }
 
 export enum PaymentMethod {
   CASH = 'CASH',
   CARD = 'CARD',
-  BANK_TRANSFER = 'BANK_TRANSFER',
-  CHECK = 'CHECK',
+  TRANSFER = 'TRANSFER',
   PAYPAL = 'PAYPAL',
-  STRIPE = 'STRIPE'
+  OTHER = 'OTHER'
 }
 
+// --- INTERFACES ---
 export interface IOrderItem {
-  design?: mongoose.Types.ObjectId;
-  description: string;
+  _id?: Types.ObjectId;
+  design?: Types.ObjectId;
+  description?: string;
   quantity: number;
   unitPrice: number;
   total: number;
@@ -36,216 +49,277 @@ export interface IOrderItem {
 }
 
 export interface IPayment {
-  amount: number;
-  method: PaymentMethod;
   status: PaymentStatus;
-  transactionId?: string;
+  method?: PaymentMethod;
+  dueDate?: Date;
   paidAt?: Date;
-  notes?: string;
+  transactions: Array<{
+    amount: number;
+    method: PaymentMethod;
+    reference?: string;
+    date: Date;
+  }>;
+}
+
+export interface IOrderDesign {
+  _id?: Types.ObjectId;
+  design: Types.ObjectId;
+  quantity: number;
+  price: number;
+  modifications?: string;
+  previewUrl?: string;
+  files?: Array<{
+    url: string;
+    filename: string;
+    mimetype: string;
+    uploadedAt: Date;
+  }>;
+  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
+  completedAt?: Date;
+}
+
+export interface IOrderHistory {
+  status: OrderStatus;
+  changedBy: Types.ObjectId;
+  comment?: string;
+  createdAt: Date;
+}
+
+export interface IOrderMessage {
+  _id?: Types.ObjectId;
+  user: Types.ObjectId;
+  content: string;
+  attachments?: Array<{
+    url: string;
+    filename: string;
+  }>;
+  readBy: Array<{
+    user: Types.ObjectId;
+    readAt: Date;
+  }>;
+  createdAt: Date;
 }
 
 export interface IOrder extends Document {
-  user: mongoose.Types.ObjectId;
-  tenant?: mongoose.Types.ObjectId;
-  client: mongoose.Types.ObjectId;
+  _id: Types.ObjectId;
+  user: Types.ObjectId;
+  tenant?: Types.ObjectId;
+  client: Types.ObjectId;
   orderNumber: string;
-  items: IOrderItem[];
-  subtotal: number;
-  tax: number;
-  discount: number;
-  total: number;
+  title: string;
+  description?: string;
   status: OrderStatus;
-  payments: IPayment[];
-  paymentStatus: PaymentStatus;
-  paymentDue?: Date;
-  notes?: string;
-  terms?: string;
-  createdBy: mongoose.Types.ObjectId;
-  assignedTo?: mongoose.Types.ObjectId;
+  priority: OrderPriority;
+  assignedTo: {
+    designer?: Types.ObjectId;
+    validator?: Types.ObjectId;
+    producer?: Types.ObjectId;
+  };
+  designs: Types.DocumentArray<IOrderDesign & mongoose.Document>;
+  requestedDate: Date;
+  startDate?: Date;
+  deadline?: Date;
   completedAt?: Date;
-  cancelledAt?: Date;
-  cancelledReason?: string;
-  metadata?: Record<string, any>;
+  price: {
+    subtotal: number;
+    taxRate: number;
+    tax: number;
+    discount?: {
+      type: 'percentage' | 'fixed';
+      value: number;
+      reason?: string;
+    };
+    total: number;
+    currency: string;
+  };
+  payment: {
+    status: PaymentStatus;
+    method?: PaymentMethod;
+    dueDate?: Date;
+    paidAt?: Date;
+    transactions: Array<{
+      amount: number;
+      method: PaymentMethod;
+      reference?: string;
+      date: Date;
+    }>;
+  };
+  messages: Types.DocumentArray<IOrderMessage & mongoose.Document>;
+  history: Types.DocumentArray<IOrderHistory & mongoose.Document>;
+  tags: string[];
+  isActive: boolean;
+  metadata?: Record<string, unknown>;
+  createdBy: Types.ObjectId;
+  updatedBy?: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
+
+  // Méthodes
+  calculateTotals(): void;
+  updateStatus(newStatus: OrderStatus, userId: string | Types.ObjectId, comment?: string): Promise<void>;
+  addMessage(message: { user: Types.ObjectId; content: string; attachments?: any[] }): Promise<void>;
 }
 
-const orderItemSchema = new Schema({
-  design: {
-    type: Schema.Types.ObjectId,
-    ref: 'Design'
-  },
-  description: {
-    type: String,
-    required: [true, 'La description est requise']
-  },
-  quantity: {
-    type: Number,
-    required: [true, 'La quantité est requise'],
-    min: [1, 'La quantité doit être au moins 1']
-  },
-  unitPrice: {
-    type: Number,
-    required: [true, 'Le prix unitaire est requis'],
-    min: [0, 'Le prix ne peut pas être négatif']
-  },
-  total: {
-    type: Number,
-    required: [true, 'Le total est requis'],
-    min: [0, 'Le total ne peut pas être négatif']
-  },
-  notes: {
-    type: String,
-    trim: true
-  }
+// --- SCHEMAS ---
+
+const orderDesignSchema = new Schema({
+  design: { type: Schema.Types.ObjectId, ref: 'Design', required: true },
+  quantity: { type: Number, required: true, min: 1, default: 1 },
+  price: { type: Number, required: true, min: 0 },
+  modifications: { type: String, trim: true },
+  previewUrl: { type: String },
+  files: [{
+    url: { type: String, required: true },
+    filename: { type: String, required: true },
+    mimetype: { type: String, required: true },
+    uploadedAt: { type: Date, default: Date.now }
+  }],
+  status: { type: String, enum: ['pending', 'in_progress', 'completed', 'cancelled'], default: 'pending' },
+  completedAt: Date
 });
 
-const paymentSchema = new Schema({
-  amount: {
-    type: Number,
-    required: [true, 'Le montant est requis'],
-    min: [0, 'Le montant ne peut pas être négatif']
-  },
-  method: {
-    type: String,
-    enum: Object.values(PaymentMethod),
-    required: [true, 'La méthode de paiement est requise']
-  },
-  status: {
-    type: String,
-    enum: Object.values(PaymentStatus),
-    default: PaymentStatus.PENDING
-  },
-  transactionId: {
-    type: String,
-    trim: true
-  },
-  paidAt: {
-    type: Date
-  },
-  notes: {
-    type: String,
-    trim: true
-  }
+const orderHistorySchema = new Schema({
+  status: { type: String, enum: Object.values(OrderStatus), required: true },
+  changedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  comment: String,
+  createdAt: { type: Date, default: Date.now }
+});
+
+const orderMessageSchema = new Schema({
+  user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  content: { type: String, required: true, trim: true },
+  attachments: [{ url: String, filename: String }],
+  readBy: [{
+    user: { type: Schema.Types.ObjectId, ref: 'User' },
+    readAt: { type: Date, default: Date.now }
+  }],
+  createdAt: { type: Date, default: Date.now }
 });
 
 const orderSchema = new Schema<IOrder>(
   {
-    user: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: [true, "L'utilisateur est requis"]
-    },
-    tenant: {
-      type: Schema.Types.ObjectId,
-      ref: 'Tenant'
-    },
-    client: {
-      type: Schema.Types.ObjectId,
-      ref: 'Client',
-      required: [true, 'Le client est requis']
-    },
-    orderNumber: {
-      type: String,
-      required: [true, 'Le numéro de commande est requis'],
-      unique: true
-    },
-    items: [orderItemSchema],
-    subtotal: {
-      type: Number,
-      required: [true, 'Le sous-total est requis'],
-      min: [0, 'Le sous-total ne peut pas être négatif']
-    },
-    tax: {
-      type: Number,
-      default: 0,
-      min: [0, 'La taxe ne peut pas être négative']
-    },
-    discount: {
-      type: Number,
-      default: 0,
-      min: [0, 'La remise ne peut pas être négative']
-    },
-    total: {
-      type: Number,
-      required: [true, 'Le total est requis'],
-      min: [0, 'Le total ne peut pas être négatif']
-    },
-    status: {
-      type: String,
-      enum: Object.values(OrderStatus),
-      default: OrderStatus.PENDING
-    },
-    payments: [paymentSchema],
-    paymentStatus: {
-      type: String,
-      enum: Object.values(PaymentStatus),
-      default: PaymentStatus.PENDING
-    },
-    paymentDue: {
-      type: Date
-    },
-    notes: {
-      type: String,
-      trim: true
-    },
-    terms: {
-      type: String,
-      trim: true
-    },
-    createdBy: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: true
-    },
+    user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    tenant: { type: Schema.Types.ObjectId, ref: 'Tenant' },
+    client: { type: Schema.Types.ObjectId, ref: 'Client', required: true },
+    orderNumber: { type: String, required: true, unique: true, trim: true },
+    title: { type: String, required: true, trim: true, maxlength: 200 },
+    description: { type: String, trim: true, maxlength: 2000 },
+    status: { type: String, enum: Object.values(OrderStatus), default: OrderStatus.PENDING, required: true },
+    priority: { type: String, enum: Object.values(OrderPriority), default: OrderPriority.MEDIUM, required: true },
     assignedTo: {
-      type: Schema.Types.ObjectId,
-      ref: 'User'
+      designer: { type: Schema.Types.ObjectId, ref: 'User' },
+      validator: { type: Schema.Types.ObjectId, ref: 'User' },
+      producer: { type: Schema.Types.ObjectId, ref: 'User' }
     },
-    completedAt: {
-      type: Date
+    designs: [orderDesignSchema],
+    requestedDate: { type: Date, required: true },
+    startDate: Date,
+    deadline: Date,
+    completedAt: Date,
+    price: {
+      subtotal: { type: Number, required: true, default: 0 },
+      taxRate: { type: Number, default: 20 },
+      tax: { type: Number, required: true, default: 0 },
+      discount: {
+        type: { type: String, enum: ['percentage', 'fixed'] },
+        value: Number,
+        reason: String
+      },
+      total: { type: Number, required: true, default: 0 },
+      currency: { type: String, default: 'EUR', uppercase: true }
     },
-    cancelledAt: {
-      type: Date
+    payment: {
+      status: { type: String, enum: Object.values(PaymentStatus), default: PaymentStatus.PENDING },
+      method: { type: String, enum: Object.values(PaymentMethod) },
+      dueDate: Date,
+      paidAt: Date,
+      transactions: [{
+        amount: Number,
+        method: { type: String, enum: Object.values(PaymentMethod) },
+        reference: String,
+        date: { type: Date, default: Date.now }
+      }]
     },
-    cancelledReason: {
-      type: String,
-      trim: true
-    },
-    metadata: {
-      type: Schema.Types.Mixed
-    }
+    messages: [orderMessageSchema],
+    history: [orderHistorySchema],
+    tags: [String],
+    isActive: { type: Boolean, default: true },
+    metadata: { type: Schema.Types.Mixed },
+    createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    updatedBy: { type: Schema.Types.ObjectId, ref: 'User' }
   },
-  {
+  { 
     timestamps: true,
-    toJSON: {
-      transform: (doc, ret: any) => {
-        ret.id = ret._id;
-        delete ret._id;
-        delete ret.__v;
-        return ret;
-      }
-    }
+    toJSON: { transform: (_, ret) => { ret.id = ret._id; delete ret._id; delete ret.__v; return ret; } } 
   }
 );
 
-// Index pour les recherches
-// Note: orderNumber index créé automatiquement par unique: true
-orderSchema.index({ user: 1 });
-orderSchema.index({ client: 1 });
-orderSchema.index({ status: 1 });
-orderSchema.index({ paymentStatus: 1 });
-orderSchema.index({ createdAt: -1 });
+// --- UTILS & METHODS ---
 
-// Génération automatique du numéro de commande
-orderSchema.pre('save', async function(next) {
-  if (!this.orderNumber) {
-    const date = new Date();
-    const year = date.getFullYear().toString().slice(-2);
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const count = await mongoose.model('Order').countDocuments();
-    this.orderNumber = `CMD-${year}${month}-${(count + 1).toString().padStart(4, '0')}`;
+const roundValue = (val: number) => Math.round((val + Number.EPSILON) * 100) / 100;
+
+orderSchema.methods.calculateTotals = function(this: IOrder) {
+  const subtotal = this.designs.reduce((sum, d) => sum + (d.price * d.quantity), 0);
+  this.price.subtotal = roundValue(subtotal);
+
+  let afterDiscount = this.price.subtotal;
+  if (this.price.discount?.value) {
+    if (this.price.discount.type === 'percentage') {
+      afterDiscount = this.price.subtotal * (1 - this.price.discount.value / 100);
+    } else {
+      afterDiscount = Math.max(0, this.price.subtotal - this.price.discount.value);
+    }
   }
+
+  this.price.tax = roundValue(afterDiscount * (this.price.taxRate / 100));
+  this.price.total = roundValue(afterDiscount + this.price.tax);
+};
+
+orderSchema.methods.updateStatus = async function(this: IOrder, newStatus: OrderStatus, userId: string | Types.ObjectId, comment?: string) {
+  const oldStatus = this.status;
+  if (oldStatus === newStatus) return;
+
+  const userObjectId = typeof userId === 'string' ? new Types.ObjectId(userId) : userId;
+
+  this.status = newStatus;
+  this.history.push({
+    status: newStatus,
+    changedBy: userObjectId,
+    comment: comment || `Transition: ${oldStatus} ➔ ${newStatus}`,
+    createdAt: new Date()
+  } as any);
+
+  // Actions automatiques selon le statut
+  if (newStatus === OrderStatus.IN_PROGRESS && !this.startDate) this.startDate = new Date();
+  if (newStatus === OrderStatus.DELIVERED && !this.completedAt) this.completedAt = new Date();
+
+  await this.save();
+};
+
+orderSchema.methods.addMessage = async function(this: IOrder, message: { user: Types.ObjectId; content: string; attachments?: any[] }) {
+  this.messages.push({
+    ...message,
+    readBy: [{ user: message.user, readAt: new Date() }],
+    createdAt: new Date()
+  } as any);
+  await this.save();
+};
+
+// --- MIDDLEWARES ---
+
+orderSchema.pre('save', function(this: IOrder, next) {
+  // Génération du numéro de commande unique
+  if (this.isNew && !this.orderNumber) {
+    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const randomSuffix = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+    this.orderNumber = `CMD-${dateStr}-${randomSuffix}`;
+  }
+
+  // Recalcul des totaux si les prix ou designs changent
+  if (this.isModified('designs') || this.isModified('price.discount') || this.isModified('price.taxRate')) {
+    this.calculateTotals();
+  }
+
   next();
 });
 

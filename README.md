@@ -9,6 +9,7 @@ ByGagoos-Ink est une application web complète pour gérer notre atelier artisan
 ## Stack Technique
 
 ### Frontend
+
 - React 18 avec TypeScript
 - Tailwind CSS pour le design
 - Vite comme build tool
@@ -17,6 +18,7 @@ ByGagoos-Ink est une application web complète pour gérer notre atelier artisan
 - Lucide React pour les icônes
 
 ### Backend
+
 - Node.js avec Express
 - TypeScript
 - MongoDB avec Mongoose
@@ -25,6 +27,7 @@ ByGagoos-Ink est une application web complète pour gérer notre atelier artisan
 - Joi pour la validation
 
 ### Déploiement
+
 - Frontend : Vercel
 - Backend : Railway
 - Base de données : MongoDB Atlas
@@ -32,6 +35,7 @@ ByGagoos-Ink est une application web complète pour gérer notre atelier artisan
 ## Installation
 
 ### Prérequis
+
 - Node.js 18+
 - MongoDB Compass (optionnel, pour visualiser la DB)
 - Git
@@ -39,12 +43,14 @@ ByGagoos-Ink est une application web complète pour gérer notre atelier artisan
 ### Installation locale
 
 1. Cloner le repository
+
 ```bash
 git clone https://github.com/VOTRE-USERNAME/bygagoos-ink.git
 cd bygagoos-ink
 ```
 
-2. Installer le backend
+1. Installer le backend
+
 ```bash
 cd backend
 npm install
@@ -52,7 +58,8 @@ cp .env.example .env  # Puis configurer les variables
 npm run dev
 ```
 
-3. Installer le frontend
+1. Installer le frontend
+
 ```bash
 cd ../frontend
 npm install
@@ -72,22 +79,26 @@ bygagoos-ink/
 ## Fonctionnalités
 
 ### Phase 1 (Novembre 2025)
+
 - [x] Authentification JWT
 - [x] Gestion des utilisateurs (4 rôles)
 - [ ] Dashboard familial
 - [ ] Gestion des produits
 
 ### Phase 2 (Décembre 2025)
+
 - [ ] Module Production
 - [ ] Contrôle Qualité
 - [ ] Gestion des stocks
 
 ### Phase 3 (Janvier 2026)
+
 - [ ] Portail Client
 - [ ] Suivi des commandes
 - [ ] Notifications
 
 ### Phase 4 (Février 2026)
+
 - [ ] Gestion Financière
 - [ ] Rapports et statistiques
 
@@ -101,6 +112,7 @@ bygagoos-ink/
 ## Variables d'environnement
 
 ### Backend (.env)
+
 ```
 PORT=5000
 MONGODB_URI=mongodb+srv://...
@@ -110,6 +122,7 @@ FRONTEND_URL=http://localhost:5173
 ```
 
 ### Frontend (.env)
+
 ```
 VITE_API_URL=http://localhost:5000/api
 ```
@@ -117,14 +130,30 @@ VITE_API_URL=http://localhost:5000/api
 ## Scripts disponibles
 
 ### Backend
+
 ```bash
 npm run dev      # Développement avec hot reload
 npm run build    # Compiler TypeScript
 npm start        # Production
+<!-- markdownlint-disable MD022 MD032 MD031 MD029 MD040 MD024 MD025 MD034 -->
+
 ## 🚀 Redis Integration
 
 ### Prérequis
 - Redis (local, Docker, ou Memurai sur Windows)
+
+### Points de stabilité importants
+
+- Une route de vérification d'état est exposée à `/health` et `/api/health`.
+  La version `/api/health` renvoie également l'état du client Redis (ping, mode
+  fallback) et peut servir pour les probes Kubernetes.
+- Le backend utilise `morgan` connecté à Winston pour des logs HTTP standards
+  accompagnés de fichiers rotatifs en production.
+- Gestion globale des erreurs via un middleware dédié et écoute des
+  `uncaughtException`/`unhandledRejection` dans `src/index.ts`.
+- Redis est configuré avec un fallback en mémoire et un utilitaire de cache
+  (voir `src/core/utils/cache.ts`).
+
 
 ### Installation
 

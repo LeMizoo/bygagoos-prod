@@ -1,4 +1,6 @@
-import { useState } from "react";
+// frontend/src/pages/user/ProfilePage.tsx
+
+import { useState, useEffect } from "react";
 import {
   User,
   Mail,
@@ -11,10 +13,9 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { useAuthStore } from "../../stores/authStore";
-import { authApi } from "../../api/auth.api";
 
 export default function ProfilePage() {
-  const { user } = useAuthStore();
+  const { user, updateProfile } = useAuthStore();
   const [isEditing, setIsEditing] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -23,12 +24,25 @@ export default function ProfilePage() {
     text: string;
   } | null>(null);
 
+  // Extraire le prénom et nom du champ name complet
+  const getFirstName = () => {
+    if (!user?.name) return "";
+    const parts = user.name.split(" ");
+    return parts[0] || "";
+  };
+
+  const getLastName = () => {
+    if (!user?.name) return "";
+    const parts = user.name.split(" ");
+    return parts.slice(1).join(" ") || "";
+  };
+
   const [formData, setFormData] = useState({
-    firstName: user?.firstName || "",
-    lastName: user?.lastName || "",
-    email: user?.email || "",
-    phone: "+261 34 43 593 30",
-    address: "Antananarivo, Madagascar",
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    address: "",
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -37,23 +51,48 @@ export default function ProfilePage() {
     confirmPassword: "",
   });
 
+  // Charger les données utilisateur
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        firstName: getFirstName(),
+        lastName: getLastName(),
+        email: user.email || "",
+        phone: user.phone || "",
+        address: user.address || "Non renseigné",
+      });
+    }
+  }, [user]);
+
   const handleSave = async () => {
     try {
       setLoading(true);
+      
+      // Construire le nom complet à partir du prénom et nom
+      const fullName = `${formData.firstName} ${formData.lastName}`.trim();
+      
       const updateData: any = {};
-      if (formData.firstName !== user?.firstName)
-        updateData.firstName = formData.firstName;
-      if (formData.lastName !== user?.lastName)
-        updateData.lastName = formData.lastName;
-      if (formData.email !== user?.email) updateData.email = formData.email;
-
+      
+      if (fullName !== user?.name) updateData.name = fullName;
+      if (formData.phone !== user?.phone) updateData.phone = formData.phone;
+      
       if (Object.keys(updateData).length > 0) {
-        await authApi.updateProfile(updateData);
+        // use dev logger
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const { dev } = require('../../utils/devLogger');
+        dev.log('📝 Mise à jour du profil avec:', updateData);
+        await updateProfile(updateData);
         setMessage({ type: "success", text: "Profil mis à jour avec succès!" });
+      } else {
+        setMessage({ type: "success", text: "Aucune modification détectée" });
       }
 
       setIsEditing(false);
     } catch (error: any) {
+      // use dev logger
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { dev } = require('../../utils/devLogger');
+      dev.error('❌ Erreur mise à jour profil:', error);
       setMessage({
         type: "error",
         text: error.message || "Erreur lors de la mise à jour du profil",
@@ -96,7 +135,10 @@ export default function ProfilePage() {
       }
 
       setLoading(true);
-      await authApi.changePassword(
+      
+      // Utiliser la méthode du store
+      const { changePassword } = useAuthStore.getState();
+      await changePassword(
         passwordData.currentPassword,
         passwordData.newPassword,
         passwordData.confirmPassword,
@@ -110,6 +152,10 @@ export default function ProfilePage() {
       });
       setIsChangingPassword(false);
     } catch (error: any) {
+      // use dev logger
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { dev } = require('../../utils/devLogger');
+      dev.error('❌ Erreur changement mot de passe:', error);
       setMessage({
         type: "error",
         text: error.message || "Erreur lors du changement de mot de passe",
@@ -119,8 +165,16 @@ export default function ProfilePage() {
     }
   };
 
+  if (!user) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto p-4">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Mon Profil</h1>
         <p className="text-gray-600 mt-2">
@@ -162,32 +216,39 @@ export default function ProfilePage() {
                   {user?.avatar ? (
                     <img
                       src={user.avatar}
-                      alt={user.firstName}
+                      alt={user.name}
                       className="h-32 w-32 rounded-full object-cover"
                     />
                   ) : (
                     <User className="h-16 w-16 text-blue-600" />
                   )}
                 </div>
-                <button className="absolute bottom-2 right-2 bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700">
+                <button 
+                  className="absolute bottom-2 right-2 bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700"
+                  aria-label="Changer la photo de profil"
+                >
                   <Camera className="h-4 w-4" />
                 </button>
               </div>
 
               <h2 className="text-xl font-bold text-gray-900">
-                {user?.firstName} {user?.lastName}
+                {user.name}
               </h2>
-              <p className="text-gray-600">{user?.email}</p>
+              <p className="text-gray-600">{user.email}</p>
 
               <div className="mt-4 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
-                {user?.role?.replace("_", " ")}
+                {user.role?.replace("_", " ")}
               </div>
 
               <div className="mt-6 text-center">
                 <p className="text-sm text-gray-500">Membre depuis</p>
                 <p className="font-medium text-gray-900">
-                  {user?.createdAt
-                    ? new Date(user.createdAt).toLocaleDateString("fr-FR")
+                  {user.createdAt
+                    ? new Date(user.createdAt).toLocaleDateString("fr-FR", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })
                     : "N/A"}
                 </p>
               </div>
@@ -206,7 +267,7 @@ export default function ProfilePage() {
               {!isEditing ? (
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="btn-secondary"
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
                 >
                   Modifier le profil
                 </button>
@@ -214,7 +275,7 @@ export default function ProfilePage() {
                 <button
                   onClick={handleSave}
                   disabled={loading}
-                  className="btn-primary flex items-center disabled:opacity-50"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center disabled:opacity-50"
                 >
                   <Save className="h-4 w-4 mr-2" />
                   {loading ? "Enregistrement..." : "Enregistrer"}
@@ -236,11 +297,12 @@ export default function ProfilePage() {
                         setFormData({ ...formData, firstName: e.target.value })
                       }
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Votre prénom"
                     />
                   ) : (
                     <div className="flex items-center px-4 py-3 bg-gray-50 rounded-lg">
                       <User className="h-5 w-5 text-gray-400 mr-3" />
-                      <span>{user?.firstName}</span>
+                      <span>{getFirstName() || "Non renseigné"}</span>
                     </div>
                   )}
                 </div>
@@ -257,11 +319,12 @@ export default function ProfilePage() {
                         setFormData({ ...formData, lastName: e.target.value })
                       }
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Votre nom"
                     />
                   ) : (
                     <div className="flex items-center px-4 py-3 bg-gray-50 rounded-lg">
                       <User className="h-5 w-5 text-gray-400 mr-3" />
-                      <span>{user?.lastName}</span>
+                      <span>{getLastName() || "Non renseigné"}</span>
                     </div>
                   )}
                 </div>
@@ -271,21 +334,13 @@ export default function ProfilePage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Email
                 </label>
-                {isEditing ? (
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) =>
-                      setFormData({ ...formData, email: e.target.value })
-                    }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                ) : (
-                  <div className="flex items-center px-4 py-3 bg-gray-50 rounded-lg">
-                    <Mail className="h-5 w-5 text-gray-400 mr-3" />
-                    <span>{user?.email}</span>
-                  </div>
-                )}
+                <div className="flex items-center px-4 py-3 bg-gray-50 rounded-lg">
+                  <Mail className="h-5 w-5 text-gray-400 mr-3" />
+                  <span>{user.email}</span>
+                </div>
+                <p className="mt-1 text-xs text-gray-500">
+                  L'email ne peut pas être modifié
+                </p>
               </div>
 
               <div>
@@ -300,11 +355,12 @@ export default function ProfilePage() {
                       setFormData({ ...formData, phone: e.target.value })
                     }
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Votre numéro de téléphone"
                   />
                 ) : (
                   <div className="flex items-center px-4 py-3 bg-gray-50 rounded-lg">
                     <Phone className="h-5 w-5 text-gray-400 mr-3" />
-                    <span>{formData.phone}</span>
+                    <span>{user.phone || "Non renseigné"}</span>
                   </div>
                 )}
               </div>
@@ -321,11 +377,12 @@ export default function ProfilePage() {
                       setFormData({ ...formData, address: e.target.value })
                     }
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Votre adresse"
                   />
                 ) : (
                   <div className="flex items-center px-4 py-3 bg-gray-50 rounded-lg">
                     <MapPin className="h-5 w-5 text-gray-400 mr-3" />
-                    <span>{formData.address}</span>
+                    <span>{user.address || "Non renseigné"}</span>
                   </div>
                 )}
               </div>
@@ -334,15 +391,25 @@ export default function ProfilePage() {
             {isEditing && (
               <div className="mt-8 pt-6 border-t border-gray-200 flex justify-end space-x-4">
                 <button
-                  onClick={() => setIsEditing(false)}
-                  className="btn-outline"
+                  onClick={() => {
+                    setIsEditing(false);
+                    // Reset form data
+                    setFormData({
+                      firstName: getFirstName(),
+                      lastName: getLastName(),
+                      email: user.email || "",
+                      phone: user.phone || "",
+                      address: user.address || "Non renseigné",
+                    });
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
                 >
                   Annuler
                 </button>
                 <button
                   onClick={handleSave}
                   disabled={loading}
-                  className="btn-primary flex items-center disabled:opacity-50"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center disabled:opacity-50"
                 >
                   <Save className="h-4 w-4 mr-2" />
                   {loading
@@ -363,7 +430,7 @@ export default function ProfilePage() {
               {!isChangingPassword && (
                 <button
                   onClick={() => setIsChangingPassword(true)}
-                  className="btn-secondary"
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
                 >
                   Changer le mot de passe
                 </button>
@@ -437,14 +504,14 @@ export default function ProfilePage() {
                       });
                       setMessage(null);
                     }}
-                    className="btn-outline"
+                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
                   >
                     Annuler
                   </button>
                   <button
                     onClick={handleChangePassword}
                     disabled={loading}
-                    className="btn-primary flex items-center disabled:opacity-50"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center disabled:opacity-50"
                   >
                     <Lock className="h-4 w-4 mr-2" />
                     {loading ? "Changement..." : "Changer le mot de passe"}

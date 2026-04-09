@@ -15,11 +15,13 @@ const getApiUrl = (): string => {
 
 export const API_URL = getApiUrl();
 
-console.log("✅ API_URL configured:", API_URL);
+import { dev } from '../utils/devLogger';
+
+dev.log("✅ API_URL configured:", API_URL);
 
 // Récupérer les headers d'authentification
 export const getAuthHeaders = (): Record<string, string> => {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("token") || localStorage.getItem("accessToken");
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
@@ -38,11 +40,16 @@ export const apiFetch = async <T = any>(
     const url = endpoint.startsWith("http")
       ? endpoint
       : `${API_URL}${endpoint}`;
+    
+    dev.log(`📡 API Fetch: ${options.method || "GET"} ${url}`);
+    
     const response = await fetch(url, { ...options, headers });
 
     if (!response.ok) {
       if (response.status === 401) {
         localStorage.removeItem("token");
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
         localStorage.removeItem("user");
         window.location.href = "/auth/login";
         throw new Error("Session expirée. Veuillez vous reconnecter.");
@@ -75,7 +82,7 @@ export const apiFetch = async <T = any>(
       };
     }
   } catch (error: any) {
-    console.error("API Fetch Error:", { endpoint, error: error.message });
+    dev.error("❌ API Fetch Error:", { endpoint, error: error.message });
     return {
       data: null as T,
       success: false,
@@ -84,7 +91,7 @@ export const apiFetch = async <T = any>(
   }
 };
 
-// ... (le reste du fichier inchangé, avec uploadFile, etc.)
+// Upload de fichier
 export const uploadFile = async (
   file: File,
   endpoint: string = "/upload",
@@ -102,5 +109,3 @@ export const uploadFile = async (
   const data = await response.json();
   return data.url || data.fileUrl;
 };
-
-// ... etc.

@@ -256,18 +256,25 @@ export class OrderService {
         const order = await Order.findOne({ _id: id, user: userId });
         if (order) {
           const subtotal = items.reduce((sum, item) => sum + item.total, 0);
-          const tax = data.tax !== undefined ? data.tax : order.tax;
-          const discount = data.discount !== undefined ? data.discount : order.discount;
+          const tax = data.tax !== undefined ? data.tax : order.price?.tax || 0;
+          const discount = data.discount !== undefined ? data.discount : order.price?.discount?.value || 0;
           const total = subtotal + tax - discount;
 
           updateData.items = items;
           updateData.subtotal = subtotal;
           updateData.total = total;
+          updateData.price = {
+            ...order.price,
+            subtotal,
+            tax,
+            total,
+            discount: order.price?.discount ? { ...order.price.discount, value: discount } : undefined
+          };
         }
       }
 
       // Mettre à jour le statut et les dates
-      if (data.status === OrderStatus.COMPLETED && !updateData.completedAt) {
+      if (data.status === OrderStatus.DELIVERED && !updateData.completedAt) {
         updateData.completedAt = new Date();
       }
 
@@ -316,23 +323,28 @@ export class OrderService {
       }
 
       // Ajouter le paiement
-      order.payments.push({
+      if (!order.payment) {
+        order.payment = {
+          status: PaymentStatus.PENDING,
+          transactions: []
+        } as any;
+      }
+
+      order.payment.transactions.push({
         amount: data.amount,
         method: data.method as PaymentMethod,
-        status: PaymentStatus.PAID,
-        transactionId: data.transactionId || undefined,
-        notes: data.notes || undefined,
-        paidAt: new Date()
+        reference: data.transactionId || undefined,
+        date: new Date()
       });
 
       // Calculer le total payé
-      const totalPaid = order.payments.reduce((sum, p) => sum + p.amount, 0);
+      const totalPaid = order.payment.transactions.reduce((sum, p) => sum + p.amount, 0);
 
       // Mettre à jour le statut de paiement
-      if (totalPaid >= order.total) {
-        order.paymentStatus = PaymentStatus.PAID;
+      if (totalPaid >= order.price?.total) {
+        order.payment.status = PaymentStatus.PAID;
       } else if (totalPaid > 0) {
-        order.paymentStatus = PaymentStatus.PARTIALLY_PAID;
+        order.payment.status = PaymentStatus.PARTIAL;
       }
 
       await order.save();

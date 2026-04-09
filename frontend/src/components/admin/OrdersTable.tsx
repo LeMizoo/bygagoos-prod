@@ -1,249 +1,345 @@
-// frontend/src/components/admin/OrdersTable.tsx
-import React from "react";
-import {
-  Package,
-  Clock,
+// frontend/src/components/orders/OrdersTable.tsx
+
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { 
+  Eye, 
+  Edit, 
+  Trash2, 
+  MoreVertical,
+  Download,
+  MessageCircle,
   CheckCircle,
   XCircle,
-  Edit,
-  Trash2,
-  Eye,
-} from "lucide-react";
-import { Order } from "../../api/adminOrders.api";
+  Clock,
+  AlertCircle
+} from 'lucide-react';
+import { useOrderStore, Order } from '../../stores/orderStore';
+import { DataTable } from '../ui/DataTable';
+import { Badge } from '../ui/Badge';
+import { Button } from '../ui/Button';
+import { Avatar } from '../ui/Avatar';
+import { Dropdown } from '../ui/Dropdown';
+import { ConfirmDialog } from '../ui/ConfirmDialog';
+import { formatPrice } from '../../utils/formatters';
+import dev from '../../utils/devLogger';
 
 interface OrdersTableProps {
-  orders: Order[];
-  onView: (id: string) => void;
-  onEdit: (id: string) => void;
-  onDelete: (id: string) => void;
-  onUpdateStatus?: (id: string, status: Order["status"]) => void;
+  onSelect?: (order: Order) => void;
+  onEdit?: (order: Order) => void;
+  onDelete?: (order: Order) => void;
+  onView?: (order: Order) => void;
 }
 
-const OrdersTable: React.FC<OrdersTableProps> = ({
-  orders,
-  onView,
+const statusConfig: Record<string, { color: string; label: string; icon: any }> = {
+  PENDING: { 
+    color: 'warning', 
+    label: 'En attente',
+    icon: Clock
+  },
+  IN_PROGRESS: { 
+    color: 'info', 
+    label: 'En cours',
+    icon: AlertCircle
+  },
+  REVIEW: { 
+    color: 'info', 
+    label: 'En révision',
+    icon: Eye
+  },
+  MODIFICATION: { 
+    color: 'warning', 
+    label: 'Modification',
+    icon: Edit
+  },
+  VALIDATED: { 
+    color: 'success', 
+    label: 'Validé',
+    icon: CheckCircle
+  },
+  PRODUCTION: { 
+    color: 'info', 
+    label: 'Production',
+    icon: AlertCircle
+  },
+  SHIPPED: { 
+    color: 'info', 
+    label: 'Expédié',
+    icon: Clock
+  },
+  DELIVERED: { 
+    color: 'success', 
+    label: 'Livré',
+    icon: CheckCircle
+  },
+  CANCELLED: { 
+    color: 'danger', 
+    label: 'Annulé',
+    icon: XCircle
+  }
+};
+
+const priorityConfig: Record<string, { color: string; label: string }> = {
+  LOW: { color: 'success', label: 'Basse' },
+  MEDIUM: { color: 'warning', label: 'Moyenne' },
+  HIGH: { color: 'danger', label: 'Haute' },
+  URGENT: { color: 'danger', label: 'Urgent' }
+};
+
+export const OrdersTable: React.FC<OrdersTableProps> = ({
+  onSelect,
   onEdit,
   onDelete,
-  onUpdateStatus,
+  onView
 }) => {
-  // Validation des données
-  if (!orders || !Array.isArray(orders)) {
-    return (
-      <div className="text-center py-12 border-2 border-dashed border-gray-200 rounded-lg">
-        <Package className="mx-auto h-12 w-12 text-gray-400" />
-        <h3 className="mt-4 text-lg font-medium text-gray-900">
-          Données invalides
-        </h3>
-        <p className="mt-1 text-sm text-gray-500">
-          Les données des commandes sont corrompues ou indisponibles.
-        </p>
-      </div>
-    );
-  }
+  const navigate = useNavigate();
+  const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
+  const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  
+  const { 
+    orders, 
+    pagination, 
+    filters, 
+    setFilters, 
+    fetchOrders,
+    deleteOrder,
+    isLoading 
+  } = useOrderStore();
 
-  if (orders.length === 0) {
-    return (
-      <div className="text-center py-12 border-2 border-dashed border-gray-200 rounded-lg">
-        <Package className="mx-auto h-12 w-12 text-gray-400" />
-        <h3 className="mt-4 text-lg font-medium text-gray-900">
-          Aucune commande
-        </h3>
-        <p className="mt-1 text-sm text-gray-500">
-          Aucune commande n'a été trouvée. Créez votre première commande.
-        </p>
-      </div>
-    );
-  }
+  useEffect(() => {
+    fetchOrders();
+  }, [filters]);
 
-  const getStatusConfig = (status: Order["status"]) => {
-    const configs = {
-      PENDING: { color: "bg-yellow-100 text-yellow-800", icon: Clock },
-      PROCESSING: { color: "bg-blue-100 text-blue-800", icon: Package },
-      COMPLETED: { color: "bg-green-100 text-green-800", icon: CheckCircle },
-      CANCELLED: { color: "bg-red-100 text-red-800", icon: XCircle },
-    };
-    return configs[status] || configs.PENDING;
+  const handleStatusChange = async (orderId: string, newStatus: string) => {
+    // À implémenter
+    dev.log('Change status', orderId, newStatus);
   };
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "N/A";
-    try {
-      return new Date(dateString).toLocaleDateString("fr-FR", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    } catch {
-      return "Date invalide";
+  const handleDelete = async () => {
+    if (orderToDelete) {
+      await deleteOrder(orderToDelete._id);
+      setShowDeleteConfirm(false);
+      setOrderToDelete(null);
     }
   };
 
-  const formatPrice = (price?: number) => {
-    if (!price) return "0 Ar";
-    return `${price.toLocaleString("fr-FR")} Ar`;
-  };
-
-  const getTotalItems = (order: Order) => {
-    return (
-      order.items?.reduce((total, item) => total + (item.quantity || 0), 0) || 0
-    );
-  };
-
-  return (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Commande
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Articles
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Montant
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Statut
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Date
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {orders.map((order) => {
-              const statusConfig = getStatusConfig(order.status);
-              const StatusIcon = statusConfig.icon;
-
-              return (
-                <tr
-                  key={order._id}
-                  className="hover:bg-gray-50 transition-colors"
-                >
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      Commande #{order._id?.substring(-6) || "N/A"}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      Client: {order.clientId?.substring(-6) || "Non spécifié"}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900">
-                      {getTotalItems(order)} article
-                      {getTotalItems(order) !== 1 ? "s" : ""}
-                    </div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      {order.items?.length || 0} type
-                      {order.items?.length !== 1 ? "s" : ""}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-semibold text-gray-900">
-                      {formatPrice(order.totalPrice)}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <StatusIcon className="h-4 w-4 mr-2" />
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusConfig.color}`}
-                      >
-                        {order.status}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {formatDate(order.createdAt)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => onView(order._id)}
-                        className="text-blue-600 hover:text-blue-900 p-1 hover:bg-blue-50 rounded transition-colors"
-                        title="Voir détails"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => onEdit(order._id)}
-                        className="text-green-600 hover:text-green-900 p-1 hover:bg-green-50 rounded transition-colors"
-                        title="Modifier"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => onDelete(order._id)}
-                        className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded transition-colors"
-                        title="Supprimer"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Status Quick Actions */}
-      {onUpdateStatus && (
-        <div className="bg-gray-50 px-6 py-3 border-t border-gray-200">
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600">
-              {orders.length} commande{orders.length !== 1 ? "s" : ""} au total
-            </span>
-            <div className="flex space-x-2">
-              <span className="text-sm text-gray-600">Actions rapides:</span>
-              <select
-                className="text-sm border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                onChange={(e) => {
-                  const status = e.target.value as Order["status"];
-                  if (status && orders.length > 0) {
-                    // Appliquer à toutes les commandes sélectionnées (ici on prend la première)
-                    onUpdateStatus(orders[0]._id, status);
-                  }
-                }}
-              >
-                <option value="">Changer statut</option>
-                <option value="PENDING">En attente</option>
-                <option value="PROCESSING">En traitement</option>
-                <option value="COMPLETED">Terminée</option>
-                <option value="CANCELLED">Annulée</option>
-              </select>
+  const columns = [
+    {
+      key: 'orderNumber',
+      label: 'N° Commande',
+      render: (order: Order) => (
+        <div className="flex items-center space-x-3">
+          <span className="font-medium text-dark-teal">
+            #{order.orderNumber}
+          </span>
+          {order.priority === 'URGENT' && (
+            <Badge variant="danger" size="sm">Urgent</Badge>
+          )}
+        </div>
+      )
+    },
+    {
+      key: 'client',
+      label: 'Client',
+      render: (order: Order) => (
+        <div className="flex items-center space-x-3">
+          <Avatar 
+            name={`${order.client.firstName} ${order.client.lastName}`}
+            size="sm"
+          />
+          <div>
+            <div className="font-medium">
+              {order.client.firstName} {order.client.lastName}
             </div>
+            {order.client.company && (
+              <div className="text-sm text-dim-grey">
+                {order.client.company}
+              </div>
+            )}
           </div>
         </div>
-      )}
-    </div>
+      )
+    },
+    {
+      key: 'title',
+      label: 'Titre',
+      render: (order: Order) => (
+        <div>
+          <div className="font-medium">{order.title}</div>
+          <div className="text-sm text-dim-grey">
+            {order.designs.length} design{order.designs.length > 1 ? 's' : ''}
+          </div>
+        </div>
+      )
+    },
+    {
+      key: 'status',
+      label: 'Statut',
+      render: (order: any) => {
+        const config = statusConfig[order.status];
+        const Icon = config?.icon || Clock;
+        const variant = (config?.color as 'default' | 'success' | 'warning' | 'danger' | 'info' | 'secondary') || 'default';
+        return (
+          <Badge variant={variant} className="flex items-center space-x-1">
+            <Icon size={14} />
+            <span>{config?.label}</span>
+          </Badge>
+        );
+      }
+    },
+    {
+      key: 'priority',
+      label: 'Priorité',
+      render: (order: any) => {
+        const config = priorityConfig[order.priority];
+        const variant = (config?.color as 'default' | 'success' | 'warning' | 'danger' | 'info' | 'secondary') || 'default';
+        return (
+          <Badge variant={variant} size="sm">
+            {config?.label}
+          </Badge>
+        );
+      }
+    },
+    {
+      key: 'assignedTo',
+      label: 'Assigné à',
+      render: (order: Order) => {
+        const designer = order.assignedTo?.designer;
+        if (!designer) return <span className="text-dim-grey">Non assigné</span>;
+
+        if (typeof designer === 'string') {
+          return <span className="text-sm">{designer}</span>;
+        }
+
+        const designerObj = designer as any;
+        return (
+          <div className="flex items-center space-x-2">
+            <Avatar 
+              name={`${designerObj.firstName} ${designerObj.lastName}`}
+              size="sm"
+            />
+            <span className="text-sm">
+              {designerObj.firstName} {designerObj.lastName}
+            </span>
+          </div>
+        );
+      }
+    },
+    {
+      key: 'price',
+      label: 'Montant',
+      render: (order: Order) => (
+        <div className="font-medium">
+          {formatPrice(order.price.total, order.price.currency)}
+        </div>
+      )
+    },
+    {
+      key: 'requestedDate',
+      label: 'Date souhaitée',
+      render: (order: Order) => (
+        <div>
+          {order.requestedDate && (
+            <>
+              <div>{format(new Date(order.requestedDate), 'dd/MM/yyyy')}</div>
+              <div className="text-xs text-dim-grey">
+                {format(new Date(order.requestedDate), 'HH:mm')}
+              </div>
+            </>
+          )}
+        </div>
+      )
+    },
+    {
+      key: 'actions',
+      label: 'Actions',
+      render: (order: Order) => (
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onView ? onView(order) : navigate(`/orders/${order._id}`)}
+            title="Voir détails"
+          >
+            <Eye size={18} />
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onEdit ? onEdit(order) : navigate(`/orders/${order._id}/edit`)}
+            title="Modifier"
+          >
+            <Edit size={18} />
+          </Button>
+          
+          <Dropdown
+            trigger={
+              <Button variant="ghost" size="sm">
+                <MoreVertical size={18} />
+              </Button>
+            }
+            items={[
+              {
+                label: 'Changer statut',
+                icon: <Clock size={16} />,
+                onClick: () => handleStatusChange(order._id, 'IN_PROGRESS')
+              },
+              {
+                label: 'Messages',
+                icon: <MessageCircle size={16} />,
+                onClick: () => navigate(`/orders/${order._id}/messages`)
+              },
+              {
+                label: 'Facture',
+                icon: <Download size={16} />,
+                onClick: () => window.open(`/api/orders/${order._id}/invoice`)
+              },
+              {
+                label: 'Supprimer',
+                icon: <Trash2 size={16} />,
+                onClick: () => {
+                  setOrderToDelete(order);
+                  setShowDeleteConfirm(true);
+                },
+                className: 'text-red-600 hover:text-red-700'
+              }
+            ]}
+          />
+        </div>
+      )
+    }
+  ];
+
+  return (
+    <>
+      <DataTable
+        data={orders}
+        columns={columns}
+        keyExtractor={(order) => order._id}
+        isLoading={isLoading}
+        pagination={{
+          page: pagination?.page || 1,
+          limit: pagination?.limit || 20,
+          total: pagination?.total || 0
+        }}
+        onPageChange={(page: number) => setFilters({ page })}
+        onSort={(key, order) => setFilters({ sortBy: key, sortOrder: order })}
+      />
+      
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDelete}
+        title="Supprimer la commande"
+        message={`Êtes-vous sûr de vouloir supprimer la commande #${orderToDelete?.orderNumber} ? Cette action est irréversible.`}
+        confirmText="Supprimer"
+        cancelText="Annuler"
+        variant="danger"
+      />
+    </>
   );
 };
-
-export default OrdersTable;

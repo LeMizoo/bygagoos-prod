@@ -1,10 +1,13 @@
+// backend/src/middlewares/role.middleware.ts
+
 import { Request, Response, NextFunction } from 'express';
 import { AppError } from '../core/utils/errors/AppError';
 import { HTTP_STATUS } from '../core/constants/httpStatus';
 import logger from '../core/utils/logger';
+import { RequestUser } from './auth.middleware';
 
 export interface AuthRequest extends Request {
-  user?: any;
+  user?: RequestUser;
 }
 
 /**
@@ -39,6 +42,11 @@ export const roleMiddleware = (allowedRoles: string[]) => {
 };
 
 /**
+ * Middleware d'autorisation par rôle (alias plus explicite)
+ */
+export const authorize = roleMiddleware;
+
+/**
  * Middleware pour vérifier si l'utilisateur est Super Admin
  */
 export const isSuperAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -50,6 +58,34 @@ export const isSuperAdmin = (req: AuthRequest, res: Response, next: NextFunction
  */
 export const isAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
   return roleMiddleware(['ADMIN', 'SUPER_ADMIN'])(req, res, next);
+};
+
+/**
+ * Middleware pour vérifier si l'utilisateur est Manager ou supérieur
+ */
+export const isManager = (req: AuthRequest, res: Response, next: NextFunction) => {
+  return roleMiddleware(['MANAGER', 'ADMIN', 'SUPER_ADMIN'])(req, res, next);
+};
+
+/**
+ * Middleware pour vérifier si l'utilisateur est Designer ou supérieur
+ */
+export const isDesigner = (req: AuthRequest, res: Response, next: NextFunction) => {
+  return roleMiddleware(['DESIGNER', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'])(req, res, next);
+};
+
+/**
+ * Middleware pour vérifier si l'utilisateur est Staff ou supérieur
+ */
+export const isStaff = (req: AuthRequest, res: Response, next: NextFunction) => {
+  return roleMiddleware(['STAFF', 'DESIGNER', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'])(req, res, next);
+};
+
+/**
+ * Middleware pour vérifier si l'utilisateur est Client
+ */
+export const isClient = (req: AuthRequest, res: Response, next: NextFunction) => {
+  return roleMiddleware(['CLIENT'])(req, res, next);
 };
 
 /**

@@ -153,7 +153,7 @@ async function seedUsers() {
     console.log(`✅ ${insertedUsers.length} utilisateurs en base`);
     console.log(`🔐 Authentification fonctionnelle (bcrypt)`);
     console.log(`🌐 Backend prêt sur http://localhost:5000`);
-    console.log(`🎨 Frontend prêt sur http://localhost:3001`);
+    console.log(`🎨 Frontend prêt sur http://localhost:3000`);
     console.log('\n🔑 Identifiants de test:');
     console.log(`   Super Admin: tovoniaina.rahendrison@gmail.com / SuperAdmin2026!`);
     console.log(`   Admin: dedettenadia@gmail.com / Admin123!`);

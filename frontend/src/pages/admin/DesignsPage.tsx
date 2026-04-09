@@ -15,6 +15,7 @@ import {
 import { adminDesignsApi } from "../../api/adminDesigns.api";
 // Importer directement depuis design.ts pour éviter les conflits
 import type { Design as DesignType, DesignCategory } from "../../types/design";
+import dev from '../../utils/devLogger';
 
 export default function DesignsPage() {
   const [designs, setDesigns] = useState<DesignType[]>([]);
@@ -61,7 +62,7 @@ export default function DesignsPage() {
         : (response.data as any)?.designs || [];
       setDesigns(designsData.filter((d: any) => d && d._id)); // Filtrer les designs valides avec _id
     } catch (error) {
-      console.error("Erreur lors du chargement des designs:", error);
+      dev.error("Erreur lors du chargement des designs:", error);
       setDesigns([]);
     } finally {
       setLoading(false);
@@ -79,7 +80,7 @@ export default function DesignsPage() {
         popular: (statsData?.popular || []) as any[],
       });
     } catch (error) {
-      console.error("Erreur lors du chargement des statistiques:", error);
+      dev.error("Erreur lors du chargement des statistiques:", error);
     }
   };
 
@@ -90,7 +91,7 @@ export default function DesignsPage() {
         loadDesigns();
         loadStats();
       } catch (error) {
-        console.error("Erreur lors de la suppression:", error);
+        dev.error("Erreur lors de la suppression:", error);
         alert("Erreur lors de la suppression du design");
       }
     }
@@ -104,7 +105,7 @@ export default function DesignsPage() {
       await adminDesignsApi.updateDesignStatus(id, status);
       loadDesigns();
     } catch (error) {
-      console.error("Erreur lors de la mise à jour du statut:", error);
+      dev.error("Erreur lors de la mise à jour du statut:", error);
       alert("Erreur lors de la mise à jour du statut");
     }
   };

@@ -1,288 +1,262 @@
 // frontend/src/components/admin/StaffTable.tsx
+import React from "react";
 import { Link } from "react-router-dom";
-import { Edit, Trash2, User, UserCheck, UserX, Eye } from "lucide-react";
+import {
+  Eye,
+  Edit,
+  Trash2,
+  Mail,
+  Phone,
+  Briefcase,
+  Calendar,
+  MoreVertical,
+  User,
+  Shield,
+} from "lucide-react";
 import { StaffMember } from "../../api/adminStaff.api";
+import { formatDate } from "../../utils/formatters";
 
-interface StaffTableProps {
+export interface StaffTableProps {
   staff: StaffMember[];
   onDelete: (id: string) => void;
-  onToggleStatus: (id: string, isActive: boolean) => void;
+  onToggleStatus: (id: string, currentStatus: boolean) => void;
+  selectedStaff?: Set<string>;
+  onSelectStaff?: (id: string) => void;
+  onSelectAll?: () => void;
+  canEdit?: boolean;
+  canDelete?: boolean;
+  onRefresh?: () => void;
+  onExport?: () => void;
+  loading?: boolean;
 }
 
-export default function StaffTable({
+const StaffTable: React.FC<StaffTableProps> = ({
   staff,
   onDelete,
   onToggleStatus,
-}: StaffTableProps) {
-  // Validation des données
-  if (!staff || !Array.isArray(staff)) {
+  selectedStaff = new Set(),
+  onSelectStaff,
+  onSelectAll,
+  canEdit = true,
+  canDelete = true,
+  onRefresh,
+  onExport,
+  loading = false,
+}) => {
+  const [expandedRow, setExpandedRow] = React.useState<string | null>(null);
+
+  if (loading) {
     return (
-      <div className="text-center py-12 border-2 border-dashed border-gray-200 rounded-lg">
-        <User className="mx-auto h-12 w-12 text-gray-400" />
-        <h3 className="mt-4 text-lg font-medium text-gray-900">
-          Données invalides
-        </h3>
-        <p className="mt-1 text-sm text-gray-500">
-          Les données du personnel sont corrompues ou indisponibles.
-        </p>
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="p-4 border-b border-gray-200">
+          <div className="h-6 bg-gray-200 rounded w-48 animate-pulse"></div>
+        </div>
+        <div className="p-4">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="flex items-center space-x-4 py-3 border-b border-gray-100 last:border-0">
+              <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
+              <div className="flex-1">
+                <div className="h-4 bg-gray-200 rounded w-32 mb-2 animate-pulse"></div>
+                <div className="h-3 bg-gray-200 rounded w-24 animate-pulse"></div>
+              </div>
+              <div className="w-20 h-6 bg-gray-200 rounded animate-pulse"></div>
+              <div className="w-24 h-8 bg-gray-200 rounded animate-pulse"></div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
-
-  if (staff.length === 0) {
-    return (
-      <div className="text-center py-12 border-2 border-dashed border-gray-200 rounded-lg">
-        <User className="mx-auto h-12 w-12 text-gray-400" />
-        <h3 className="mt-4 text-lg font-medium text-gray-900">Aucun membre</h3>
-        <p className="mt-1 text-sm text-gray-500">
-          Aucun membre du personnel n'a été trouvé.
-        </p>
-      </div>
-    );
-  }
-
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "N/A";
-    try {
-      return new Date(dateString).toLocaleDateString("fr-FR");
-    } catch {
-      return "Date invalide";
-    }
-  };
-
-  const getRoleBadgeColor = (role: string) => {
-    const colors: Record<string, string> = {
-      FOUNDER: "bg-purple-100 text-purple-800",
-      INSPIRATION: "bg-pink-100 text-pink-800",
-      PRODUCTION: "bg-blue-100 text-blue-800",
-      CREATION: "bg-green-100 text-green-800",
-      ADMIN_INSPIRATION: "bg-pink-100 text-pink-800",
-      ADMIN_PRODUCTION: "bg-blue-100 text-blue-800",
-      ADMIN_COMMUNICATION: "bg-green-100 text-green-800",
-      SUPER_ADMIN: "bg-purple-100 text-purple-800",
-      ARTISAN: "bg-yellow-100 text-yellow-800",
-      USER: "bg-gray-100 text-gray-800",
-      STAFF: "bg-gray-100 text-gray-800",
-      ADMIN: "bg-blue-100 text-blue-800",
-      MANAGER: "bg-indigo-100 text-indigo-800",
-    };
-    return colors[role] || "bg-gray-100 text-gray-800";
-  };
-
-  const getDepartmentBadgeColor = (department?: string) => {
-    if (!department) return "bg-gray-50 text-gray-700 border-gray-200";
-
-    const colors: Record<string, string> = {
-      INSPIRATION: "bg-pink-50 text-pink-700 border-pink-200",
-      PRODUCTION: "bg-blue-50 text-blue-700 border-blue-200",
-      COMMUNICATION: "bg-green-50 text-green-700 border-green-200",
-      ADMINISTRATION: "bg-purple-50 text-purple-700 border-purple-200",
-      LOGISTIQUE: "bg-orange-50 text-orange-700 border-orange-200",
-      CREATION: "bg-teal-50 text-teal-700 border-teal-200",
-      SALES: "bg-red-50 text-red-700 border-red-200",
-      MANAGEMENT: "bg-indigo-50 text-indigo-700 border-indigo-200",
-    };
-    return colors[department] || "bg-gray-50 text-gray-700 border-gray-200";
-  };
-
-  const getDisplayName = (member: StaffMember) => {
-    if (member.displayName && member.displayName.trim()) {
-      return member.displayName;
-    }
-    return (
-      `${member.firstName || ""} ${member.lastName || ""}`.trim() ||
-      "Nom inconnu"
-    );
-  };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
+        <table className="w-full">
           <thead className="bg-gray-50">
             <tr>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Membre
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Rôle & Département
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Responsabilités
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Statut
-              </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Actions
-              </th>
+              {onSelectStaff && onSelectAll && (
+                <th className="px-4 py-3 w-10">
+                  <input
+                    type="checkbox"
+                    checked={selectedStaff.size === staff.length && staff.length > 0}
+                    onChange={onSelectAll}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                </th>
+              )}
+              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Membre</th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Contact</th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Rôle</th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Département</th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Statut</th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Date d'embauche</th>
+              <th className="px-4 py-3 text-center text-sm font-medium text-gray-600">Actions</th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody>
             {staff.map((member) => (
-              <tr
-                key={member._id}
-                className="hover:bg-gray-50 transition-colors"
-              >
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0 h-10 w-10">
-                      {member.avatar ? (
-                        <img
-                          className="h-10 w-10 rounded-full object-cover"
-                          src={member.avatar}
-                          alt={getDisplayName(member)}
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).style.display =
-                              "none";
-                            const parent = (e.target as HTMLImageElement)
-                              .parentElement;
-                            if (parent) {
-                              parent.innerHTML = `
-                                <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                                  <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                  </svg>
-                                </div>
-                              `;
-                            }
-                          }}
-                        />
-                      ) : (
-                        <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                          <User className="h-6 w-6 text-blue-600" />
+              <React.Fragment key={member._id}>
+                <tr 
+                  className={`border-t border-gray-200 hover:bg-gray-50 transition-colors ${
+                    expandedRow === member._id ? 'bg-blue-50' : ''
+                  }`}
+                >
+                  {onSelectStaff && (
+                    <td className="px-4 py-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedStaff.has(member._id!)}
+                        onChange={() => onSelectStaff(member._id!)}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                    </td>
+                  )}
+
+                  <td className="px-4 py-3">
+                    <div className="flex items-center">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-medium shadow-sm">
+                        {member.firstName?.[0] || ''}{member.lastName?.[0] || ''}
+                      </div>
+                      <div className="ml-3">
+                        <p className="font-medium text-gray-900">
+                          {member.firstName} {member.lastName}
+                        </p>
+                        <p className="text-sm text-gray-500">{member.position || member.role}</p>
+                      </div>
+                    </div>
+                  </td>
+
+                  <td className="px-4 py-3">
+                    <div className="space-y-1">
+                      {member.email && (
+                        <div className="flex items-center text-sm text-gray-600">
+                          <Mail className="h-3.5 w-3.5 mr-1.5 text-gray-400" />
+                          <span className="truncate max-w-[150px]">{member.email}</span>
+                        </div>
+                      )}
+                      {member.phone && (
+                        <div className="flex items-center text-sm text-gray-600">
+                          <Phone className="h-3.5 w-3.5 mr-1.5 text-gray-400" />
+                          {member.phone}
                         </div>
                       )}
                     </div>
-                    <div className="ml-4">
-                      <div className="text-sm font-medium text-gray-900">
-                        {getDisplayName(member)}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {member.email || member.user?.email || "Non associé"}
-                      </div>
-                      <div className="text-xs text-gray-400">
-                        Depuis: {formatDate(member.joinedAt)}
-                      </div>
+                  </td>
+
+                  <td className="px-4 py-3">
+                    <div className="flex items-center">
+                      <Shield className="h-4 w-4 mr-2 text-gray-400" />
+                      <span className="text-sm text-gray-900">{member.role}</span>
                     </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="space-y-2">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeColor(member.role)}`}
-                    >
-                      {member.role.replace(/_/g, " ")}
-                    </span>
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getDepartmentBadgeColor(member.department)}`}
-                    >
-                      {member.department || "Non spécifié"}
-                    </span>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex flex-wrap gap-1 max-w-xs">
-                    {member.responsibilities &&
-                    member.responsibilities.length > 0 ? (
-                      <>
-                        {member.responsibilities
-                          .slice(0, 3)
-                          .map((resp, index) => (
-                            <span
-                              key={index}
-                              className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800"
-                              title={resp}
-                            >
-                              {resp.length > 15
-                                ? resp.substring(0, 15) + "..."
-                                : resp}
-                            </span>
-                          ))}
-                        {member.responsibilities.length > 3 && (
-                          <span
-                            className="text-xs text-gray-500"
-                            title={member.responsibilities.slice(3).join(", ")}
-                          >
-                            +{member.responsibilities.length - 3} autres
-                          </span>
-                        )}
-                      </>
-                    ) : (
-                      <span className="text-sm text-gray-500">
-                        Aucune responsabilité
-                      </span>
-                    )}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <button
-                    onClick={() => onToggleStatus(member._id, !member.isActive)}
-                    className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                      member.isActive
-                        ? "bg-green-100 text-green-800 hover:bg-green-200"
-                        : "bg-red-100 text-red-800 hover:bg-red-200"
-                    }`}
-                    title={`Cliquer pour ${member.isActive ? "désactiver" : "activer"}`}
-                  >
-                    {member.isActive ? (
-                      <>
-                        <UserCheck className="h-4 w-4 mr-1" />
-                        Actif
-                      </>
-                    ) : (
-                      <>
-                        <UserX className="h-4 w-4 mr-1" />
-                        Inactif
-                      </>
-                    )}
-                  </button>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <div className="flex space-x-2">
-                    <Link
-                      to={`/admin/staff/${member._id}`}
-                      className="text-blue-600 hover:text-blue-900 p-1 hover:bg-blue-50 rounded transition-colors"
-                      title="Voir les détails"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Link>
-                    <Link
-                      to={`/admin/staff/edit/${member._id}`}
-                      className="text-green-600 hover:text-green-900 p-1 hover:bg-green-50 rounded transition-colors"
-                      title="Modifier"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Link>
+                  </td>
+
+                  <td className="px-4 py-3 text-sm text-gray-700">
+                    {member.department ? (
+                      <div className="flex items-center">
+                        <Briefcase className="h-4 w-4 mr-2 text-gray-400" />
+                        {member.department}
+                      </div>
+                    ) : '-'}
+                  </td>
+
+                  <td className="px-4 py-3">
                     <button
-                      onClick={() => onDelete(member._id)}
-                      className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded transition-colors"
-                      title="Supprimer"
+                      onClick={() => onToggleStatus(member._id!, member.isActive)}
+                      disabled={!canEdit}
+                      className={`px-2 py-1 rounded-full text-xs font-medium transition-colors ${
+                        member.isActive
+                          ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                          : 'bg-red-100 text-red-800 hover:bg-red-200'
+                      } ${!canEdit ? 'cursor-not-allowed opacity-50' : ''}`}
+                      title={canEdit ? "Cliquer pour changer le statut" : "Permission refusée"}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      {member.isActive ? 'Actif' : 'Inactif'}
                     </button>
-                  </div>
-                </td>
-              </tr>
+                  </td>
+
+                  <td className="px-4 py-3 text-sm text-gray-600">
+                    {member.hireDate ? (
+                      <div className="flex items-center">
+                        <Calendar className="h-4 w-4 mr-2 text-gray-400" />
+                        {formatDate(member.hireDate)}
+                      </div>
+                    ) : '-'}
+                  </td>
+
+                  <td className="px-4 py-3">
+                    <div className="flex items-center justify-center gap-1">
+                      <Link
+                        to={`/admin/staff/${member._id}`}
+                        className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="Voir les détails"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Link>
+                      
+                      {canEdit && (
+                        <Link
+                          to={`/admin/staff/edit/${member._id}`}
+                          className="p-1.5 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-lg transition-colors"
+                          title="Modifier"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Link>
+                      )}
+                      
+                      {canDelete && (
+                        <button
+                          onClick={() => onDelete(member._id!)}
+                          className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Supprimer"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
+
+                      <button
+                        onClick={() => setExpandedRow(expandedRow === member._id ? null : member._id!)}
+                        className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors lg:hidden"
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+
+                {expandedRow === member._id && (
+                  <tr className="bg-blue-50 border-t border-blue-200 lg:hidden">
+                    <td colSpan={onSelectStaff ? 8 : 7} className="px-4 py-3">
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <p className="font-medium text-gray-700 mb-1">Informations</p>
+                          <p className="text-gray-600">Email: {member.email || '-'}</p>
+                          <p className="text-gray-600">Tél: {member.phone || '-'}</p>
+                          <p className="text-gray-600">Rôle: {member.role || '-'}</p>
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-700 mb-1">Détails</p>
+                          <p className="text-gray-600">Département: {member.department || '-'}</p>
+                          <p className="text-gray-600">Poste: {member.position || '-'}</p>
+                          <p className="text-gray-600">Date d'embauche: {member.hireDate ? formatDate(member.hireDate) : '-'}</p>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
             ))}
           </tbody>
         </table>
       </div>
+
+      {staff.length === 0 && (
+        <div className="text-center py-12">
+          <User className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+          <p className="text-gray-500">Aucun membre du personnel trouvé</p>
+        </div>
+      )}
     </div>
   );
-}
+};
+
+export default StaffTable;

@@ -1,3 +1,5 @@
+// frontend/src/App.tsx
+
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { useEffect } from "react";
@@ -15,6 +17,18 @@ import AboutPage from "./pages/AboutPage";
 import GalleryPage from "./pages/GalleryPage";
 import ContactPage from "./pages/ContactPage";
 
+// Pages Légales et Support (NOUVELLES)
+import { 
+  PrivacyPage, 
+  TermsPage, 
+  CookiesPage, 
+  ReturnsPage, 
+  HelpCenterPage,
+  FAQPage,
+  CareersPage,
+  PressPage
+} from "./pages/legal/LegalPages";
+
 // Pages d'authentification
 import LoginPage from "./pages/auth/LoginPage";
 import RegisterPage from "./pages/auth/RegisterPage";
@@ -29,13 +43,24 @@ import EditStaffPage from "./pages/admin/EditStaffPage";
 import CreateStaffPage from "./pages/admin/CreateStaffPage";
 import DesignsPage from "./pages/admin/DesignsPage";
 import CreateDesignPage from "./pages/admin/CreateDesignPage";
-import OrdersPage from "./pages/admin/OrdersPage";
-import CreateOrderPage from "./pages/admin/CreateOrderPage";
 import SettingsPage from "./pages/admin/SettingsPage";
 import ClientsPage from "./pages/admin/ClientsPage";
 import CreateClientPage from "./pages/admin/CreateClientPage";
 import ClientDetailPage from "./pages/admin/ClientDetailPage";
 import EditClientPage from "./pages/admin/EditClientPage";
+
+// Pages commandes
+import OrdersPage from "./pages/admin/OrdersPage";
+import CreateOrderPage from "./pages/admin/CreateOrderPage";
+import { OrderDetailsPage } from "./pages/admin/OrderDetailsPage";
+import { EditOrderPage } from "./pages/admin/EditOrderPage";
+
+// Pages utilisateur commandes
+import { UserOrdersPage } from "./pages/user/UserOrdersPage";
+import { UserOrderTrackingPage } from './pages/user/UserOrderTrackingPage';
+
+// Page de test
+import TestCreateClient from "./pages/admin/TestCreateClient";
 
 // Pages utilisateur
 import ProfilePage from "./pages/user/ProfilePage";
@@ -52,13 +77,8 @@ function App() {
   const { checkAuth, isAuthenticated, user } = useAuthStore();
 
   useEffect(() => {
-    console.log('🔄 Vérification de l\'authentification...');
     checkAuth();
   }, [checkAuth]);
-
-  useEffect(() => {
-    console.log('👤 État auth:', { isAuthenticated, user });
-  }, [isAuthenticated, user]);
 
   return (
     <ThemeProvider>
@@ -66,29 +86,19 @@ function App() {
         position="top-right"
         toastOptions={{
           duration: 4000,
-          style: {
-            background: "#363636",
-            color: "#fff",
-          },
+          style: { background: "#363636", color: "#fff" },
           success: {
             duration: 3000,
-            iconTheme: {
-              primary: "#10b981",
-              secondary: "#fff",
-            },
+            iconTheme: { primary: "#10b981", secondary: "#fff" },
           },
           error: {
             duration: 4000,
-            iconTheme: {
-              primary: "#ef4444",
-              secondary: "#fff",
-            },
+            iconTheme: { primary: "#ef4444", secondary: "#fff" },
           },
         }}
       />
 
       <Routes>
-        {/* Redirection racine */}
         <Route path="/" element={<Navigate to="/home" replace />} />
 
         {/* ===== ROUTES PUBLIQUES AVEC MAIN LAYOUT ===== */}
@@ -97,9 +107,19 @@ function App() {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/gallery" element={<GalleryPage />} />
           <Route path="/contact" element={<ContactPage />} />
+          
+          {/* Nouvelles routes issues du Footer */}
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/cookies" element={<CookiesPage />} />
+          <Route path="/returns" element={<ReturnsPage />} />
+          <Route path="/help" element={<HelpCenterPage />} />
+          <Route path="/faq" element={<FAQPage />} />
+          <Route path="/careers" element={<CareersPage />} />
+          <Route path="/press" element={<PressPage />} />
         </Route>
 
-        {/* ===== ROUTES D'AUTHENTIFICATION SANS LAYOUT PRINCIPAL ===== */}
+        {/* ===== ROUTES D'AUTHENTIFICATION ===== */}
         <Route path="/auth" element={<AuthLayout />}>
           <Route index element={<Navigate to="login" replace />} />
           <Route path="login" element={<LoginPage />} />
@@ -112,43 +132,36 @@ function App() {
         <Route
           path="/admin"
           element={
-            <ProtectedRoute requiredRoles={["ADMIN", "SUPER_ADMIN"]}>
+            <ProtectedRoute requiredRoles={["ADMIN", "SUPER_ADMIN", "MANAGER"]}>
               <AdminLayout />
             </ProtectedRoute>
           }
         >
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
-
-          {/* Staff */}
           <Route path="staff">
             <Route index element={<AdminStaffPage />} />
             <Route path="create" element={<CreateStaffPage />} />
             <Route path=":id" element={<StaffDetailPage />} />
             <Route path="edit/:id" element={<EditStaffPage />} />
           </Route>
-
-          {/* Designs */}
           <Route path="designs">
             <Route index element={<DesignsPage />} />
             <Route path="create" element={<CreateDesignPage />} />
           </Route>
-
-          {/* Orders */}
           <Route path="orders">
             <Route index element={<OrdersPage />} />
             <Route path="create" element={<CreateOrderPage />} />
+            <Route path=":id" element={<OrderDetailsPage />} />
+            <Route path="edit/:id" element={<EditOrderPage />} />
           </Route>
-
-          {/* Clients */}
           <Route path="clients">
             <Route index element={<ClientsPage />} />
             <Route path="create" element={<CreateClientPage />} />
             <Route path=":id" element={<ClientDetailPage />} />
             <Route path="edit/:id" element={<EditClientPage />} />
+            <Route path="test-client" element={<TestCreateClient />} />
           </Route>
-
-          {/* Settings */}
           <Route path="settings" element={<SettingsPage />} />
         </Route>
 
@@ -156,7 +169,7 @@ function App() {
         <Route
           path="/user"
           element={
-            <ProtectedRoute requiredRoles={["USER", "CLIENT", "user", "client"]}>
+            <ProtectedRoute requiredRoles={["SUPER_ADMIN", "ADMIN", "STAFF", "CLIENT", "USER"]}>
               <MainLayout />
             </ProtectedRoute>
           }
@@ -164,6 +177,8 @@ function App() {
           <Route index element={<Navigate to="profile" replace />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="my-orders" element={<MyOrdersPage />} />
+          <Route path="orders" element={<UserOrdersPage />} />
+          <Route path="orders/:id" element={<UserOrderTrackingPage />} />
         </Route>
 
         {/* ===== ROUTES D'ERREUR ===== */}

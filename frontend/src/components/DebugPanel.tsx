@@ -1,12 +1,13 @@
 import React from "react";
 import { useAuthStore } from "../stores/authStore";
+import dev from "../utils/devLogger";
 
 const DebugPanel: React.FC = () => {
   const { user, token, isAuthenticated } = useAuthStore();
 
   const testApi = async () => {
     try {
-      console.log("🧪 Testing API...");
+      dev.log("🧪 Testing API...");
 
       // Test /auth/me
       const response = await fetch("/api/auth/me", {
@@ -16,13 +17,13 @@ const DebugPanel: React.FC = () => {
         },
       });
 
-      console.log("✅ /auth/me:", {
+      dev.log("✅ /auth/me:", {
         status: response.status,
         ok: response.ok,
         data: await response.json(),
       });
     } catch (error) {
-      console.error("❌ API test failed:", error);
+      dev.error("❌ API test failed:", error);
     }
   };
 

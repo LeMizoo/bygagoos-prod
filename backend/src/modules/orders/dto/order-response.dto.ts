@@ -70,14 +70,14 @@ export class OrderResponseDTO {
       notes: item.notes
     }));
     
-    this.subtotal = order.subtotal;
-    this.tax = order.tax;
-    this.discount = order.discount;
-    this.total = order.total;
+    this.subtotal = order.subtotal || order.price?.subtotal || 0;
+    this.tax = order.tax || order.price?.tax || 0;
+    this.discount = order.discount || order.price?.discount?.value || 0;
+    this.total = order.total || order.price?.total || 0;
     this.status = order.status;
-    this.payments = order.payments || [];
-    this.paymentStatus = order.paymentStatus;
-    this.paymentDue = order.paymentDue;
+    this.payments = order.payment?.transactions || [];
+    this.paymentStatus = order.payment?.status || PaymentStatus.PENDING;
+    this.paymentDue = order.payment?.dueDate;
     this.notes = order.notes;
     this.terms = order.terms;
     

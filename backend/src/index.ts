@@ -1,56 +1,89 @@
+// backend/src/index.ts
+
+import dns from 'dns';
+import http from 'http';
 import app from './app';
 import { env } from './config/env';
 import { connectDatabase } from './config/database';
-import { connectRedis, disconnectRedis } from './config/redis';
+import redisClient from './core/config/redis.config';
 import logger from './core/utils/logger';
-import http from 'http';
+import { AddressInfo } from 'net';
+
+// Forcer les DNS publics
+dns.setServers(['8.8.8.8', '1.1.1.1']);
+
+// Gestion des alertes de dépréciation
+process.on('warning', (warning: Error) => {
+  const warn = warning as Error & { code?: string };
+  if (warn.name === 'DeprecationWarning' && warn.code === 'DEP0169') return;
+  console.warn(warning);
+});
 
 const PORT = env.PORT;
 let server: http.Server;
-let redisConnected = false; // Variable pour suivre l'état Redis
+let redisConnected = false;
 
 const startServer = async () => {
   try {
-    // Connexion MongoDB
     await connectDatabase();
     
-    // Connexion Redis (non bloquante en dev si Redis n'est pas disponible)
     try {
-      await connectRedis();
-      redisConnected = true; // Redis connecté avec succès
-      logger.info('✅ Redis connecté avec succès');
+      await redisClient.connect();
+      redisConnected = redisClient.isReady();
+      logger.info('✅ Redis client avancé initialisé');
     } catch (redisError) {
-      redisConnected = false; // Redis non connecté
-      logger.warn('⚠️ Redis non disponible, fonctionnement en mode dégradé:', redisError);
+      redisConnected = false;
+      logger.warn('⚠️ Redis non disponible, mode dégradé activé:', redisError);
     }
     
-    // Création serveur HTTP explicite
     server = http.createServer(app);
-    
-    server.listen(PORT, () => {
-      logger.info(`
-🚀 Serveur démarré avec succès !
-================================
-📡 Port: ${PORT}
-🌍 Environnement: ${env.NODE_ENV}
-🔗 URL: http://localhost:${PORT}
-📦 MongoDB: Connecté
-🧠 Redis: ${redisConnected ? 'Connecté' : 'Non connecté (mode dégradé)'}
-🔐 JWT: ${env.JWT_ACCESS_EXPIRES_IN} / ${env.JWT_REFRESH_EXPIRES_IN}
-📤 Upload: ${env.MAX_FILE_SIZE / 1024 / 1024}MB max
-================================
-      `);
-    });
 
-    // Gestion des erreurs du serveur
-    server.on('error', (error: any) => {
+    const desiredPort = Number(PORT);
+    const fallbackPort = Number(env.FALLBACK_PORT) || desiredPort + 1;
+
+    const listenOn = (port: number) =>
+      new Promise<void>((resolve, reject) => {
+        const onError = (err: Error) => {
+          server.removeListener('listening', onListening);
+          reject(err);
+        };
+        const onListening = () => {
+          server.removeListener('error', onError);
+          resolve();
+        };
+        server.once('error', onError);
+        server.once('listening', onListening);
+        server.listen(port);
+      });
+
+    try {
+      await listenOn(desiredPort);
+      logger.info(`🚀 Écoute sur le port ${desiredPort}`);
+    } catch (err: unknown) {
+      const error = err as Error & { code?: string };
       if (error.code === 'EADDRINUSE') {
-        logger.error(`❌ Port ${PORT} déjà utilisé`);
-        process.exit(1);
+        logger.warn(`⚠️ Port ${desiredPort} déjà utilisé, tentative sur ${fallbackPort}...`);
+        await listenOn(fallbackPort);
+        logger.info(`🚀 Écoute sur le port ${fallbackPort}`);
       } else {
-        logger.error('❌ Erreur serveur:', error);
+        throw error;
       }
-    });
+    }
+
+    // Correction ESLint : Utilisation de AddressInfo au lieu de any
+    const addr = server.address() as AddressInfo;
+    const activePort = addr ? addr.port : desiredPort;
+
+    logger.info(`
+  🚀 Serveur démarré avec succès !
+  ================================
+  📡 Port: ${activePort}
+  🌍 Environnement: ${env.NODE_ENV}
+  🔗 URL: http://localhost:${activePort}
+  📦 MongoDB: Connecté
+  🧠 Redis: ${redisConnected ? 'Connecté' : 'Non connecté'}
+  ================================
+    `);
 
   } catch (error) {
     logger.error('❌ Erreur lors du démarrage:', error);
@@ -58,27 +91,20 @@ const startServer = async () => {
   }
 };
 
-// ==================== SHUTDOWN PROPRE ====================
 const gracefulShutdown = async (signal: string) => {
-  logger.info(`👋 ${signal} reçu, arrêt gracieux en cours...`);
+  logger.info(`👋 ${signal} reçu, arrêt en cours...`);
   
-  // Timeout de sécurité
   const forceExit = setTimeout(() => {
-    logger.error('⏰ Arrêt forcé après délai');
     process.exit(1);
   }, 10000);
 
   if (server) {
     server.close(async () => {
-      logger.info('🛑 Serveur HTTP fermé');
-      
       try {
-        await disconnectRedis();
-        logger.info('🧠 Redis déconnecté');
+        await redisClient.disconnect();
       } catch (err) {
         logger.error('Erreur fermeture Redis:', err);
       }
-      
       clearTimeout(forceExit);
       process.exit(0);
     });
@@ -88,20 +114,15 @@ const gracefulShutdown = async (signal: string) => {
   }
 };
 
-// Gestion des signaux
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-
-// Gestion des exceptions non capturées
 process.on('uncaughtException', (error) => {
   logger.error('❌ Exception non capturée:', error);
   gracefulShutdown('uncaughtException');
 });
-
 process.on('unhandledRejection', (reason) => {
   logger.error('❌ Rejet non géré:', reason);
   gracefulShutdown('unhandledRejection');
 });
 
-// ==================== START ====================
 startServer();

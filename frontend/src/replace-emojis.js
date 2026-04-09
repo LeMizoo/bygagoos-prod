@@ -3,19 +3,19 @@ const path = require('path');
 
 // Remplacements pour les emojis courants
 const replacements = {
-    'í¾¨': '<Palette className="h-5 w-5" />',
-    'í±¨â€í±©â€í±§â€í±¦': '<Users className="h-5 w-5" />',
-    'í¼±': '<Sprout className="h-5 w-5" />',
-    'í³¦': '<Package className="h-5 w-5" />',
+    'ï¿½ï¿½ï¿½': '<Palette className="h-5 w-5" />',
+    'ï¿½ï¿½ï¿½â€ï¿½ï¿½ï¿½â€ï¿½ï¿½ï¿½â€ï¿½ï¿½ï¿½': '<Users className="h-5 w-5" />',
+    'ï¿½ï¿½ï¿½': '<Sprout className="h-5 w-5" />',
+    'ï¿½ï¿½ï¿½': '<Package className="h-5 w-5" />',
     'âš™ï¸': '<Settings className="h-5 w-5" />',
-    'í¾¯': '<Target className="h-5 w-5" />',
-    'íº€': '<Rocket className="h-5 w-5" />',
+    'ï¿½ï¿½ï¿½': '<Target className="h-5 w-5" />',
+    'ï¿½ï¿½ï¿½': '<Rocket className="h-5 w-5" />',
     'âœ¨': '<Sparkles className="h-5 w-5" />',
     'âœ“': '<Check className="h-5 w-5" />',
     'â†’': '<ArrowRight className="h-5 w-5" />',
-    'í³': '<Phone className="h-5 w-5" />',
-    'í³§': '<Mail className="h-5 w-5" />',
-    'í³': '<MapPin className="h-5 w-5" />'
+    'ï¿½ï¿½ï¿½': '<Phone className="h-5 w-5" />',
+    'ï¿½ï¿½ï¿½': '<Mail className="h-5 w-5" />',
+    'ï¿½ï¿½ï¿½': '<MapPin className="h-5 w-5" />'
 };
 
 // Fonction pour remplacer dans un fichier
@@ -26,10 +26,11 @@ function replaceInFile(filePath) {
         
         for (const [emoji, replacement] of Object.entries(replacements)) {
             if (content.includes(emoji)) {
-                content = content.replace(new RegExp(emoji, 'g'), replacement);
-                modified = true;
-                console.log(`   RemplacÃ© ${emoji} dans ${path.basename(filePath)}`);
-            }
+                    content = content.replace(new RegExp(emoji, 'g'), replacement);
+                    modified = true;
+                    // Use dev-style logging only in scripts: keep console here but mark ESLint
+                    console.log(`   RemplacÃ© ${emoji} dans ${path.basename(filePath)}`);
+                }
         }
         
         if (modified) {
@@ -58,7 +59,8 @@ function walkDir(dir) {
 }
 
 // ExÃ©cuter
-console.log('í´ Recherche des emojis dans les fichiers...');
+/* eslint-disable no-console */
+console.log('ï¿½ï¿½ï¿½ Recherche des emojis dans les fichiers...');
 walkDir('.');
 
 let count = 0;

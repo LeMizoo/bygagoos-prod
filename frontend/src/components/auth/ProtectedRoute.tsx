@@ -1,23 +1,28 @@
+// frontend/src/components/auth/ProtectedRoute.tsx
+
 import { ReactNode, useEffect } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "../../stores/authStore";
+import { dev } from '../../utils/devLogger';
 
 export interface ProtectedRouteProps {
   children: ReactNode;
   requiredRole?: string;
   requiredRoles?: string[];
+  allowSuperAdmin?: boolean;
 }
 
 const ProtectedRoute = ({
   children,
   requiredRole,
   requiredRoles = [],
+  allowSuperAdmin = true,
 }: ProtectedRouteProps) => {
   const { user, isAuthenticated, isLoading } = useAuthStore();
   const location = useLocation();
 
   useEffect(() => {
-    console.log('🛡️ ProtectedRoute - Vérification:', {
+    dev.log('🛡️ ProtectedRoute - Vérification:', {
       path: location.pathname,
       isAuthenticated,
       userRole: user?.role,
@@ -34,29 +39,40 @@ const ProtectedRoute = ({
   }
 
   if (!isAuthenticated || !user) {
-    console.log('❌ Non authentifié, redirection vers login');
+    dev.log('❌ Non authentifié, redirection vers login');
     return <Navigate to="/auth/login" state={{ from: location }} replace />;
   }
 
-  const rolesToCheck: string[] = requiredRole ? [requiredRole] : requiredRoles;
+  const userRole = user.role?.toUpperCase() || '';
 
-  if (rolesToCheck.length > 0) {
-    const userRole = user.role?.toUpperCase() || '';
-    const allowedRoles = rolesToCheck.map(r => r.toUpperCase());
-    
-    console.log('🔍 Vérification rôle:', {
-      userRole,
-      allowedRoles,
-      match: allowedRoles.includes(userRole)
-    });
-    
-    if (!allowedRoles.includes(userRole)) {
-      console.log('❌ Rôle non autorisé, redirection vers unauthorized');
-      return <Navigate to="/unauthorized" replace />;
-    }
+  // SUPER_ADMIN a toujours accès si allowSuperAdmin est true
+  if (allowSuperAdmin && userRole === 'SUPER_ADMIN') {
+    dev.log('✅ SUPER_ADMIN - Accès autorisé');
+    return <>{children}</>;
   }
 
-  console.log('✅ Accès autorisé');
+  const rolesToCheck: string[] = requiredRole 
+    ? [requiredRole.toUpperCase()] 
+    : requiredRoles.map(r => r.toUpperCase());
+
+  // Si aucune restriction de rôle, tout utilisateur authentifié a accès
+  if (rolesToCheck.length === 0) {
+    dev.log('✅ Aucune restriction de rôle, accès autorisé');
+    return <>{children}</>;
+  }
+
+  dev.log('🔍 Vérification rôle:', {
+    userRole,
+    allowedRoles: rolesToCheck,
+    match: rolesToCheck.includes(userRole)
+  });
+
+  if (!rolesToCheck.includes(userRole)) {
+    dev.log('❌ Rôle non autorisé, redirection vers unauthorized');
+    return <Navigate to="/unauthorized" replace />;
+  }
+
+  dev.log('✅ Accès autorisé');
   return <>{children}</>;
 };
 

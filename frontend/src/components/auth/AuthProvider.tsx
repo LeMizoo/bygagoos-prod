@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuthStore } from "../../stores/authStore";
+import dev from '../../utils/devLogger';
 
 export default function AuthProvider({
   children,
@@ -14,7 +15,7 @@ export default function AuthProvider({
       try {
         await checkAuth();
       } catch (error) {
-        console.error("Auth check failed:", error);
+        dev.error("Auth check failed:", error);
       } finally {
         setIsChecking(false);
       }

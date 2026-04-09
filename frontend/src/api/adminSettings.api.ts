@@ -6,7 +6,7 @@ export interface AppSettings {
   language?: string;
   enableAnalytics?: boolean;
   enableMaintenance?: boolean;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export const adminSettingsApi = {

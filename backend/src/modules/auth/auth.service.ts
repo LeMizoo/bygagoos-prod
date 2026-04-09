@@ -1,3 +1,5 @@
+// backend/src/modules/auth/auth.service.ts
+
 import User from '../users/user.model';
 import { generateAccessToken } from './utils/jwt';
 import { RefreshTokenService } from './refreshToken.service';
@@ -5,228 +7,163 @@ import bcrypt from 'bcrypt';
 import { AppError } from '../../core/utils/errors/AppError';
 import { HTTP_STATUS } from '../../core/constants/httpStatus';
 import logger from '../../core/utils/logger';
+import { RegisterDto, LoginDto, UpdateProfileDto } from './dto';
+import { env } from '../../config/env';
+import { Document } from 'mongoose';
 
 export class AuthService {
   /**
-   * Inscription d'un nouvel utilisateur
+   * Helper pour formater la réponse utilisateur sans utiliser 'any'
    */
-  async register(userData: any) {
-    const { email, password, firstName, lastName } = userData;
+  private formatUserResponse(user: Document) {
+    const userObj = user.toObject() as Record<string, unknown>;
+    const avatarPath = userObj.avatar as string | undefined;
+    let fullAvatarUrl = avatarPath || null;
 
-    // Vérifier si l'utilisateur existe déjà
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      throw new AppError(
-        'Un utilisateur avec cet email existe déjà',
-        HTTP_STATUS.CONFLICT
-      );
+    if (avatarPath && !avatarPath.startsWith('http')) {
+      const baseUrl = env.API_URL;
+      fullAvatarUrl = `${baseUrl}${avatarPath.startsWith('/') ? '' : '/'}${avatarPath}`;
     }
 
-    // Hasher le mot de passe
-    const hashedPassword = await bcrypt.hash(password, 12);
+    return {
+      id: userObj._id,
+      email: userObj.email,
+      firstName: userObj.firstName,
+      lastName: userObj.lastName,
+      name: userObj.name,
+      role: userObj.role,
+      phone: userObj.phone,
+      avatar: fullAvatarUrl,
+      address: userObj.address || null,
+      isActive: userObj.isActive,
+      lastLogin: userObj.lastLogin,
+      createdAt: userObj.createdAt,
+      updatedAt: userObj.updatedAt,
+    };
+  }
 
-    // ✅ CORRECTION: Utiliser 'CLIENT' au lieu de 'client'
+  async register(userData: RegisterDto) {
+    const { email, password, firstName, lastName, phone } = userData;
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      throw new AppError('Email déjà utilisé', HTTP_STATUS.CONFLICT);
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
     const user = await User.create({
       email,
       password: hashedPassword,
       firstName,
       lastName,
-      role: 'CLIENT', // ← Changé de 'client' à 'CLIENT'
+      name: `${firstName} ${lastName}`.trim(),
+      role: 'CLIENT',
+      phone,
       isActive: true,
     });
 
-    // Générer les tokens
-    const accessToken = generateAccessToken(
-      user.id,
-      user.email,
-      user.role
-    );
-
-    // Générer et stocker le refresh token dans Redis
+    const accessToken = generateAccessToken(user.id, user.email, user.role);
     const refreshToken = RefreshTokenService.generateToken();
     await RefreshTokenService.storeToken(user.id, refreshToken);
 
-    logger.info(`✅ Nouvel utilisateur inscrit: ${user.email} (rôle: ${user.role})`);
+    logger.info(`✅ Inscription: ${user.email}`);
 
     return {
-      user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        role: user.role,
-      },
+      user: this.formatUserResponse(user),
       accessToken,
       refreshToken,
     };
   }
 
-  /**
-   * Connexion utilisateur
-   */
-  async login(credentials: { email: string; password: string }) {
+  async login(credentials: LoginDto) {
     const { email, password } = credentials;
 
-    // Vérifier l'utilisateur
     const user = await User.findOne({ email }).select('+password');
-    if (!user) {
-      throw new AppError(
-        'Email ou mot de passe incorrect',
-        HTTP_STATUS.UNAUTHORIZED
-      );
+    // Utilisation d'une assertion vers un objet littéral pour accéder au password hashé
+    const userWithPass = user as unknown as Record<string, string>;
+    
+    if (!user || !(await bcrypt.compare(password, userWithPass.password || ''))) {
+      throw new AppError('Email ou mot de passe incorrect', HTTP_STATUS.UNAUTHORIZED);
     }
 
-    // Vérifier le mot de passe
-    const isPasswordValid = await bcrypt.compare(
-      password,
-      user.password
-    );
-
-    if (!isPasswordValid) {
-      throw new AppError(
-        'Email ou mot de passe incorrect',
-        HTTP_STATUS.UNAUTHORIZED
-      );
-    }
-
-    // Vérifier si le compte est actif
     if (!user.isActive) {
-      throw new AppError(
-        "Compte désactivé. Contactez l'administrateur.",
-        HTTP_STATUS.FORBIDDEN
-      );
+      throw new AppError("Compte désactivé", HTTP_STATUS.FORBIDDEN);
     }
 
-    // Mettre à jour la date de dernière connexion
     user.lastLogin = new Date();
     await user.save();
 
-    // Générer les tokens
-    const accessToken = generateAccessToken(
-      user.id,
-      user.email,
-      user.role
-    );
-
-    // Générer et stocker le refresh token dans Redis
+    const accessToken = generateAccessToken(user.id, user.email, user.role);
     const refreshToken = RefreshTokenService.generateToken();
     await RefreshTokenService.storeToken(user.id, refreshToken);
 
-    logger.info(`✅ Utilisateur connecté: ${user.email} (rôle: ${user.role})`);
-
     return {
-      user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        role: user.role,
-      },
+      user: this.formatUserResponse(user),
       accessToken,
       refreshToken,
     };
   }
 
-  /**
-   * Rafraîchir le token d'accès
-   */
   async refreshToken(oldRefreshToken: string) {
-    // Vérifier le refresh token dans Redis
     const userId = await RefreshTokenService.verifyToken(oldRefreshToken);
+    if (!userId) throw new AppError('Session expirée', HTTP_STATUS.UNAUTHORIZED);
 
-    if (!userId) {
-      throw new AppError(
-        'Refresh token invalide ou expiré',
-        HTTP_STATUS.UNAUTHORIZED
-      );
-    }
-
-    // Vérifier que l'utilisateur existe toujours
     const user = await User.findById(userId);
-    if (!user) {
-      throw new AppError(
-        'Utilisateur non trouvé',
-        HTTP_STATUS.UNAUTHORIZED
-      );
-    }
+    if (!user || !user.isActive) throw new AppError('Accès interdit', HTTP_STATUS.FORBIDDEN);
 
-    if (!user.isActive) {
-      throw new AppError(
-        'Compte désactivé',
-        HTTP_STATUS.FORBIDDEN
-      );
-    }
+    const newRefreshToken = await RefreshTokenService.rotateToken(oldRefreshToken, userId);
+    const newAccessToken = generateAccessToken(user.id, user.email, user.role);
 
-    // Rotation : nouveau refresh + révocation ancien
-    const newRefreshToken = await RefreshTokenService.rotateToken(
-      oldRefreshToken,
-      userId
-    );
-
-    // Nouveau access token
-    const newAccessToken = generateAccessToken(
-      user.id,
-      user.email,
-      user.role
-    );
-
-    logger.info(
-      `🔄 Token rafraîchi pour l'utilisateur: ${user.email}`
-    );
-
-    return {
-      accessToken: newAccessToken,
-      refreshToken: newRefreshToken,
-    };
+    return { accessToken: newAccessToken, refreshToken: newRefreshToken };
   }
 
-  /**
-   * Déconnexion utilisateur
-   */
   async logout(userId: string, refreshToken: string) {
-    try {
-      await RefreshTokenService.revokeToken(refreshToken);
-
-      logger.info(
-        `👋 Déconnexion de l'utilisateur ${userId}`
-      );
-
-      return true;
-    } catch (error) {
-      logger.error(
-        '❌ Erreur lors de la déconnexion:',
-        error
-      );
-
-      throw new AppError(
-        'Erreur lors de la déconnexion',
-        HTTP_STATUS.INTERNAL_SERVER_ERROR
-      );
-    }
+    await RefreshTokenService.revokeToken(refreshToken);
+    logger.info(`👋 Déconnexion: ${userId}`);
+    return true;
   }
 
-  /**
-   * Obtenir les informations de l'utilisateur
-   */
   async getMe(userId: string) {
     const user = await User.findById(userId).select('-password');
+    if (!user) throw new AppError('Utilisateur non trouvé', HTTP_STATUS.NOT_FOUND);
+    return this.formatUserResponse(user);
+  }
 
-    if (!user) {
-      throw new AppError(
-        'Utilisateur non trouvé',
-        HTTP_STATUS.NOT_FOUND
-      );
+  async updateProfile(userId: string, updateData: UpdateProfileDto) {
+    const user = await User.findById(userId);
+    if (!user) throw new AppError('Utilisateur non trouvé', HTTP_STATUS.NOT_FOUND);
+
+    if (updateData.name) user.name = updateData.name;
+    if (updateData.firstName) user.firstName = updateData.firstName;
+    if (updateData.lastName) user.lastName = updateData.lastName;
+    if (updateData.phone) user.phone = updateData.phone;
+    if (updateData.avatar) user.avatar = updateData.avatar;
+    
+    if (updateData.address) {
+      const userObj = user as unknown as Record<string, unknown>;
+      userObj.address = updateData.address;
     }
 
-    return {
-      id: user.id,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      role: user.role,
-      isActive: user.isActive,
-      lastLogin: user.lastLogin,
-      createdAt: user.createdAt,
-    };
+    if (updateData.firstName || updateData.lastName) {
+      user.name = `${user.firstName || ''} ${user.lastName || ''}`.trim();
+    }
+
+    await user.save();
+    return this.formatUserResponse(user);
+  }
+
+  async changePassword(userId: string, current: string, next: string, confirm: string) {
+    if (next !== confirm) throw new AppError('Mots de passe différents', HTTP_STATUS.BAD_REQUEST);
+    const user = await User.findById(userId).select('+password');
+    const userWithPass = user as unknown as Record<string, string>;
+
+    if (!user || !(await bcrypt.compare(current, userWithPass.password || ''))) {
+      throw new AppError('Ancien mot de passe incorrect', HTTP_STATUS.BAD_REQUEST);
+    }
+    user.password = await bcrypt.hash(next, 12);
+    await user.save();
+    await RefreshTokenService.revokeAllUserTokens(userId);
   }
 }
+
+export default new AuthService();

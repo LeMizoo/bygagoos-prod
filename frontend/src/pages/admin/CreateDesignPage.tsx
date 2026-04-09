@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { ArrowLeft, Save, Upload, Image, Tag, DollarSign } from "lucide-react";
+import dev from '../../utils/devLogger';
 
 export default function CreateDesignPage() {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ export default function CreateDesignPage() {
     try {
       setLoading(true);
       // TODO: Implémenter l'API de création de design
-      console.log("Création du design:", formData);
+      dev.log("Création du design:", formData);
 
       // Simuler une requête API
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -30,7 +31,7 @@ export default function CreateDesignPage() {
       navigate("/admin/designs");
     } catch (error) {
       alert("Erreur lors de la création du design");
-      console.error(error);
+      dev.error(error);
     } finally {
       setLoading(false);
     }

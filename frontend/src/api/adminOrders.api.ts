@@ -1,5 +1,6 @@
 // frontend/src/api/adminOrders.api.ts
 import { API_URL } from "./index";
+import { dev } from '../utils/devLogger';
 
 export interface Order {
   _id: string;
@@ -31,7 +32,7 @@ const fetchWithAuth = async <T>(
 ): Promise<T> => {
   const headers = { ...getHeaders(), ...options.headers };
   const fullUrl = `${API_URL}${url}`;
-  console.log(`🌐 Orders API: ${fullUrl}`);
+  dev.log(`🌐 Orders API: ${fullUrl}`);
   const res = await fetch(fullUrl, { ...options, headers });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));

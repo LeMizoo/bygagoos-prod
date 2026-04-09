@@ -1,36 +1,127 @@
+// frontend/src/pages/admin/SuperAdminDashboard.tsx
 import { useEffect, useState } from "react";
 import {
+  Users,
   ShoppingCart,
   DollarSign,
-  Users,
   Package,
-  Clock,
+  TrendingUp,
   AlertCircle,
   Loader,
-  CheckCircle,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import { dashboardApi, UserStats } from "../../api/dashboard.api";
+import { dashboardApi, AdminStats } from "../../api/dashboard.api";
+import dev from '../../utils/devLogger';
 import {
   StatCard,
   DashboardSection,
   ListItem,
 } from "../../components/dashboard/DashboardComponents";
 
-export default function UserDashboard() {
-  const [stats, setStats] = useState<UserStats | null>(null);
+// Interface pour les statistiques étendues du Super Admin
+// On n'étend plus AdminStats, on crée une interface indépendante
+interface SuperAdminStats {
+  orders: {
+    total: number;
+    active: number;
+    completed: number;
+    thisPeriod: number;
+    previousPeriod: number;
+    byStatus: {
+      draft: number;
+      confirmed: number;
+      inProgress: number;
+      completed: number;
+    };
+    recentOrders7days: number;
+  };
+  revenue: {
+    total: number;
+    thisPeriod: number;
+    previousPeriod: number;
+    average: number;
+    ordersThisPeriod: number;
+    history: Array<{
+      date: string;
+      amount: number;
+    }>;
+  };
+  designs: {
+    total: number;
+    active: number;
+    draft: number;
+    archived: number;
+    popular: Array<{
+      id: string;
+      title: string;
+      status: string;
+      viewCount: number;
+      orderCount: number;
+    }>;
+  };
+  users: {
+    total: number;
+    admins: number;
+    staff: number;
+    clients: number;
+  };
+  staff: {
+    total: number;
+    active: number;
+    byRole: Record<string, number>;
+  };
+  clients: {
+    total: number;
+    active: number;
+    newThisMonth: number;
+  };
+  topClients: Array<{
+    clientInfo: Array<{
+      firstName: string;
+      lastName: string;
+      email: string;
+    }>;
+    orderCount: number;
+    totalSpent: number;
+  }>;
+  topDesigns: Array<{
+    title: string;
+    popularity: number;
+    orderCount: number;
+  }>;
+  recentOrders: any[];
+  recentClients: any[];
+  alerts?: string[];
+}
+
+export default function SuperAdminDashboard() {
+  const [stats, setStats] = useState<SuperAdminStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
         setLoading(true);
-        const data = await dashboardApi.getUserStats(); // directement la data
-        setStats(data);
+        // Appel à l'API pour les stats super admin
+        // Note: Il faut que cette route existe dans le backend
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/dashboard/super-admin-stats`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (!response.ok) {
+          throw new Error('Erreur lors du chargement des statistiques');
+        }
+        
+        const data = await response.json();
+        setStats(data.data || data);
       } catch (error: any) {
         toast.error(
           error.message || "Erreur lors du chargement des statistiques",
         );
+        dev.error("Error fetching super admin stats:", error);
       } finally {
         setLoading(false);
       }
@@ -61,154 +152,177 @@ export default function UserDashboard() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900">
-          Mon Tableau de Bord
+          Tableau de Bord Super Admin
         </h1>
         <p className="text-gray-600 mt-2">
-          Suivi de vos commandes et activités
+          Vue d'ensemble complète de l'activité et des performances
         </p>
       </div>
 
-      {/* Main Stats */}
-      <DashboardSection title="Vue d'ensemble">
+      {/* Top Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Commandes Totales"
-          value={stats.orders.total}
+          value={stats.orders.total || 0}
           icon={ShoppingCart}
-          description={`${stats.orders.completed} complétées`}
+          description={`${stats.orders.recentOrders7days || 0} ces 7 derniers jours`}
           color="blue"
         />
         <StatCard
-          title="Commandes Actives"
-          value={stats.orders.active}
-          icon={Clock}
-          color="orange"
-        />
-        <StatCard
-          title="Montant Dépensé"
-          value={`${(stats.spending.total / 1000).toFixed(1)}k €`}
+          title="Revenu Total"
+          value={`${((stats.revenue.total || 0) / 1000).toFixed(1)}k €`}
           icon={DollarSign}
-          description={`Moyenne: ${stats.spending.average.toFixed(0)} €`}
+          description={`Moyenne: ${(stats.revenue.average || 0).toFixed(0)} € par commande`}
           color="green"
         />
         <StatCard
-          title="Mes Clients"
-          value={stats.clients}
-          icon={Users}
+          title="Designs Actifs"
+          value={stats.designs.active || 0}
+          icon={Package}
+          description={`${stats.designs.draft || 0} en brouillon`}
           color="purple"
         />
-      </DashboardSection>
-
-      {/* Secondary Stats */}
-      <DashboardSection title="Ressources">
         <StatCard
-          title="Mes Designs"
-          value={stats.designs}
-          icon={Package}
-          color="blue"
+          title="Utilisateurs"
+          value={stats.users?.total || 0}
+          icon={Users}
+          description={`${stats.users?.admins || 0} admin(s)`}
+          color="orange"
         />
-      </DashboardSection>
+      </div>
 
-      {/* Recent Orders */}
+      {/* Orders Status */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h3 className="font-bold text-gray-900 mb-4">Mes Commandes Récentes</h3>
-        <div className="overflow-x-auto">
-          {stats.recentOrders?.length > 0 ? (
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-2 text-left text-gray-600">Client</th>
-                  <th className="px-4 py-2 text-center text-gray-600">
-                    Designs
-                  </th>
-                  <th className="px-4 py-2 text-right text-gray-600">
-                    Montant
-                  </th>
-                  <th className="px-4 py-2 text-center text-gray-600">
-                    Statut
-                  </th>
-                  <th className="px-4 py-2 text-left text-gray-600">Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stats.recentOrders.map((order, idx) => (
-                  <tr
-                    key={idx}
-                    className="border-b border-gray-100 hover:bg-gray-50"
-                  >
-                    <td className="px-4 py-2 text-gray-900 font-medium">
-                      {order.client?.firstName} {order.client?.lastName}
-                    </td>
-                    <td className="px-4 py-2 text-center text-gray-600">
-                      {order.designs?.length || 0}
-                    </td>
-                    <td className="px-4 py-2 text-right font-medium text-gray-900">
-                      {order.totalPrice.toFixed(2)} €
-                    </td>
-                    <td className="px-4 py-2 text-center">
-                      <span
-                        className={`px-2 py-1 text-xs font-medium rounded inline-flex items-center gap-1 ${
-                          order.status === "done"
-                            ? "bg-green-100 text-green-800"
-                            : order.status === "in_progress"
-                              ? "bg-orange-100 text-orange-800"
-                              : order.status === "confirmed"
-                                ? "bg-blue-100 text-blue-800"
-                                : order.status === "cancelled"
-                                  ? "bg-red-100 text-red-800"
-                                  : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        {order.status === "done" && (
-                          <CheckCircle className="h-3 w-3" />
-                        )}
-                        {order.status === "done"
-                          ? "Complétée"
-                          : order.status === "in_progress"
-                            ? "En cours"
-                            : order.status === "confirmed"
-                              ? "Confirmée"
-                              : order.status === "cancelled"
-                                ? "Annulée"
-                                : "Brouillon"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-2 text-gray-600 text-xs">
-                      {new Date(order.createdAt).toLocaleDateString("fr-FR")}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <div className="text-center py-8">
-              <ShoppingCart className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-600">Aucune commande trouvée</p>
-              <p className="text-sm text-gray-500 mt-1">
-                Créez votre première commande pour la voir ici
-              </p>
-            </div>
-          )}
+        <h3 className="font-bold text-gray-900 mb-4">État des Commandes</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <StatCard
+            title="Brouillons"
+            value={stats.orders.byStatus?.draft || 0}
+            icon={ShoppingCart}
+            color="gray"
+          />
+          <StatCard
+            title="Confirmées"
+            value={stats.orders.byStatus?.confirmed || 0}
+            icon={ShoppingCart}
+            color="blue"
+          />
+          <StatCard
+            title="En Production"
+            value={stats.orders.byStatus?.inProgress || 0}
+            icon={TrendingUp}
+            color="orange"
+          />
+          <StatCard
+            title="Complétées"
+            value={stats.orders.byStatus?.completed || 0}
+            icon={ShoppingCart}
+            color="green"
+          />
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-blue-50 rounded-xl border border-blue-200 p-6">
-          <Package className="h-8 w-8 text-blue-600 mb-3" />
-          <h3 className="font-bold text-gray-900 mb-2">Créer une Commande</h3>
-          <p className="text-sm text-gray-600 mb-4">
-            Ajoutez une nouvelle commande pour un client
-          </p>
-          <button className="btn-primary text-sm">Nouvelle Commande</button>
+      {/* Staff & Clients */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <h3 className="font-bold text-gray-900 mb-4">Personnel</h3>
+          <div className="space-y-4">
+            <StatCard
+              title="Total"
+              value={stats.staff?.total || 0}
+              icon={Users}
+              color="blue"
+            />
+            <StatCard
+              title="Actifs"
+              value={stats.staff?.active || 0}
+              icon={Users}
+              color="green"
+            />
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <h3 className="font-bold text-gray-900 mb-4">Clients</h3>
+          <div className="space-y-4">
+            <StatCard
+              title="Total"
+              value={stats.clients?.total || 0}
+              icon={Users}
+              color="purple"
+            />
+            <StatCard
+              title="Nouveaux ce mois"
+              value={stats.clients?.newThisMonth || 0}
+              icon={Users}
+              color="blue"
+            />
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <h3 className="font-bold text-gray-900 mb-4">Designs</h3>
+          <div className="space-y-4">
+            <StatCard
+              title="Total"
+              value={stats.designs.total || 0}
+              icon={Package}
+              color="blue"
+            />
+            <StatCard
+              title="Archivés"
+              value={stats.designs.archived || 0}
+              icon={Package}
+              color="gray"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Top Clients & Designs */}
+      <div className="grid lg:grid-cols-2 gap-6">
+        {/* Top Clients */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <h3 className="font-bold text-gray-900 mb-4">Top 5 Clients</h3>
+          <div className="space-y-2">
+            {stats.topClients && stats.topClients.length > 0 ? (
+              stats.topClients.map((client, idx) => (
+                <ListItem
+                  key={idx}
+                  title={
+                    client.clientInfo?.[0]
+                      ? `${client.clientInfo[0].firstName || ''} ${client.clientInfo[0].lastName || ''}`.trim() || "Client"
+                      : "Client supprimé"
+                  }
+                  subtitle={`${client.orderCount || 0} commande(s)`}
+                  value={`${(client.totalSpent || 0).toFixed(0)} €`}
+                  badge={`#${idx + 1}`}
+                />
+              ))
+            ) : (
+              <p className="text-gray-600 text-sm py-4">Aucun client</p>
+            )}
+          </div>
         </div>
 
-        <div className="bg-green-50 rounded-xl border border-green-200 p-6">
-          <Users className="h-8 w-8 text-green-600 mb-3" />
-          <h3 className="font-bold text-gray-900 mb-2">Gérer les Clients</h3>
-          <p className="text-sm text-gray-600 mb-4">
-            Consultez et gérez votre liste de clients
-          </p>
-          <button className="btn-primary text-sm">Voir les Clients</button>
+        {/* Top Designs */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <h3 className="font-bold text-gray-900 mb-4">Top 5 Designs</h3>
+          <div className="space-y-2">
+            {stats.topDesigns && stats.topDesigns.length > 0 ? (
+              stats.topDesigns.map((design, idx) => (
+                <ListItem
+                  key={idx}
+                  title={design.title || "Sans titre"}
+                  subtitle={`Popularité: ${design.popularity || 0}%`}
+                  value={`${design.orderCount || 0} commande(s)`}
+                  badge={`#${idx + 1}`}
+                />
+              ))
+            ) : (
+              <p className="text-gray-600 text-sm py-4">Aucun design</p>
+            )}
+          </div>
         </div>
       </div>
     </div>

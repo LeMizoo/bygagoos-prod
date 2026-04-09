@@ -1,3 +1,5 @@
+// frontend/src/components/ui/LoadingSpinner.tsx
+
 import React from "react";
 
 interface LoadingSpinnerProps {
@@ -6,7 +8,7 @@ interface LoadingSpinnerProps {
   showLogo?: boolean;
 }
 
-const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
+export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   size = "md",
   text = "Chargement...",
   showLogo = false,
@@ -42,5 +44,3 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
     </div>
   );
 };
-
-export default LoadingSpinner;

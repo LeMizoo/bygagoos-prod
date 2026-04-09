@@ -7,6 +7,7 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Palette primaire violette existante
         primary: {
           50: '#f5f3ff',
           100: '#ede9fe',
@@ -19,6 +20,12 @@ export default {
           800: '#5b21b6',
           900: '#4c1d95',
         },
+        // Palette personnalisée ByGagoos-Ink
+        'antique-white': '#F7ECDC',
+        'ink-black': '#0A202E',
+        'floral-white': '#F8F5EE',
+        'dark-teal': '#164657',
+        'dim-grey': '#707470',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],

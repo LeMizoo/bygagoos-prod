@@ -1,48 +1,49 @@
 // frontend/src/utils/debugApi.ts
 import { API_URL } from "../api";
+import { dev } from './devLogger';
 
 export const debugApi = async () => {
-  console.group("🔧 DEBUG API SYSTEM");
+  dev.group("🔧 DEBUG API SYSTEM");
 
   // 1. Vérifier l'URL API
-  console.log("🌐 API_URL:", API_URL);
+  dev.log("🌐 API_URL:", API_URL);
 
   // 2. Vérifier le token
   const token = localStorage.getItem("token");
-  console.log("🔑 Token in localStorage:", token ? "Present" : "Missing");
+  dev.log("🔑 Token in localStorage:", token ? "Present" : "Missing");
 
   if (token) {
     // 3. Tester l'endpoint /auth/me
     try {
-      console.log("🧪 Testing /auth/me...");
+      dev.log("🧪 Testing /auth/me...");
       const meResponse = await fetch(`${API_URL}/api/auth/me`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
-      console.log("📡 /auth/me status:", meResponse.status);
+      dev.log("📡 /auth/me status:", meResponse.status);
       if (meResponse.ok) {
         const meData = await meResponse.json();
-        console.log("✅ /auth/me data:", meData);
+        dev.log("✅ /auth/me data:", meData);
       }
     } catch (error) {
-      console.error("❌ /auth/me error:", error);
+      dev.error("❌ /auth/me error:", error);
     }
 
     // 4. Tester l'endpoint /admin/staff
     try {
-      console.log("🧪 Testing /admin/staff...");
+      dev.log("🧪 Testing /admin/staff...");
       const staffResponse = await fetch(`${API_URL}/api/admin/staff`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
-      console.log("📡 /admin/staff status:", staffResponse.status);
+      dev.log("📡 /admin/staff status:", staffResponse.status);
       if (staffResponse.ok) {
         const staffData = await staffResponse.json();
-        console.log("✅ /admin/staff data structure:", {
+        dev.log("✅ /admin/staff data structure:", {
           success: staffData.success,
           hasData: !!staffData.data,
           isArray: Array.isArray(staffData.data),
@@ -50,14 +51,14 @@ export const debugApi = async () => {
         });
       }
     } catch (error) {
-      console.error("❌ /admin/staff error:", error);
+      dev.error("❌ /admin/staff error:", error);
     }
   }
 
-  console.groupEnd();
+  dev.groupEnd();
 };
 
-// Ajouter à la console globale pour le débogage
+// Ajouter à la console globale pour le débogage (défini seulement en DEV via devLogger)
 if (typeof window !== "undefined") {
   (window as any).debugApi = debugApi;
 }

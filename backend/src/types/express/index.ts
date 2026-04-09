@@ -1,14 +1,14 @@
-import { UserRole } from '../../core/types/userRoles';
+// backend/src/types/express/index.ts
+
+import { RequestUser } from '../../middlewares/auth.middleware';
 
 declare global {
   namespace Express {
     interface Request {
-      user?: {
-        id: string;
-        role: UserRole;
-        _id?: string;
-      };
-      deviceId?: string;
+      user?: RequestUser;
+      token?: string;
     }
   }
 }
+
+export {};

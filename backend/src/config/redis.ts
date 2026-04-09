@@ -1,70 +1,32 @@
 // backend/src/config/redis.ts
 
-import { createClient } from 'redis';
+// Ce module existait avant l'introduction du client Redis avancé.
+// Nous le conservons pour compatibilité, mais il redirige désormais vers le
+// singleton `RedisClient` défini dans `core/config/redis.config`.
+
+import redisClient from '../core/config/redis.config';
 import logger from '../core/utils/logger';
 
-// =============================
-// CONFIGURATION REDIS
-// =============================
+// NOTE: le client avancé gère déjà ses propres événements et la logique de
+// reconnexion/fallback. Nous exposons simplement deux fonctions utilitaires
+// par souci de rétrocompatibilité (utilisées auparavant dans `index.ts`).
 
-// À CHANGER : Utilise process.env pour l'URL (plus sécurisé)
-const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
-const useTLS = process.env.REDIS_TLS === 'true' || redisUrl.startsWith('rediss://');
-
-const redisClient = createClient({
-  url: redisUrl,
-  socket: {
-    tls: useTLS,
-    rejectUnauthorized: false, // utile pour les certificats Upstash
-  },
-});
-
-// =============================
-// EVENTS
-// =============================
-redisClient.on('error', (err) => {
-  logger.error('❌ Erreur Redis:', err);
-});
-
-redisClient.on('connect', () => {
-  logger.info('🔌 Connexion Redis en cours...');
-});
-
-redisClient.on('ready', () => {
-  logger.info('✅ Redis prêt');
-});
-
-redisClient.on('end', () => {
-  logger.warn('⚠️ Connexion Redis fermée');
-});
-
-// =============================
-// CONNEXION
-// =============================
 export const connectRedis = async (): Promise<void> => {
   try {
-    if (!redisClient.isOpen) {
-      await redisClient.connect();
-      logger.info('✅ Redis connecté avec succès');
-    }
+    await redisClient.connect();
+    logger.info('✅ connectRedis (wrapper) a démarré le client Redis avancé');
   } catch (error) {
-    logger.error('❌ Erreur connexion Redis:', error);
-    // IMPORTANT : On ne relance pas l'erreur pour permettre au serveur de démarrer
-    logger.warn('⚠️ Le serveur continue sans Redis (mode dégradé)');
+    logger.error('❌ connectRedis erreur:', error);
+    // on ne throw pas : l'app continue en mode dégradé si nécessaire
   }
 };
 
-// =============================
-// DECONNEXION
-// =============================
 export const disconnectRedis = async (): Promise<void> => {
   try {
-    if (redisClient.isOpen) {
-      await redisClient.quit();
-      logger.info('✅ Redis déconnecté proprement');
-    }
+    await redisClient.disconnect();
+    logger.info('✅ disconnectRedis (wrapper) a fermé le client Redis');
   } catch (error) {
-    logger.error('❌ Erreur déconnexion Redis:', error);
+    logger.error('❌ disconnectRedis erreur:', error);
   }
 };
 

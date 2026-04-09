@@ -54,16 +54,33 @@ export interface Order {
   clientEmail: string;
   clientPhone?: string;
   items: OrderItem[];
+  designs?: OrderItem[];  // Alias for items for backward compatibility
   subtotal: number;
   tax: number;
   taxRate: number;
   shipping: number;
   discount?: number;
   total: number;
+  totalPrice?: number;  // Alias for total
+  price?: {
+    subtotal: number;
+    tax: number;
+    shipping: number;
+    discount?: number;
+    total: number;
+    currency?: string;
+  };
   status: OrderStatus;
   paymentStatus: PaymentStatus;
+  payment?: {
+    status: PaymentStatus;
+    method?: PaymentMethod;
+    paidAt?: string;
+    amount?: number;
+  };
   paymentMethod?: PaymentMethod;
   shippingMethod?: ShippingMethod;
+  requestedDate?: string;
   shippingAddress?: {
     fullName: string;
     street: string;
@@ -84,9 +101,22 @@ export interface Order {
   estimatedDelivery?: string;
   deliveredAt?: string;
   paidAt?: string;
-  assignedTo?: string;
+  assignedTo?: {
+    designer?: { _id: string; firstName: string; lastName: string } | string;
+    validator?: { _id: string; firstName: string; lastName: string } | string;
+    producer?: { _id: string; firstName: string; lastName: string } | string;
+  } | string;
   assignedToName?: string;
+  user?: { firstName: string; lastName: string };  // Backward compatibility
+  client?: { firstName: string; lastName: string; company?: string };  // Backward compatibility
   trackingNumber?: string;
+  history?: Array<{
+    action: string;
+    date: string;
+    user?: string;
+    notes?: string;
+  }>;
+  tags?: string[];
   createdAt: string;
   updatedAt: string;
   createdBy?: string;

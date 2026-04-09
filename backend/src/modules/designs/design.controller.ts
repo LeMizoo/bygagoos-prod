@@ -20,9 +20,9 @@ export const getDesigns = async (req: AuthRequest, res: Response): Promise<void>
     }
 
     const query = validateData(queryDesignSchema, req.query) as any;
-    const result = await designService.findAll(userId, query);
+    const designs = await designService.findAll(userId, query);
 
-    apiResponse.success(res, result, 'Designs récupérés avec succès');
+    apiResponse.success(res, designs, 'Designs récupérés avec succès');
   } catch (error: any) {
     console.error('Erreur getDesigns:', error);
     apiResponse.error(res, error.message || 'Erreur lors de la récupération des designs', HTTP_STATUS.INTERNAL_SERVER_ERROR);
@@ -47,7 +47,7 @@ export const getDesignById = async (req: AuthRequest, res: Response): Promise<vo
     }
     const design = await designService.findById(id, userId);
 
-    apiResponse.success(res, { design }, 'Design récupéré avec succès');
+    apiResponse.success(res, design, 'Design récupéré avec succès');
   } catch (error: any) {
     console.error('Erreur getDesignById:', error);
     
@@ -77,7 +77,7 @@ export const createDesign = async (req: AuthRequest, res: Response): Promise<voi
     const data = validateData(createDesignSchema, req.body) as any;
     const design = await designService.create(userId, data, createdBy);
 
-    apiResponse.success(res, { design }, 'Design créé avec succès', HTTP_STATUS.CREATED);
+    apiResponse.success(res, design, 'Design créé avec succès', HTTP_STATUS.CREATED);
   } catch (error: any) {
     console.error('Erreur createDesign:', error);
     
@@ -113,7 +113,7 @@ export const updateDesign = async (req: AuthRequest, res: Response): Promise<voi
     }
 
     const design = await designService.update(id, userId, data);
-    apiResponse.success(res, { design }, 'Design mis à jour avec succès');
+    apiResponse.success(res, design, 'Design mis à jour avec succès');
   } catch (error: any) {
     console.error('Erreur updateDesign:', error);
     
@@ -151,7 +151,7 @@ export const addDesignFiles = async (req: AuthRequest, res: Response): Promise<v
     }
 
     const design = await designService.addFiles(id, userId, files);
-    apiResponse.success(res, { design }, `${files.length} fichier(s) ajouté(s) avec succès`);
+    apiResponse.success(res, design, `${files.length} fichier(s) ajouté(s) avec succès`);
   } catch (error: any) {
     console.error('Erreur addDesignFiles:', error);
     
@@ -183,7 +183,7 @@ export const removeDesignFile = async (req: AuthRequest, res: Response): Promise
     }
     const design = await designService.removeFile(id, userId, fileId);
 
-    apiResponse.success(res, { design }, 'Fichier supprimé avec succès');
+    apiResponse.success(res, design, 'Fichier supprimé avec succès');
   } catch (error: any) {
     console.error('Erreur removeDesignFile:', error);
     

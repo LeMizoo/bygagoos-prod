@@ -167,3 +167,4 @@ export const apiToStaff = (member: ApiStaffMember): Staff => {
     status: (member.isActive ?? member.active ?? true) ? "active" : "inactive",
   };
 };
+export type StaffMember = Staff;

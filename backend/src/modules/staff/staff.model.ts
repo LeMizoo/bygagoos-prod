@@ -1,135 +1,147 @@
+// backend/src/modules/staff/staff.model.ts (version simplifiée et corrigée)
+
 import mongoose, { Schema, Document } from 'mongoose';
 
-export enum StaffCategory {
-  DESIGNER = 'DESIGNER',
-  ACCOUNTANT = 'ACCOUNTANT',
-  MANAGER = 'MANAGER',
-  SALES = 'SALES',
-  PRODUCTION = 'PRODUCTION'
-}
-
-export enum StaffRole {
-  ADMIN = 'ADMIN',
-  MANAGER = 'MANAGER',
-  SUPERVISOR = 'SUPERVISOR',
-  STAFF = 'STAFF',
-  TRAINEE = 'TRAINEE'
-}
+// Types
+export type StaffRole = string;
+export type StaffCategory = string;
+export type StaffDepartment = string;
 
 export interface IStaff extends Document {
-  user: mongoose.Types.ObjectId;
-  displayName: string;
+  // Informations de base
   firstName: string;
   lastName: string;
+  name?: string;
+  displayName?: string;
+  
+  // Contact
   email: string;
-  category: StaffCategory;
-  role: StaffRole;
-  responsibilities: string[];
-  profileImage?: string;
   phone?: string;
-  address?: string;
-  bio?: string;
-  joinedAt: Date;
+  
+  // Professionnel
+  position?: string;
+  department: string;
+  role: string;
+  category: string;
+  responsibilities?: string[];
+  skills?: string[];
+  
+  // Statut
   isActive: boolean;
-  createdBy: mongoose.Types.ObjectId;
+  active: boolean;
+  
+  // Description
+  description?: string;
+  notes?: string;
+  bio?: string;
+  
+  // Média
+  avatar?: string;
+  profileImage?: string;
+  
+  // Relations
+  user?: mongoose.Types.ObjectId;
+  
+  // Dates
+  joinedAt: Date;
   createdAt: Date;
   updatedAt: Date;
 }
 
-const staffSchema = new Schema<IStaff>(
+// Schéma
+const StaffSchema = new Schema<IStaff>(
   {
-    user: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: [true, "L'utilisateur est requis"],
-      unique: true
+    firstName: { type: String, required: true, trim: true },
+    lastName: { type: String, required: true, trim: true },
+    name: { type: String, trim: true },
+    displayName: { type: String, trim: true },
+    
+    email: { 
+      type: String, 
+      required: true, 
+      unique: true, 
+      lowercase: true, 
+      trim: true 
     },
-    displayName: {
-      type: String,
-      required: [true, 'Le nom affiché est requis'],
-      trim: true
-    },
-    firstName: {
-      type: String,
-      required: [true, 'Le prénom est requis'],
-      trim: true
-    },
-    lastName: {
-      type: String,
-      required: [true, 'Le nom est requis'],
-      trim: true
-    },
-    email: {
-      type: String,
-      required: [true, 'L\'email est requis'],
-      unique: true,
-      lowercase: true,
-      trim: true,
-      match: [/^\S+@\S+\.\S+$/, 'Email invalide']
-    },
-    category: {
-      type: String,
-      enum: Object.values(StaffCategory),
-      required: [true, 'La catégorie est requise']
-    },
-    role: {
-      type: String,
-      enum: Object.values(StaffRole),
-      default: StaffRole.STAFF
-    },
-    responsibilities: [{
-      type: String,
-      trim: true
-    }],
-    profileImage: {
-      type: String,
-      default: null
-    },
-    phone: {
-      type: String,
-      trim: true
-    },
-    address: {
-      type: String,
-      trim: true
-    },
-    bio: {
-      type: String,
-      trim: true,
-      maxlength: 500
-    },
-    joinedAt: {
-      type: Date,
-      default: Date.now
-    },
-    isActive: {
-      type: Boolean,
-      default: true
-    },
-    createdBy: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: true
-    }
+    phone: { type: String, trim: true },
+    
+    position: { type: String, trim: true },
+    department: { type: String, default: 'PRODUCTION' },
+    role: { type: String, default: 'STAFF' },
+    category: { type: String, default: 'PRODUCTION' },
+    responsibilities: [{ type: String }],
+    skills: [{ type: String }],
+    
+    isActive: { type: Boolean, default: true },
+    active: { type: Boolean, default: true },
+    
+    description: { type: String },
+    notes: { type: String },
+    bio: { type: String },
+    
+    avatar: { type: String },
+    profileImage: { type: String },
+    
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    
+    joinedAt: { type: Date, default: Date.now }
   },
   {
     timestamps: true,
-    toJSON: {
-      transform: (doc, ret) => {
-        ret.id = ret._id;
-        delete (ret as any)._id;
-        delete (ret as any).__v;
-        return ret;
-      }
-    }
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
   }
 );
 
-// Index pour les recherches
-// Note: email index créé automatiquement par unique: true
-staffSchema.index({ category: 1 });
-staffSchema.index({ isActive: 1 });
-staffSchema.index({ firstName: 'text', lastName: 'text', email: 'text' });
+// Index (le champ `email` a déjà `unique: true` sur la propriété, éviter double déclaration)
+StaffSchema.index({ role: 1 });
+StaffSchema.index({ department: 1 });
+StaffSchema.index({ isActive: 1 });
 
-const Staff = mongoose.model<IStaff>('Staff', staffSchema);
-export default Staff;
+// Middleware pre-save
+StaffSchema.pre('save', function(next) {
+  // Générer le nom complet
+  if (this.firstName && this.lastName) {
+    const fullName = `${this.firstName} ${this.lastName}`.trim();
+    if (!this.name) this.name = fullName;
+    if (!this.displayName) this.displayName = fullName;
+  }
+  
+  // Synchroniser les champs
+  this.active = this.isActive;
+  
+  if (this.avatar && !this.profileImage) this.profileImage = this.avatar;
+  if (this.profileImage && !this.avatar) this.avatar = this.profileImage;
+  
+  if (this.description && !this.bio) this.bio = this.description;
+  if (this.bio && !this.description) this.description = this.bio;
+  
+  next();
+});
+
+// Virtual - Cette fois correctement typé
+StaffSchema.virtual('fullName').get(function() {
+  return this.name || `${this.firstName} ${this.lastName}`.trim();
+});
+
+// Méthode d'instance - Sans utiliser this.fullName directement
+StaffSchema.methods.getFullName = function() {
+  return this.name || `${this.firstName} ${this.lastName}`.trim();
+};
+
+// Méthodes statiques
+StaffSchema.statics.findActive = function() {
+  return this.find({ isActive: true });
+};
+
+StaffSchema.statics.findByDepartment = function(department: string) {
+  return this.find({ department });
+};
+
+StaffSchema.statics.findByRole = function(role: string) {
+  return this.find({ role });
+};
+
+// Export
+export const StaffModel = mongoose.model<IStaff>('Staff', StaffSchema);
+export default StaffModel;

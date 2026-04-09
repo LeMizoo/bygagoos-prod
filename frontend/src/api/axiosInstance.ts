@@ -1,6 +1,9 @@
+// frontend/src/api/axiosInstance.ts
+
 import axios from "axios";
 import { useAuthStore } from "../stores/authStore";
 import authApi from "./auth.api";
+import dev from "../utils/devLogger";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -27,19 +30,18 @@ const onRefreshed = (token: string) => {
 
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token") || useAuthStore.getState().token;
+    const token = localStorage.getItem("token") || localStorage.getItem("accessToken") || useAuthStore.getState().token;
     
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    if (config.url?.includes('/admin/')) {
-      const originalUrl = config.url;
-      config.url = config.url.replace('/admin/', '/');
-      console.log(`🔄 URL transformée: ${originalUrl} → ${config.url}`);
+    // ✅ CORRIGÉ: Éviter les doubles /api
+    if (config.url?.startsWith('/api/')) {
+      config.url = config.url.substring(4);
     }
 
-    console.log(`📡 Requête API: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
+    dev.log(`📡 Requête API: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
     return config;
   },
   (error) => Promise.reject(error)
@@ -47,14 +49,14 @@ axiosInstance.interceptors.request.use(
 
 axiosInstance.interceptors.response.use(
   (response) => {
-    console.log(`✅ Réponse API: ${response.status} ${response.config.url}`);
+    dev.log(`✅ Réponse API: ${response.status} ${response.config.url}`);
     return response;
   },
   async (error) => {
     const originalRequest = error.config;
 
     if (error.response) {
-      console.error(`❌ Erreur API ${error.response.status}:`, {
+      dev.error(`❌ Erreur API ${error.response.status}:`, {
         url: originalRequest?.url,
         method: originalRequest?.method,
         data: error.response.data,
@@ -83,11 +85,12 @@ axiosInstance.interceptors.response.use(
           throw new Error('Pas de refresh token');
         }
 
-        console.log('🔄 Token expiré, tentative de rafraîchissement...');
+        dev.log('🔄 Token expiré, tentative de rafraîchissement...');
         
         const response = await authApi.refreshToken(refreshToken);
         
         localStorage.setItem('token', response.accessToken);
+        localStorage.setItem('accessToken', response.accessToken);
         if (response.refreshToken) {
           localStorage.setItem('refreshToken', response.refreshToken);
         }
@@ -97,7 +100,7 @@ axiosInstance.interceptors.response.use(
           store.token = response.accessToken;
         }
 
-        console.log('✅ Token rafraîchi avec succès');
+        dev.log('✅ Token rafraîchi avec succès');
         
         onRefreshed(response.accessToken);
         
@@ -105,12 +108,12 @@ axiosInstance.interceptors.response.use(
         return axiosInstance(originalRequest);
         
       } catch (refreshError) {
-        console.error('❌ Échec du rafraîchissement du token:', refreshError);
+        dev.error('❌ Échec du rafraîchissement du token:', refreshError);
         
         localStorage.removeItem('token');
+        localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
-        localStorage.removeItem('auth-storage');
         
         useAuthStore.getState().clearAuth();
         
@@ -123,7 +126,7 @@ axiosInstance.interceptors.response.use(
     }
 
     if (error.response?.status === 403) {
-      console.log('⛔ Accès interdit');
+      dev.log('⛔ Accès interdit');
       window.location.href = "/unauthorized";
     }
 

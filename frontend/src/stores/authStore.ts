@@ -1,13 +1,15 @@
+// frontend/src/stores/authStore.ts
+
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import authApi, { type UserProfile, type AuthResponse } from "../api/auth.api";
+import authApi, { type UserProfile, type AuthResponse, type UpdateProfileData } from "../api/auth.api";
 
 export type User = UserProfile;
 
 interface AuthState {
   user: User | null;
   token: string | null;
-  refreshToken: string | null;  // ← Propriété (stockage)
+  refreshToken: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   error: string | null;
@@ -22,7 +24,7 @@ interface AuthState {
   getAuthHeaders: () => Record<string, string>;
   updateProfile: (data: Partial<User>) => Promise<void>;
   changePassword: (current: string, newPass: string, confirm: string) => Promise<void>;
-  refreshTokenAction: () => Promise<string | null>;  // ← Renommé (action)
+  refreshTokenAction: () => Promise<string | null>;
   clearError: () => void;
 }
 
@@ -36,14 +38,13 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       error: null,
 
+      /**
+       * Connecter un utilisateur
+       */
       login: async (email: string, password: string) => {
         set({ isLoading: true, error: null });
         try {
-          console.log('🔑 Tentative de connexion:', email);
-          
           const response: AuthResponse = await authApi.login({ email, password });
-
-          console.log('✅ Connexion réussie:', response.user.email);
           
           set({
             user: response.user,
@@ -52,13 +53,7 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: true,
             isLoading: false,
           });
-
-          localStorage.setItem("token", response.accessToken);
-          localStorage.setItem("refreshToken", response.refreshToken);
-          localStorage.setItem("user", JSON.stringify(response.user));
-          
         } catch (error: any) {
-          console.error('❌ Erreur login:', error);
           set({ 
             isLoading: false, 
             error: error.message || "Erreur de connexion" 
@@ -67,13 +62,13 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
+      /**
+       * Inscrire un nouvel utilisateur
+       */
       register: async (userData) => {
         set({ isLoading: true, error: null });
         try {
           const response: AuthResponse = await authApi.register(userData);
-
-          console.log('✅ Inscription réussie:', response.user.email);
-          
           set({
             user: response.user,
             token: response.accessToken,
@@ -81,10 +76,6 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: true,
             isLoading: false,
           });
-
-          localStorage.setItem("token", response.accessToken);
-          localStorage.setItem("refreshToken", response.refreshToken);
-          localStorage.setItem("user", JSON.stringify(response.user));
         } catch (error: any) {
           set({ 
             isLoading: false, 
@@ -94,18 +85,30 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
+      /**
+       * Déconnexion robuste (Nettoyage garanti)
+       */
       logout: async () => {
         set({ isLoading: true });
         try {
+          // On tente d'avertir le backend (route maintenant publique)
           await authApi.logout();
         } catch (error) {
-          console.error("Logout error:", error);
+          // Prefer development-only logger
+          // eslint-disable-next-line @typescript-eslint/no-var-requires
+          const { dev } = require('../utils/devLogger');
+          dev.warn("Déconnexion API notifiée avec erreur (ignorée):", error);
         } finally {
+          // QUOI QU'IL ARRIVE : On vide tout
           get().clearAuth();
+          // Redirection forcée pour nettoyer l'état de l'application
           window.location.href = "/home";
         }
       },
 
+      /**
+       * Définir manuellement les données d'authentification
+       */
       setAuthData: (user: User, token: string, refreshToken: string) => {
         set({
           user,
@@ -113,131 +116,83 @@ export const useAuthStore = create<AuthState>()(
           refreshToken,
           isAuthenticated: true,
         });
-        localStorage.setItem("token", token);
-        localStorage.setItem("refreshToken", refreshToken);
-        localStorage.setItem("user", JSON.stringify(user));
       },
 
+      /**
+       * Vérifier l'état de l'authentification au chargement
+       */
       checkAuth: async () => {
-        const state = get();
-        const token = state.token;
-        const refreshToken = state.refreshToken;
+        const { token, refreshToken } = get();
 
-        // Si pas de token mais refresh token présent, essayer de rafraîchir
+        // 1. Si aucun token mais refresh présent -> tentative de récupération
         if (!token && refreshToken) {
-          console.log('🔄 Token manquant mais refresh token présent, tentative de rafraîchissement...');
           try {
-            const newToken = await get().refreshTokenAction(); // ← Renommé
-            if (newToken) {
-              console.log('✅ Token rafraîchi avec succès');
-              return;
-            }
-          } catch (error) {
-            console.error('❌ Échec du rafraîchissement automatique:', error);
+            await get().refreshTokenAction();
+          } catch {
+            return get().clearAuth();
           }
         }
 
-        if (!token) {
-          const localToken = localStorage.getItem("token");
-          const localRefreshToken = localStorage.getItem("refreshToken");
-          const localUser = localStorage.getItem("user");
-
-          if (localToken && localRefreshToken && localUser) {
-            try {
-              const parsedUser = JSON.parse(localUser) as User;
-              console.log('🔄 Restauration depuis localStorage:', parsedUser.email);
-              set({
-                token: localToken,
-                refreshToken: localRefreshToken,
-                user: parsedUser,
-                isAuthenticated: true,
-              });
-            } catch {
-              get().clearAuth();
-            }
-            return;
-          }
-
-          set({ isAuthenticated: false });
-          return;
+        // 2. Si toujours pas de token après tentative -> clear
+        const currentToken = get().token;
+        if (!currentToken) {
+          return get().clearAuth();
         }
 
         set({ isLoading: true });
         try {
-          console.log('🔄 Vérification du token...');
-          const { user } = await authApi.getMe(token);
-          console.log('✅ Token valide, utilisateur:', user.email);
-          
-          set({
-            user,
-            isAuthenticated: true,
-            isLoading: false,
-          });
-          localStorage.setItem("user", JSON.stringify(user));
+          const { user } = await authApi.getMe(currentToken);
+          set({ user, isAuthenticated: true });
         } catch (error: any) {
-          console.error('❌ Token invalide:', error);
-          
-          // Si token invalide mais refresh token présent, essayer de rafraîchir
+          // Si le token est expiré ici, on tente une dernière fois le refresh
           if (refreshToken) {
-            console.log('🔄 Tentative de rafraîchissement du token expiré...');
             try {
-              const newToken = await get().refreshTokenAction(); // ← Renommé
+              const newToken = await get().refreshTokenAction();
               if (newToken) {
-                // Réessayer getMe avec le nouveau token
                 const { user } = await authApi.getMe(newToken);
-                set({
-                  user,
-                  isAuthenticated: true,
-                  isLoading: false,
-                });
-                localStorage.setItem("user", JSON.stringify(user));
+                set({ user, isAuthenticated: true });
                 return;
               }
-            } catch (refreshError) {
-              console.error('❌ Échec du rafraîchissement:', refreshError);
+            } catch (e) {
+              // eslint-disable-next-line @typescript-eslint/no-var-requires
+              const { dev } = require('../utils/devLogger');
+              dev.error("Échec rafraîchissement profond:", e);
             }
           }
-          
           get().clearAuth();
         } finally {
           set({ isLoading: false });
         }
       },
 
-      // Renommé de refreshToken à refreshTokenAction
+      /**
+       * Rafraîchir le token d'accès
+       */
       refreshTokenAction: async (): Promise<string | null> => {
-        const refreshToken = get().refreshToken || localStorage.getItem('refreshToken');
+        const { refreshToken } = get();
         
-        if (!refreshToken) {
-          console.log('ℹ️ Pas de refresh token disponible');
-          return null;
-        }
+        if (!refreshToken) return null;
 
         try {
-          console.log('🔄 Rafraîchissement du token...');
           const response = await authApi.refreshToken(refreshToken);
           
           set({
             token: response.accessToken,
             refreshToken: response.refreshToken || refreshToken,
+            isAuthenticated: true
           });
           
-          localStorage.setItem("token", response.accessToken);
-          if (response.refreshToken) {
-            localStorage.setItem("refreshToken", response.refreshToken);
-          }
-          
-          console.log('✅ Token rafraîchi avec succès');
           return response.accessToken;
         } catch (error) {
-          console.error('❌ Erreur refreshTokenAction:', error);
           get().clearAuth();
           return null;
         }
       },
 
+      /**
+       * Effacer proprement toutes les traces d'auth
+       */
       clearAuth: () => {
-        console.log('🚪 Effacement de l\'authentification');
         set({
           user: null,
           token: null,
@@ -246,45 +201,69 @@ export const useAuthStore = create<AuthState>()(
           isLoading: false,
           error: null,
         });
-        localStorage.removeItem("token");
-        localStorage.removeItem("refreshToken");
-        localStorage.removeItem("user");
+        // Le middleware 'persist' s'occupe du localStorage automatiquement
       },
 
+      /**
+       * Helper pour les headers
+       */
       getAuthHeaders: () => {
-        const token = get().token;
-        const headers: Record<string, string> = {
+        const { token } = get();
+        return {
           "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {}),
         };
-        if (token) headers["Authorization"] = `Bearer ${token}`;
-        return headers;
       },
 
+      /**
+       * Mise à jour profil
+       */
       updateProfile: async (data: Partial<User>) => {
         set({ isLoading: true, error: null });
         try {
-          const { user } = await authApi.updateProfile(data);
-          set({ user, isLoading: false });
-          localStorage.setItem("user", JSON.stringify(user));
+          const updateData: UpdateProfileData = {
+            ...data,
+            name: data.name || (data.firstName && data.lastName ? `${data.firstName} ${data.lastName}`.trim() : undefined)
+          };
+          
+          const response = await authApi.updateProfile(updateData);
+          
+          // Mise à jour de l'utilisateur avec la réponse ou fusion locale
+          set((state) => ({ 
+            user: response.user ? (response.user as User) : { ...state.user, ...data } as User,
+            isLoading: false 
+          }));
+          
         } catch (error: any) {
-          set({ 
-            isLoading: false, 
-            error: error.message || "Erreur de mise à jour" 
-          });
+          if (error.status === 401) {
+            const newToken = await get().refreshTokenAction();
+            if (newToken) return get().updateProfile(data);
+          }
+          set({ isLoading: false, error: error.message });
           throw error;
         }
       },
 
+      /**
+       * Changement de mot de passe
+       */
       changePassword: async (current: string, newPass: string, confirm: string) => {
         set({ isLoading: true, error: null });
         try {
-          await authApi.changePassword(current, newPass, confirm);
+          // 🔥 CORRECTION : Passage en mode objet pour matcher la signature de l'API
+          await authApi.changePassword({
+            currentPassword: current,
+            newPassword: newPass,
+            confirmPassword: confirm
+          });
           set({ isLoading: false });
         } catch (error: any) {
-          set({ 
-            isLoading: false, 
-            error: error.message || "Erreur de changement de mot de passe" 
-          });
+          if (error.status === 401) {
+            const newToken = await get().refreshTokenAction();
+            // L'appel interne à la méthode du store reste avec les 3 arguments
+            if (newToken) return get().changePassword(current, newPass, confirm);
+          }
+          set({ isLoading: false, error: error.message });
           throw error;
         }
       },
@@ -294,6 +273,7 @@ export const useAuthStore = create<AuthState>()(
     {
       name: "auth-storage",
       storage: createJSONStorage(() => localStorage),
+      // On ne persiste que les données essentielles
       partialize: (state) => ({
         user: state.user,
         token: state.token,
@@ -303,3 +283,9 @@ export const useAuthStore = create<AuthState>()(
     }
   )
 );
+
+// Hooks utilitaires
+export const useUser = () => useAuthStore((state) => state.user);
+export const useIsAuthenticated = () => useAuthStore((state) => state.isAuthenticated);
+export const useIsLoading = () => useAuthStore((state) => state.isLoading);
+export const useAuthError = () => useAuthStore((state) => state.error);
