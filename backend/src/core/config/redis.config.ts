@@ -25,9 +25,17 @@ class RedisClient {
   private readonly RECONNECT_DELAY = 1000;
 
   private constructor() {
-    // Toujours essayer de se connecter à Redis, mais permettre le fallback
-    this.initializeClient();
-    this.setupEventHandlers();
+    // Vérifier si Redis est disponible
+    const redisUrl = env.REDIS_URL;
+    const hasValidRedisUrl = redisUrl && redisUrl !== 'redis://localhost:6379';
+
+    if (hasValidRedisUrl) {
+      this.initializeClient();
+      this.setupEventHandlers();
+    } else {
+      logger.warn('⚠️ Redis non configuré - utilisation du mode fallback (stockage en mémoire)');
+      this.useFallback = true;
+    }
   }
 
   private initializeClient(): void {
