@@ -22,9 +22,9 @@ services:
       - key: JWT_REFRESH_EXPIRES_IN
         value: 7d
       - key: ALLOWED_ORIGINS
-        value: https://your-frontend.vercel.app
+        value: https://bygagoos-prod.vercel.app
       - key: FRONTEND_URL
-        value: https://your-frontend.vercel.app
+        value: https://bygagoos-prod.vercel.app
       - key: SMTP_HOST
         value: smtp.gmail.com
       - key: SMTP_PORT
