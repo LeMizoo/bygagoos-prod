@@ -48,25 +48,80 @@ app.use(
   })
 );
 
+// ==================== CONFIGURATION CORS AMÉLIORÉE ====================
+// Liste des origines autorisées
+const allowedOrigins = [
+  'https://bygagoos-prod.vercel.app',
+  'https://bygagoos-prod.onrender.com',
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://localhost:5173',
+  'http://localhost:5000',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:5173',
+  ...(env.ALLOWED_ORIGINS || [])
+];
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (env.NODE_ENV === 'development' || !origin) return callback(null, true);
-      const allowedOrigins = env.ALLOWED_ORIGINS;
+      // Permettre les requêtes sans origine (comme Postman, apps mobiles)
+      if (!origin) {
+        return callback(null, true);
+      }
+      
+      // En développement, autoriser toutes les origines localhost
+      if (env.NODE_ENV === 'development') {
+        if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+          return callback(null, true);
+        }
+      }
+      
+      // Vérifier si l'origine est autorisée
       if (allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        logger.warn(`Origine CORS refusée: ${origin}`);
-        callback(new Error('Non autorisé par CORS'));
+        logger.warn(`❌ Origine CORS refusée: ${origin}`);
+        logger.info(`Origines autorisées: ${allowedOrigins.join(', ')}`);
+        callback(new Error(`Non autorisé par CORS: ${origin}`));
       }
     },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-    exposedHeaders: ['Set-Cookie'],
-    optionsSuccessStatus: 200
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+      'Accept',
+      'Origin',
+      'Access-Control-Request-Method',
+      'Access-Control-Request-Headers'
+    ],
+    exposedHeaders: ['Set-Cookie', 'Authorization'],
+    optionsSuccessStatus: 200,
+    preflightContinue: false,
+    maxAge: 86400 // 24 heures en cache pour les requêtes preflight
   })
 );
+
+// Middleware supplémentaire pour s'assurer que les headers CORS sont présents
+app.use((req: Request, res: Response, next: NextFunction) => {
+  // Ajouter les headers CORS manuellement en complément
+  const origin = req.headers.origin;
+  if (origin && allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+    res.header('Access-Control-Expose-Headers', 'Set-Cookie, Authorization');
+  }
+  
+  // Répondre immédiatement aux requêtes OPTIONS (preflight)
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
 
 app.use(
   morgan(env.NODE_ENV === 'development' ? 'dev' : 'combined', {
@@ -98,8 +153,27 @@ app.use('/api/forms', formRoutes);
 // Routes des paramètres et templates modifiables
 app.use('/api/settings', settingsRoutes);
 
+// Route de santé améliorée avec infos CORS
 app.get('/health', (_req, res) => {
-  res.json({ success: true, status: 'OK', timestamp: new Date().toISOString() });
+  res.json({ 
+    success: true, 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    cors: {
+      enabled: true,
+      allowedOrigins: allowedOrigins
+    }
+  });
+});
+
+// Route pour tester CORS (utile pour le débogage)
+app.options('/test-cors', cors());
+app.get('/test-cors', (_req, res) => {
+  res.json({ 
+    success: true, 
+    message: 'CORS fonctionne correctement',
+    timestamp: new Date().toISOString()
+  });
 });
 
 app.use('*', (req: Request, res: Response) => {
@@ -109,12 +183,32 @@ app.use('*', (req: Request, res: Response) => {
   });
 });
 
+// Middleware global de gestion d'erreurs
 app.use((err: AppError, _req: Request, res: Response, _next: NextFunction) => {
   const statusCode = err.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
+  
+  // Log l'erreur complète en développement
+  if (env.NODE_ENV === 'development') {
+    logger.error('❌ Erreur:', {
+      message: err.message,
+      stack: err.stack,
+      code: err.code,
+      statusCode: statusCode
+    });
+  } else {
+    logger.error(`❌ Erreur: ${err.message} - Status: ${statusCode}`);
+  }
+  
+  // Ne pas exposer les erreurs CORS en production
+  const isCorsError = err.message && err.message.includes('CORS');
+  const errorMessage = isCorsError && env.NODE_ENV === 'production'
+    ? 'Erreur de configuration CORS'
+    : err.message || 'Erreur interne du serveur';
+  
   res.status(statusCode).json({
     success: false,
-    message: err.message || 'Erreur interne du serveur',
-    ...(env.NODE_ENV === 'development' && err.stack ? { stack: err.stack } : {}),
+    message: errorMessage,
+    ...(env.NODE_ENV === 'development' && !isCorsError && err.stack ? { stack: err.stack } : {}),
     timestamp: new Date().toISOString()
   });
 });
