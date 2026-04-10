@@ -77,8 +77,8 @@ app.use(
         }
       }
       
-      // Vérifier si l'origine est autorisée
-      if (allowedOrigins.includes(origin)) {
+      // Vérifier si l'origine est autorisée ou si elle provient d'un domaine Vercel
+      if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
         callback(null, true);
       } else {
         logger.warn(`❌ Origine CORS refusée: ${origin}`);
@@ -128,6 +128,8 @@ app.use(
     stream: { write: (msg: string) => logger.info(msg.trim()) }
   })
 );
+
+logger.info(`✅ CORS origins loaded: ${env.ALLOWED_ORIGINS.join(', ')}`);
 
 app.use(apiLimiter);
 app.use(express.json({ limit: '10mb' }));
