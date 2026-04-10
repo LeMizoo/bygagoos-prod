@@ -25,15 +25,8 @@ class RedisClient {
   private readonly RECONNECT_DELAY = 1000;
 
   private constructor() {
-    // Vérifier si Redis est requis
-    this.useFallback = process.env.REDIS_REQUIRED !== 'true' && process.env.NODE_ENV !== 'production';
-    
-    if (!this.useFallback) {
-      this.initializeClient();
-    } else {
-      logger.warn('⚠️ Redis configuré en mode fallback (stockage en mémoire)');
-    }
-    
+    // Toujours essayer de se connecter à Redis, mais permettre le fallback
+    this.initializeClient();
     this.setupEventHandlers();
   }
 
@@ -70,12 +63,11 @@ class RedisClient {
       logger.error('❌ Redis Client Error:', err);
       this.isConnected = false;
       
-      // Passer en mode fallback si nécessaire
-      if (!this.useFallback && process.env.REDIS_REQUIRED !== 'true') {
+      // Passer en mode fallback après échec de reconnexion
+      if (!this.useFallback) {
         logger.warn('⚠️ Passage en mode fallback (stockage en mémoire)');
         this.useFallback = true;
-      } else {
-        this.attemptReconnect();
+        this.reconnectAttempts = 0; // Reset attempts
       }
     });
 
@@ -100,8 +92,14 @@ class RedisClient {
   }
 
   private async attemptReconnect(): Promise<void> {
+    if (this.useFallback) {
+      logger.info('🔄 Redis en mode fallback - pas de reconnexion');
+      return;
+    }
+
     if (this.reconnectAttempts >= this.MAX_RECONNECT_ATTEMPTS) {
-      logger.error('❌ Max reconnection attempts reached for Redis');
+      logger.error('❌ Max reconnection attempts reached for Redis - passage en fallback');
+      this.useFallback = true;
       return;
     }
 
