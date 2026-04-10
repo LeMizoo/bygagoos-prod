@@ -50,7 +50,11 @@ export const env = {
 
   // Frontend
   FRONTEND_URL_DEV: process.env.FRONTEND_URL_DEV || 'http://localhost:3000',
-  ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ['http://localhost:3000', 'http://localhost:5173'],
+  ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim()).filter(Boolean)
+    : process.env.NODE_ENV === 'production'
+      ? ['https://bygagoos-prod.vercel.app']
+      : ['http://localhost:3000', 'http://localhost:5173'],
 
   // Rate Limiting
   RATE_LIMIT_WINDOW_MS: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10),
