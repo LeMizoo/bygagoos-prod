@@ -22,7 +22,7 @@ services:
       - key: JWT_REFRESH_EXPIRES_IN
         value: 7d
       - key: ALLOWED_ORIGINS
-        value: https://bygagoos-prod.vercel.app
+        value: https://bygagoos-prod.vercel.app,http://localhost:5173,http://localhost:3000
       - key: FRONTEND_URL
         value: https://bygagoos-prod.vercel.app
       - key: SMTP_HOST
