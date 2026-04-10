@@ -16,11 +16,14 @@ interface RefreshTokenPayload {
 const accessSecret = process.env.JWT_ACCESS_SECRET as string;
 const refreshSecret = process.env.JWT_REFRESH_SECRET as string;
 
-if (!accessSecret || !refreshSecret) {
-  throw new Error('JWT secrets not defined in environment variables');
-}
+const validateSecrets = () => {
+  if (!accessSecret || !refreshSecret) {
+    throw new Error('JWT secrets not defined in environment variables');
+  }
+};
 
 export const generateAccessToken = (id: string, email: string, role: string) => {
+  validateSecrets();
   const payload: AccessTokenPayload = {
     id,
     email,
@@ -38,6 +41,7 @@ export const generateAccessToken = (id: string, email: string, role: string) => 
 };
 
 export const generateRefreshToken = (id: string, tokenVersion: number) => {
+  validateSecrets();
   const payload: RefreshTokenPayload = {
     id,
     tokenVersion,
@@ -53,9 +57,11 @@ export const generateRefreshToken = (id: string, tokenVersion: number) => {
 };
 
 export const verifyAccessToken = (token: string) => {
+  validateSecrets();
   return jwt.verify(token, accessSecret) as AccessTokenPayload;
 };
 
 export const verifyRefreshToken = (token: string) => {
+  validateSecrets();
   return jwt.verify(token, refreshSecret) as RefreshTokenPayload;
 };
