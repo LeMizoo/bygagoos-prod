@@ -196,10 +196,11 @@ export default function CreateOrderPage() {
 
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="clientId" className="block text-sm font-medium text-gray-700 mb-2">
                 Client *
               </label>
               <select
+                id="clientId"
                 name="clientId"
                 value={formData.clientId}
                 onChange={handleChange}
@@ -218,10 +219,11 @@ export default function CreateOrderPage() {
 
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="deliveryDate" className="block text-sm font-medium text-gray-700 mb-2">
                   Date de livraison souhaitée
                 </label>
                 <input
+                  id="deliveryDate"
                   type="date"
                   name="deliveryDate"
                   value={formData.deliveryDate}
@@ -231,10 +233,11 @@ export default function CreateOrderPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="priority" className="block text-sm font-medium text-gray-700 mb-2">
                   Priorité
                 </label>
                 <select
+                  id="priority"
                   name="priority"
                   value={formData.priority}
                   onChange={handleChange}
@@ -280,11 +283,12 @@ export default function CreateOrderPage() {
           <div className="space-y-6">
             {/* Sélection d'un design à ajouter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="addDesign" className="block text-sm font-medium text-gray-700 mb-2">
                 Ajouter un design
               </label>
               <div className="flex space-x-4">
                 <select
+                  id="addDesign"
                   onChange={(e) => {
                     if (e.target.value) {
                       addDesign(e.target.value);
@@ -403,10 +407,11 @@ export default function CreateOrderPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
               Statut initial
             </label>
             <select
+              id="status"
               name="status"
               value={formData.status}
               onChange={handleChange}
