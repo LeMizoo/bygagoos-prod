@@ -38,7 +38,7 @@
 4. Framework: React ✓
 5. Root directory: frontend/
 6. Deploy!
-7. Environment Variable: VITE_API_BASE_URL = https://your-app.railway.app/api
+7. Environment Variable: VITE_API_URL = https://your-app.railway.app/api
 8. Redeploy
 ```
 
@@ -79,7 +79,7 @@ See `DEPLOYMENT_GUIDE.md` for detailed instructions, troubleshooting, and featur
 | Issue | Fix |
 |-------|-----|
 | CORS Error | Check `CORS_ORIGIN` env var in Railway |
-| "Cannot reach API" | Vercel `VITE_API_BASE_URL` might be wrong - redeploy |
+| "Cannot reach API" | Vercel `VITE_API_URL` might be wrong - redeploy |
 | MongoDB timeout | Whitelist IP on MongoDB Atlas |
 | Email not working | Use [Gmail App Password](https://support.google.com/accounts/answer/185833) |
 

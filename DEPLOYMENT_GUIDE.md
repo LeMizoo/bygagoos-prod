@@ -92,7 +92,7 @@ CORS_ORIGIN = https://your-vercel-frontend-url.vercel.app
 ### Étape 6: Mettre à jour la variable Vercel
 1. Retournez sur Vercel
 2. Allez à **Settings → Environment Variables**
-3. Mettez à jour: `VITE_API_BASE_URL = https://your-app-name.railway.app/api`
+3. Mettez à jour: `VITE_API_URL = https://your-app-name.railway.app/api`
 4. **Redeploy** le frontend
 
 ---

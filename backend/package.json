@@ -61,7 +61,7 @@
     "email:test": "ts-node src/scripts/test-email.ts",
 
     "prebuild": "npm run clean",
-    "postinstall": "npm run type-check",
+    "postinstall": "npm run build",
     "precommit": "lint-staged",
     "prepush": "npm test"
   },
