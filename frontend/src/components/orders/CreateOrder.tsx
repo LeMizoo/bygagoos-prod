@@ -63,15 +63,47 @@ type OrderFormData = z.infer<typeof orderSchema>;
 // ==================
 // COMPONENT
 // ==================
-export const CreateOrder: React.FC = () => {
+type CreateOrderProps = {
+  isEditing?: boolean;
+  initialData?: Record<string, any>;
+};
+
+export const CreateOrder: React.FC<CreateOrderProps> = ({ isEditing = false, initialData }) => {
   const navigate = useNavigate();
 
   const [uploadingPreviews, setUploadingPreviews] = useState<Record<number, boolean>>({});
 
-  const { createOrder, isLoading } = useOrderStore();
+  const { createOrder, updateOrder, isLoading } = useOrderStore();
   const { clients, fetchClients } = useClientStore();
   const { designs, fetchDesigns } = useDesignStore();
   const { user } = useAuthStore();
+
+  const normalizeClientId = () => {
+    const client = initialData?.client;
+    if (!client) return '';
+    if (typeof client === 'string') {
+      return client;
+    }
+    return client._id ?? '';
+  };
+
+  const normalizeDesigns = () => {
+    if (!initialData?.designs) return [{ design: '', quantity: 1 }];
+    return initialData.designs.map((d: any) => ({
+      design: typeof d.design === 'string' ? d.design : d.design?._id ?? '',
+      quantity: d.quantity ?? 1,
+      price: d.price ?? d.design?.price,
+      modifications: d.modifications ?? '',
+      previewFile: undefined,
+      existingPreview: d.previewUrl ?? d.existingPreview ?? ''
+    }));
+  };
+
+  const getRequestedDate = () => {
+    if (initialData?.requestedDate) return initialData.requestedDate;
+    if (initialData?.deadline) return initialData.deadline.split('T')[0];
+    return '';
+  };
 
   // ==================
   // ✅ FORM CLEAN
@@ -79,15 +111,15 @@ export const CreateOrder: React.FC = () => {
   const form = useForm<OrderFormData>({
     resolver: zodResolver(orderSchema),
     defaultValues: {
-      client: '',
-      title: '',
-      description: '',
-      priority: 'MEDIUM',
-      requestedDate: '',
-      designs: [{ design: '', quantity: 1 }],
-      taxRate: 20,
-      discount: undefined,
-      tags: []
+      client: normalizeClientId(),
+      title: initialData?.title ?? '',
+      description: initialData?.description ?? '',
+      priority: initialData?.priority ?? 'MEDIUM',
+      requestedDate: getRequestedDate(),
+      designs: normalizeDesigns(),
+      taxRate: initialData?.taxRate ?? 20,
+      discount: initialData?.discount ?? undefined,
+      tags: Array.isArray(initialData?.tags) ? initialData?.tags : []
     }
   });
 
@@ -98,8 +130,25 @@ export const CreateOrder: React.FC = () => {
     watch,
     setValue,
     getValues,
+    reset,
     formState: { errors }
   } = form;
+
+  useEffect(() => {
+    if (initialData) {
+      reset({
+        client: normalizeClientId(),
+        title: initialData.title ?? '',
+        description: initialData.description ?? '',
+        priority: initialData.priority ?? 'MEDIUM',
+        requestedDate: getRequestedDate(),
+        designs: normalizeDesigns(),
+        taxRate: initialData.taxRate ?? 20,
+        discount: initialData.discount ?? undefined,
+        tags: Array.isArray(initialData.tags) ? initialData.tags : []
+      });
+    }
+  }, [initialData, reset]);
 
   const { fields, append, remove, update } = useFieldArray({
     control,
@@ -180,6 +229,13 @@ export const CreateOrder: React.FC = () => {
           previewUrl: d.previewFile || d.existingPreview
         }))
       };
+
+      if (isEditing && initialData?._id) {
+        await updateOrder(initialData._id, payload);
+        toast.success('Commande mise à jour');
+        navigate(`/admin/orders/${initialData._id}`);
+        return;
+      }
 
       const order = await createOrder(payload);
 
@@ -296,7 +352,7 @@ export const CreateOrder: React.FC = () => {
       {/* SUBMIT */}
       <Button type="submit" isLoading={isLoading}>
         <Save size={18} className="mr-2" />
-        Créer
+        {isEditing ? 'Mettre à jour' : 'Créer'}
       </Button>
 
     </form>
