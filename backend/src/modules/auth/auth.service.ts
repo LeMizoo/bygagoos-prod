@@ -76,27 +76,71 @@ export class AuthService {
   }
 
   async login(credentials: LoginDto) {
-    const { email, password } = credentials;
-
-    const user = await User.findOne({ email }).select('+password');
-    // Utilisation d'une assertion vers un objet littéral pour accéder au password hashé
-    const userWithPass = user as unknown as Record<string, string>;
+    console.log('=== AUTH SERVICE LOGIN ===');
+    console.log('Credentials reçus:', { 
+      email: credentials.email, 
+      password: credentials.password ? '***' : 'manquant' 
+    });
     
-    if (!user || !(await bcrypt.compare(password, userWithPass.password || ''))) {
+    const { email, password } = credentials;
+    
+    // Validation supplémentaire
+    if (!email || !password) {
+      console.log('❌ Email ou mot de passe manquant');
+      throw new AppError('Email et mot de passe requis', HTTP_STATUS.BAD_REQUEST);
+    }
+    
+    // Normaliser l'email (trim + lowercase)
+    const normalizedEmail = email.toLowerCase().trim();
+    console.log('Email normalisé:', normalizedEmail);
+    
+    // Chercher l'utilisateur avec le mot de passe
+    const user = await User.findOne({ email: normalizedEmail }).select('+password');
+    
+    if (!user) {
+      console.log('❌ Utilisateur non trouvé pour:', normalizedEmail);
       throw new AppError('Email ou mot de passe incorrect', HTTP_STATUS.UNAUTHORIZED);
     }
-
+    
+    console.log('✅ Utilisateur trouvé:', {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      isActive: user.isActive,
+      hasPassword: !!user.password
+    });
+    
+    // Vérifier si le compte est actif
     if (!user.isActive) {
-      throw new AppError("Compte désactivé", HTTP_STATUS.FORBIDDEN);
+      console.log('❌ Compte désactivé');
+      throw new AppError('Compte désactivé. Contactez l\'administrateur.', HTTP_STATUS.FORBIDDEN);
     }
-
+    
+    // Vérifier le mot de passe avec logs détaillés
+    console.log('🔐 Vérification du mot de passe...');
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    console.log('Résultat de la comparaison bcrypt:', isPasswordValid);
+    
+    if (!isPasswordValid) {
+      console.log('❌ Mot de passe invalide pour:', normalizedEmail);
+      throw new AppError('Email ou mot de passe incorrect', HTTP_STATUS.UNAUTHORIZED);
+    }
+    
+    console.log('✅ Mot de passe valide!');
+    
+    // Mettre à jour la dernière connexion
     user.lastLogin = new Date();
     await user.save();
-
+    console.log('📅 lastLogin mis à jour');
+    
+    // Générer les tokens
     const accessToken = generateAccessToken(user.id, user.email, user.role);
     const refreshToken = RefreshTokenService.generateToken();
     await RefreshTokenService.storeToken(user.id, refreshToken);
-
+    
+    console.log('🎫 Tokens générés avec succès');
+    console.log('✅ Login réussi pour:', user.email);
+    
     return {
       user: this.formatUserResponse(user),
       accessToken,
