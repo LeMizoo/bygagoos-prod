@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 // frontend/src/utils/devLogger.ts
 // Simple logger wrapper that only emits logs in development mode (Vite/DEV or NODE_ENV=development)
-const isDev = typeof import.meta !== 'undefined' && Boolean((import.meta as any).env?.DEV) || process.env.NODE_ENV === 'development';
+const isDev = typeof import.meta !== 'undefined' && Boolean(import.meta.env?.DEV) || import.meta.env?.MODE === 'development';
 
 export const dev = {
   log: (...args: unknown[]) => { if (isDev) console.log(...args); },

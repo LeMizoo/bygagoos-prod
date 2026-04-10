@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import authApi, { type UserProfile, type AuthResponse, type UpdateProfileData } from "../api/auth.api";
+import { dev } from "../utils/devLogger";
 
 export type User = UserProfile;
 
@@ -95,8 +96,6 @@ export const useAuthStore = create<AuthState>()(
           await authApi.logout();
         } catch (error) {
           // Prefer development-only logger
-          // eslint-disable-next-line @typescript-eslint/no-var-requires
-          const { dev } = require('../utils/devLogger');
           dev.warn("Déconnexion API notifiée avec erreur (ignorée):", error);
         } finally {
           // QUOI QU'IL ARRIVE : On vide tout
@@ -154,8 +153,6 @@ export const useAuthStore = create<AuthState>()(
                 return;
               }
             } catch (e) {
-              // eslint-disable-next-line @typescript-eslint/no-var-requires
-              const { dev } = require('../utils/devLogger');
               dev.error("Échec rafraîchissement profond:", e);
             }
           }

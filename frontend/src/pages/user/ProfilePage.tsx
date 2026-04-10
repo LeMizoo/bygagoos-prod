@@ -13,6 +13,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { useAuthStore } from "../../stores/authStore";
+import { dev } from "../../utils/devLogger";
 
 export default function ProfilePage() {
   const { user, updateProfile } = useAuthStore();
@@ -78,8 +79,6 @@ export default function ProfilePage() {
       
       if (Object.keys(updateData).length > 0) {
         // use dev logger
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const { dev } = require('../../utils/devLogger');
         dev.log('📝 Mise à jour du profil avec:', updateData);
         await updateProfile(updateData);
         setMessage({ type: "success", text: "Profil mis à jour avec succès!" });
@@ -90,8 +89,6 @@ export default function ProfilePage() {
       setIsEditing(false);
     } catch (error: any) {
       // use dev logger
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { dev } = require('../../utils/devLogger');
       dev.error('❌ Erreur mise à jour profil:', error);
       setMessage({
         type: "error",
@@ -153,8 +150,6 @@ export default function ProfilePage() {
       setIsChangingPassword(false);
     } catch (error: any) {
       // use dev logger
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { dev } = require('../../utils/devLogger');
       dev.error('❌ Erreur changement mot de passe:', error);
       setMessage({
         type: "error",
