@@ -2,7 +2,7 @@ services:
   - type: web
     name: bygagoos-ink-backend
     runtime: node
-    repo: https://github.com/votre-username/bygagoos-ink
+    repo: https://github.com/LeMizoo/bygagoos-prod
     branch: main
     rootDir: backend
     buildCommand: npm install && npm run build
@@ -19,8 +19,26 @@ services:
         generateValue: true
       - key: JWT_REFRESH_SECRET
         generateValue: true
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 7d
       - key: ALLOWED_ORIGINS
-        value: https://votre-frontend.vercel.app
+        value: https://your-frontend.vercel.app
+      - key: FRONTEND_URL
+        value: https://your-frontend.vercel.app
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: SMTP_FROM
+        value: noreply@bygagoos.com
+      - key: ALLOWED_FILE_TYPES
+        value: image/jpeg,image/png
+      - key: MAX_FILE_SIZE
+        value: "10485760"
       - key: CLOUDINARY_CLOUD_NAME
         sync: false
       - key: CLOUDINARY_API_KEY

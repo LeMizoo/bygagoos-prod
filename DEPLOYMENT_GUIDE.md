@@ -97,6 +97,39 @@ CORS_ORIGIN = https://your-vercel-frontend-url.vercel.app
 
 ---
 
+---
+
+## Alternative : Déployer le backend sur Render
+
+Si Railway est indisponible ou si votre période d'essai est terminée, utilisez Render :
+
+1. Allez sur https://render.com
+2. Créez un compte GitHub / connectez-vous
+3. Cliquez `New` → `Web Service`
+4. Sélectionnez le repo `LeMizoo/bygagoos-prod`
+5. Choisissez `backend/` comme root folder
+6. Build command : `npm install && npm run build`
+7. Start command : `npm start`
+8. Health check path : `/health`
+9. Ajoutez ces variables d'environnement :
+   - `MONGODB_URI`
+   - `NODE_ENV=production`
+   - `PORT=5000`
+   - `JWT_ACCESS_SECRET`
+   - `JWT_REFRESH_SECRET`
+   - `ALLOWED_ORIGINS=https://your-frontend.vercel.app`
+   - `FRONTEND_URL=https://your-frontend.vercel.app`
+   - `SMTP_HOST=smtp.gmail.com`
+   - `SMTP_PORT=587`
+   - `SMTP_USER`
+   - `SMTP_PASSWORD`
+   - `SMTP_FROM=noreply@bygagoos.com`
+10. Deployez.
+
+Une fois le backend Render en ligne, utilisez son URL pour `VITE_API_URL` dans Vercel.
+
+---
+
 ## Phase 4: Configuration Finale
 
 ### Test des APIs
