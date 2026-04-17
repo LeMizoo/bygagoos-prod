@@ -100,6 +100,7 @@ function App() {
 
       <Routes>
         <Route path="/" element={<Navigate to="/home" replace />} />
+        <Route path="/login" element={<Navigate to="/auth/login" replace />} />
 
         {/* ===== ROUTES PUBLIQUES AVEC MAIN LAYOUT ===== */}
         <Route element={<MainLayout />}>
