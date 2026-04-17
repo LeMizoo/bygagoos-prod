@@ -35,6 +35,21 @@ interface ClientStore {
   deleteClient: (id: string) => Promise<void>;
 }
 
+const extractClientsList = (payload: unknown): Client[] => {
+  if (Array.isArray(payload)) {
+    return payload as Client[];
+  }
+
+  if (payload && typeof payload === 'object') {
+    const maybeClients = (payload as { clients?: unknown }).clients;
+    if (Array.isArray(maybeClients)) {
+      return maybeClients as Client[];
+    }
+  }
+
+  return [];
+};
+
 export const useClientStore = create<ClientStore>((set, get) => ({
   clients: [],
   currentClient: null,
@@ -47,9 +62,10 @@ export const useClientStore = create<ClientStore>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await api.get("/clients", { params: { page, limit, ...filters } });
+      const payload = response.data?.data ?? response.data;
       set({
-        clients: response.data.data || response.data,
-        totalPages: response.data.pagination?.pages || 1,
+        clients: extractClientsList(payload),
+        totalPages: response.data.pagination?.totalPages || 1,
         currentPage: page,
         isLoading: false,
       });

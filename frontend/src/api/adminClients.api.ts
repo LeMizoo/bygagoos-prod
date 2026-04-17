@@ -100,14 +100,29 @@ const transformClientData = (data: Record<string, unknown>): Client => {
   };
 };
 
+const extractClientsList = (payload: unknown): Record<string, unknown>[] => {
+  if (Array.isArray(payload)) {
+    return payload as Record<string, unknown>[];
+  }
+
+  if (payload && typeof payload === 'object') {
+    const maybeClients = (payload as { clients?: unknown }).clients;
+    if (Array.isArray(maybeClients)) {
+      return maybeClients as Record<string, unknown>[];
+    }
+  }
+
+  return [];
+};
+
 export const adminClientsApi = {
   // Récupérer tous les clients
   getAll: async (): Promise<Client[]> => {
     try {
       dev.log('🌐 Clients API: GET /api/clients');
       const response = await api.get('/clients');
-      const data = response.data.data || response.data;
-      return Array.isArray(data) ? data.map(transformClientData) : [];
+      const payload = response.data?.data ?? response.data;
+      return extractClientsList(payload).map(transformClientData);
     } catch (error) {
       dev.error("❌ Error fetching clients:", error);
       return [];
