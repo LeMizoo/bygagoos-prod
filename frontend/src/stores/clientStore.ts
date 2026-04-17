@@ -50,6 +50,17 @@ const extractClientsList = (payload: unknown): Client[] => {
   return [];
 };
 
+const extractPaginationTotalPages = (responseData: unknown): number => {
+  if (!responseData || typeof responseData !== 'object') {
+    return 1;
+  }
+
+  const data = responseData as { data?: { totalPages?: unknown }; totalPages?: unknown; pagination?: { totalPages?: unknown; pages?: unknown } };
+  const candidate = data.data?.totalPages ?? data.totalPages ?? data.pagination?.totalPages ?? data.pagination?.pages;
+
+  return typeof candidate === 'number' && candidate > 0 ? candidate : 1;
+};
+
 export const useClientStore = create<ClientStore>((set, get) => ({
   clients: [],
   currentClient: null,
@@ -65,7 +76,7 @@ export const useClientStore = create<ClientStore>((set, get) => ({
       const payload = response.data?.data ?? response.data;
       set({
         clients: extractClientsList(payload),
-        totalPages: response.data.pagination?.totalPages || 1,
+        totalPages: extractPaginationTotalPages(response.data),
         currentPage: page,
         isLoading: false,
       });

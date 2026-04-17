@@ -21,7 +21,7 @@ export const getClients = async (req: AuthRequest, res: Response): Promise<void>
     }
 
     const query = validateData(queryClientSchema, req.query) as Record<string, unknown>;
-    const result = await clientService.findAll(userId, query);
+    const result = await clientService.findAll(userId, query, req.user?.role);
 
     apiResponse.success(res, result, 'Clients récupérés avec succès');
   } catch (error) {
@@ -56,7 +56,7 @@ export const getClientById = async (req: AuthRequest, res: Response): Promise<vo
       return;
     }
 
-    const client = await clientService.findById(id, userId);
+    const client = await clientService.findById(id, userId, req.user?.role);
 
     apiResponse.success(res, client, 'Client récupéré avec succès');
   } catch (error) {
@@ -139,7 +139,7 @@ export const updateClient = async (req: AuthRequest, res: Response): Promise<voi
       return;
     }
 
-    const client = await clientService.update(id, userId, data);
+    const client = await clientService.update(id, userId, data, req.user?.role);
 
     apiResponse.success(res, client, 'Client mis à jour avec succès');
   } catch (error) {
@@ -182,7 +182,7 @@ export const deleteClient = async (req: AuthRequest, res: Response): Promise<voi
       return;
     }
 
-    await clientService.delete(id, userId);
+    await clientService.delete(id, userId, req.user?.role);
 
     apiResponse.success(res, null, 'Client supprimé avec succès');
   } catch (error) {
@@ -216,7 +216,7 @@ export const getClientStats = async (req: AuthRequest, res: Response): Promise<v
       return;
     }
 
-    const stats = await clientService.getStats(userId);
+    const stats = await clientService.getStats(userId, req.user?.role);
 
     apiResponse.success(res, stats, 'Statistiques récupérées');
   } catch (error) {
@@ -254,7 +254,8 @@ export const searchClients = async (req: AuthRequest, res: Response): Promise<vo
     const clients = await clientService.search(
       userId,
       q,
-      limit ? parseInt(limit as string, 10) : 10
+      limit ? parseInt(limit as string, 10) : 10,
+      req.user?.role
     );
 
     apiResponse.success(res, { clients, count: clients.length }, 'Recherche effectuée');

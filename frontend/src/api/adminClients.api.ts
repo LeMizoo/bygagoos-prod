@@ -1,8 +1,9 @@
 // frontend/src/api/adminClients.api.ts
 
+import api from './client';
+import { dev } from '../utils/devLogger';
 import { Client as ClientType } from "../types/client";
 
-// Réutiliser le type Client de types/client.ts
 export type Client = ClientType;
 
 export interface CreateClientData {
@@ -46,33 +47,25 @@ export interface CreateClientData {
 
 export interface UpdateClientData extends Partial<CreateClientData> {}
 
-// Utiliser la même instance axios que le reste de l'app
-import api from './client';
-import { dev } from '../utils/devLogger';
-
-// Fonction pour transformer les données de l'API vers le type Client
 const transformClientData = (data: Record<string, unknown>): Client => {
-  // Si le statut est "active"/"inactive" au lieu de isActive boolean
   let isActive = true;
   if (typeof data.isActive === 'boolean') {
     isActive = data.isActive;
-  } else if (data.status === 'inactive') {
-    isActive = false;
-  } else if (data.status === 'pending') {
+  } else if (data.status === 'inactive' || data.status === 'pending') {
     isActive = false;
   }
 
-  const name = typeof data.name === 'string' ? data.name : "";
-  const nameParts = name.split(" ");
-  const firstName = typeof data.firstName === 'string' ? data.firstName : nameParts[0] || "";
-  const lastName = typeof data.lastName === 'string' ? data.lastName : (nameParts.length > 1 ? nameParts.slice(1).join(" ") : "");
+  const name = typeof data.name === 'string' ? data.name : '';
+  const nameParts = name.split(' ');
+  const firstName = typeof data.firstName === 'string' ? data.firstName : nameParts[0] || '';
+  const lastName = typeof data.lastName === 'string' ? data.lastName : (nameParts.length > 1 ? nameParts.slice(1).join(' ') : '');
 
   return {
     _id: typeof data._id === 'string' ? data._id : (typeof data.id === 'string' ? data.id : undefined),
     id: typeof data._id === 'string' ? data._id : (typeof data.id === 'string' ? data.id : undefined),
     firstName,
     lastName,
-    email: typeof data.email === 'string' ? data.email : "",
+    email: typeof data.email === 'string' ? data.email : '',
     phone: typeof data.phone === 'string' ? data.phone : undefined,
     address: typeof data.address === 'string' ? data.address : undefined,
     city: typeof data.city === 'string' ? data.city : undefined,
@@ -115,54 +108,91 @@ const extractClientsList = (payload: unknown): Record<string, unknown>[] => {
   return [];
 };
 
+const extractResponseData = (responseData: unknown): unknown => {
+  if (responseData && typeof responseData === 'object' && 'data' in responseData) {
+    return (responseData as { data?: unknown }).data ?? responseData;
+  }
+
+  return responseData;
+};
+
+const extractErrorMessage = (error: unknown, fallback: string): string => {
+  const maybeError = error as { response?: { data?: { message?: unknown; error?: unknown } }; message?: unknown };
+  const responseMessage = maybeError.response?.data?.message ?? maybeError.response?.data?.error;
+
+  if (typeof responseMessage === 'string' && responseMessage.trim()) {
+    return responseMessage;
+  }
+
+  if (typeof maybeError.message === 'string' && maybeError.message.trim()) {
+    return maybeError.message;
+  }
+
+  return fallback;
+};
+
 export const adminClientsApi = {
-  // Récupérer tous les clients
   getAll: async (): Promise<Client[]> => {
     try {
-      dev.log('🌐 Clients API: GET /api/clients');
+      dev.log('?? Clients API: GET /api/clients');
       const response = await api.get('/clients');
       const payload = response.data?.data ?? response.data;
       return extractClientsList(payload).map(transformClientData);
     } catch (error) {
-      dev.error("❌ Error fetching clients:", error);
+      dev.error('? Error fetching clients:', error);
       return [];
     }
   },
-  
+
   getById: async (id: string): Promise<Client> => {
-    dev.log(`🌐 Clients API: GET /api/clients/${id}`);
+    dev.log(`?? Clients API: GET /api/clients/${id}`);
     const response = await api.get(`/clients/${id}`);
-    const data = response.data.data || response.data;
-    return transformClientData(data);
+    const data = extractResponseData(response.data);
+    return transformClientData(data as Record<string, unknown>);
   },
-  
+
   create: async (data: CreateClientData): Promise<Client> => {
-    dev.log('🌐 Clients API: POST /api/clients');
-    const response = await api.post('/clients', data);
-    const responseData = response.data.data || response.data;
-    return transformClientData(responseData);
+    dev.log('?? Clients API: POST /api/clients');
+    try {
+      const response = await api.post('/clients', data);
+      const responseData = extractResponseData(response.data);
+      return transformClientData(responseData as Record<string, unknown>);
+    } catch (error) {
+      throw new Error(extractErrorMessage(error, 'Erreur lors de la cr?ation du client'));
+    }
   },
-  
+
   update: async (id: string, data: UpdateClientData): Promise<Client> => {
-    dev.log(`🌐 Clients API: PATCH /api/clients/${id}`);
-    const response = await api.patch(`/clients/${id}`, data);
-    const responseData = response.data.data || response.data;
-    return transformClientData(responseData);
+    dev.log(`?? Clients API: PATCH /api/clients/${id}`);
+    try {
+      const response = await api.patch(`/clients/${id}`, data);
+      const responseData = extractResponseData(response.data);
+      return transformClientData(responseData as Record<string, unknown>);
+    } catch (error) {
+      throw new Error(extractErrorMessage(error, 'Erreur lors de la mise ? jour du client'));
+    }
   },
-  
+
   delete: async (id: string): Promise<void> => {
-    dev.log(`🌐 Clients API: DELETE /api/clients/${id}`);
-    await api.delete(`/clients/${id}`);
+    dev.log(`?? Clients API: DELETE /api/clients/${id}`);
+    try {
+      await api.delete(`/clients/${id}`);
+    } catch (error) {
+      throw new Error(extractErrorMessage(error, 'Erreur lors de la suppression du client'));
+    }
   },
-  
+
   toggleStatus: async (id: string, isActive: boolean): Promise<Client> => {
-    dev.log(`🌐 Clients API: PATCH /api/clients/${id}/status`);
-    const response = await api.patch(`/clients/${id}/status`, { isActive });
-    const responseData = response.data.data || response.data;
-    return transformClientData(responseData);
+    dev.log(`?? Clients API: PATCH /api/clients/${id}/status`);
+    try {
+      const response = await api.patch(`/clients/${id}/status`, { isActive });
+      const responseData = extractResponseData(response.data);
+      return transformClientData(responseData as Record<string, unknown>);
+    } catch (error) {
+      throw new Error(extractErrorMessage(error, 'Erreur lors du changement de statut du client'));
+    }
   },
-  
-  // Alias pour compatibilité
+
   getAllClients: async (): Promise<Client[]> => adminClientsApi.getAll(),
   createClient: async (data: CreateClientData): Promise<Client> => adminClientsApi.create(data),
   updateClient: async (id: string, data: UpdateClientData): Promise<Client> => adminClientsApi.update(id, data),

@@ -4,12 +4,21 @@ import { CreateClientDto, UpdateClientDto, QueryClientDto, ClientResponseDTO } f
 import { AppError } from '../../core/utils/errors/AppError';
 import { HTTP_STATUS } from '../../core/constants/httpStatus';
 import logger from '../../core/utils/logger';
+import { UserRole } from '../../core/types/userRoles';
 
 export class ClientService {
+  private buildScopeFilter(userId: string, role?: UserRole): Record<string, unknown> {
+    if (role === UserRole.SUPER_ADMIN) {
+      return {};
+    }
+
+    return { user: new Types.ObjectId(userId) };
+  }
+
   /**
    * Récupère tous les clients d'un utilisateur
    */
-  async findAll(userId: string, query: QueryClientDto): Promise<{
+  async findAll(userId: string, query: QueryClientDto, role?: UserRole): Promise<{
     clients: ClientResponseDTO[];
     total: number;
     page: number;
@@ -21,7 +30,7 @@ export class ClientService {
       const skip = (page - 1) * limit;
 
       // Construction du filtre
-      const filter: any = { user: new Types.ObjectId(userId) };
+      const filter: any = this.buildScopeFilter(userId, role);
       
       if (isActive !== undefined) {
         filter.isActive = isActive;
@@ -72,15 +81,15 @@ export class ClientService {
   /**
    * Récupère un client par son ID
    */
-  async findById(id: string, userId: string): Promise<ClientResponseDTO> {
+  async findById(id: string, userId: string, role?: UserRole): Promise<ClientResponseDTO> {
     try {
       if (!Types.ObjectId.isValid(id)) {
         throw new AppError('ID de client invalide', HTTP_STATUS.BAD_REQUEST);
       }
 
-      const client = await Client.findOne({ 
-        _id: id, 
-        user: new Types.ObjectId(userId) 
+      const client = await Client.findOne({
+        _id: id,
+        ...this.buildScopeFilter(userId, role)
       }).lean();
 
       if (!client) {
@@ -100,17 +109,17 @@ export class ClientService {
    */
   async create(userId: string, data: CreateClientDto, createdBy: string): Promise<ClientResponseDTO> {
     try {
-      // Vérifier si l'email existe déjà pour cet utilisateur
+      // V?rifier si l'email existe d?j? pour cet utilisateur
       const existingClient = await Client.findOne({
         email: data.email,
         user: new Types.ObjectId(userId)
       });
 
       if (existingClient) {
-        throw new AppError('Un client avec cet email existe déjà', HTTP_STATUS.CONFLICT);
+        throw new AppError('Un client avec cet email existe d?j?', HTTP_STATUS.CONFLICT);
       }
 
-      // Créer le client
+      // Cr?er le client
       const client = await Client.create({
         ...data,
         user: new Types.ObjectId(userId),
@@ -118,20 +127,20 @@ export class ClientService {
         tags: data.tags || []
       });
 
-      logger.info(`Nouveau client créé: ${client.email} par utilisateur ${userId}`);
+      logger.info(`Nouveau client cr??: ${client.email} par utilisateur ${userId}`);
 
       return new ClientResponseDTO(client.toObject());
     } catch (error) {
       if (error instanceof AppError) throw error;
       logger.error('Erreur dans create client:', error);
-      throw new AppError('Erreur lors de la création du client', HTTP_STATUS.INTERNAL_SERVER_ERROR);
+      throw new AppError('Erreur lors de la cr?ation du client', HTTP_STATUS.INTERNAL_SERVER_ERROR);
     }
   }
 
   /**
    * Met à jour un client existant
    */
-  async update(id: string, userId: string, data: UpdateClientDto): Promise<ClientResponseDTO> {
+  async update(id: string, userId: string, data: UpdateClientDto, role?: UserRole): Promise<ClientResponseDTO> {
     try {
       if (!Types.ObjectId.isValid(id)) {
         throw new AppError('ID de client invalide', HTTP_STATUS.BAD_REQUEST);
@@ -141,7 +150,7 @@ export class ClientService {
       if (data.email) {
         const existingClient = await Client.findOne({
           email: data.email,
-          user: new Types.ObjectId(userId),
+          ...this.buildScopeFilter(userId, role),
           _id: { $ne: id }
         });
 
@@ -152,7 +161,7 @@ export class ClientService {
 
       // Mettre à jour le client
       const client = await Client.findOneAndUpdate(
-        { _id: id, user: new Types.ObjectId(userId) },
+        { _id: id, ...this.buildScopeFilter(userId, role) },
         { $set: data },
         { new: true, runValidators: true }
       ).lean();
@@ -174,14 +183,14 @@ export class ClientService {
   /**
    * Supprime un client (soft delete)
    */
-  async delete(id: string, userId: string): Promise<void> {
+  async delete(id: string, userId: string, role?: UserRole): Promise<void> {
     try {
       if (!Types.ObjectId.isValid(id)) {
         throw new AppError('ID de client invalide', HTTP_STATUS.BAD_REQUEST);
       }
 
       const result = await Client.findOneAndUpdate(
-        { _id: id, user: new Types.ObjectId(userId) },
+        { _id: id, ...this.buildScopeFilter(userId, role) },
         { isActive: false },
         { new: true }
       );
@@ -201,7 +210,7 @@ export class ClientService {
   /**
    * Récupère les statistiques des clients
    */
-  async getStats(userId: string): Promise<{
+  async getStats(userId: string, role?: UserRole): Promise<{
     total: number;
     active: number;
     withCompany: number;
@@ -209,15 +218,15 @@ export class ClientService {
     tags: Record<string, number>;
   }> {
     try {
-      const userObjectId = new Types.ObjectId(userId);
+      const scopeFilter = this.buildScopeFilter(userId, role);
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
       const [total, active, withCompany, recent, tagAggregation] = await Promise.all([
-        Client.countDocuments({ user: userObjectId }),
-        Client.countDocuments({ user: userObjectId, isActive: true }),
+        Client.countDocuments(scopeFilter),
+        Client.countDocuments({ ...scopeFilter, isActive: true }),
         Client.countDocuments({ 
-          user: userObjectId,
+          ...scopeFilter,
           $and: [
             { company: { $exists: true } },
             { company: { $ne: null } },
@@ -225,11 +234,11 @@ export class ClientService {
           ]
         }),
         Client.countDocuments({
-          user: userObjectId,
+          ...scopeFilter,
           createdAt: { $gte: thirtyDaysAgo }
         }),
         Client.aggregate([
-          { $match: { user: userObjectId } },
+          { $match: scopeFilter },
           { $unwind: '$tags' },
           { $group: { _id: '$tags', count: { $sum: 1 } } },
           { $sort: { count: -1 } },
@@ -258,10 +267,10 @@ export class ClientService {
   /**
    * Recherche des clients
    */
-  async search(userId: string, term: string, limit: number = 10): Promise<ClientResponseDTO[]> {
+  async search(userId: string, term: string, limit: number = 10, role?: UserRole): Promise<ClientResponseDTO[]> {
     try {
       const clients = await Client.find({
-        user: new Types.ObjectId(userId),
+        ...this.buildScopeFilter(userId, role),
         isActive: true,
         $or: [
           { firstName: { $regex: term, $options: 'i' } },
@@ -279,4 +288,5 @@ export class ClientService {
       throw new AppError('Erreur lors de la recherche des clients', HTTP_STATUS.INTERNAL_SERVER_ERROR);
     }
   }
+
 }
