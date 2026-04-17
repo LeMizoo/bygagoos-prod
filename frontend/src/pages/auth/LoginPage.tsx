@@ -11,6 +11,7 @@ export default function LoginPage() {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>(
     {},
   );
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const { login } = useAuthStore();
@@ -40,6 +41,7 @@ export default function LoginPage() {
     if (!validateForm()) return;
 
     setIsLoading(true);
+    setSubmitError(null);
     try {
       dev.log('📝 Tentative de connexion...');
       await login(email, password);
@@ -52,8 +54,10 @@ export default function LoginPage() {
       } else {
         navigate("/user/profile");
       }
-    } catch (error: any) {
-      dev.error('❌ Erreur:', error);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      setSubmitError(errorMessage);
+      dev.error('Erreur:', errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -163,6 +167,13 @@ export default function LoginPage() {
           >
             {isLoading ? "Connexion en cours..." : "Se connecter"}
           </button>
+
+          {submitError && (
+            <p className="text-sm text-red-600 flex items-center" role="alert">
+              <AlertCircle className="h-4 w-4 mr-1" />
+              {submitError}
+            </p>
+          )}
         </form>
 
         {/* Boutons sociaux avec logos uniquement - alignés horizontalement */}
@@ -178,14 +189,22 @@ export default function LoginPage() {
 
           <div className="mt-6 flex justify-center gap-4">
             {/* Microsoft */}
-            <button className="p-3 rounded-full border border-gray-300 bg-white hover:bg-gray-50 transition-colors">
+            <button
+              title="Se connecter avec Microsoft"
+              aria-label="Se connecter avec Microsoft"
+              className="p-3 rounded-full border border-gray-300 bg-white hover:bg-gray-50 transition-colors"
+            >
               <svg width="24" height="24" viewBox="0 0 24 24">
                 <path d="M11.5 2v9.5H2V2h9.5zm0 20H2v-9.5h9.5V22zM22 2v9.5h-9.5V2H22zm0 20h-9.5v-9.5H22V22z" fill="#00a4ef"/>
               </svg>
             </button>
 
             {/* Google */}
-            <button className="p-3 rounded-full border border-gray-300 bg-white hover:bg-gray-50 transition-colors">
+            <button
+              title="Se connecter avec Google"
+              aria-label="Se connecter avec Google"
+              className="p-3 rounded-full border border-gray-300 bg-white hover:bg-gray-50 transition-colors"
+            >
               <svg width="24" height="24" viewBox="0 0 24 24">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -195,14 +214,22 @@ export default function LoginPage() {
             </button>
 
             {/* Apple */}
-            <button className="p-3 rounded-full border border-gray-300 bg-white hover:bg-gray-50 transition-colors">
+            <button
+              title="Se connecter avec Apple"
+              aria-label="Se connecter avec Apple"
+              className="p-3 rounded-full border border-gray-300 bg-white hover:bg-gray-50 transition-colors"
+            >
               <svg width="24" height="24" viewBox="0 0 24 24">
                 <path d="M17.05 20.28c-.98.95-2.05.88-3.08.38-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.38C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" fill="#000"/>
               </svg>
             </button>
 
             {/* Facebook */}
-            <button className="p-3 rounded-full border border-gray-300 bg-white hover:bg-gray-50 transition-colors">
+            <button
+              title="Se connecter avec Facebook"
+              aria-label="Se connecter avec Facebook"
+              className="p-3 rounded-full border border-gray-300 bg-white hover:bg-gray-50 transition-colors"
+            >
               <svg width="24" height="24" viewBox="0 0 24 24">
                 <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.8c4.56-.93 8-4.96 8-9.8z" fill="#1877f2"/>
               </svg>

@@ -1,4 +1,4 @@
-// backend/src/modules/auth/auth.service.ts
+﻿// backend/src/modules/auth/auth.service.ts
 
 import User from '../users/user.model';
 import { generateAccessToken } from './utils/jwt';
@@ -10,6 +10,10 @@ import logger from '../../core/utils/logger';
 import { RegisterDto, LoginDto, UpdateProfileDto } from './dto';
 import { env } from '../../config/env';
 import { Document } from 'mongoose';
+
+const normalizeEmail = (email: string) => email.trim().toLowerCase();
+
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 export class AuthService {
   /**
@@ -42,17 +46,34 @@ export class AuthService {
     };
   }
 
+  /**
+   * Recherche un utilisateur par email, avec repli tolérant pour les anciens comptes.
+   */
+  private async findUserByEmail(email: string) {
+    const normalizedEmail = normalizeEmail(email);
+
+    const exactMatch = await User.findOne({ email: normalizedEmail }).select('+password');
+    if (exactMatch) {
+      return exactMatch;
+    }
+
+    return User.findOne({
+      email: { $regex: `^${escapeRegExp(normalizedEmail)}$`, $options: 'i' }
+    }).select('+password');
+  }
+
   async register(userData: RegisterDto) {
     const { email, password, firstName, lastName, phone } = userData;
+    const normalizedEmail = normalizeEmail(email);
 
-    const existingUser = await User.findOne({ email });
+    const existingUser = await this.findUserByEmail(normalizedEmail);
     if (existingUser) {
       throw new AppError('Email déjà utilisé', HTTP_STATUS.CONFLICT);
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
     const user = await User.create({
-      email,
+      email: normalizedEmail,
       password: hashedPassword,
       firstName,
       lastName,
@@ -91,11 +112,11 @@ export class AuthService {
     }
     
     // Normaliser l'email (trim + lowercase)
-    const normalizedEmail = email.toLowerCase().trim();
+    const normalizedEmail = normalizeEmail(email);
     console.log('Email normalisé:', normalizedEmail);
     
     // Chercher l'utilisateur avec le mot de passe
-    const user = await User.findOne({ email: normalizedEmail }).select('+password');
+    const user = await this.findUserByEmail(normalizedEmail);
     
     if (!user) {
       console.log('❌ Utilisateur non trouvé pour:', normalizedEmail);
