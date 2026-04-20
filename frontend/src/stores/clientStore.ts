@@ -28,7 +28,7 @@ interface ClientStore {
   totalPages: number;
   currentPage: number;
 
-  fetchClients: (page?: number, limit?: number, filters?: any) => Promise<void>;
+  fetchClients: (page?: number, limit?: number, filters?: Record<string, unknown>) => Promise<void>;
   fetchClientById: (id: string) => Promise<void>;
   createClient: (data: Partial<Client>) => Promise<Client>;
   updateClient: (id: string, data: Partial<Client>) => Promise<void>;

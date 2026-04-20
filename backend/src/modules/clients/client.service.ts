@@ -8,7 +8,7 @@ import { UserRole } from '../../core/types/userRoles';
 
 export class ClientService {
   private buildScopeFilter(userId: string, role?: UserRole): Record<string, unknown> {
-    if (role === UserRole.SUPER_ADMIN) {
+    if (role === UserRole.SUPER_ADMIN || role === UserRole.ADMIN) {
       return {};
     }
 
@@ -62,11 +62,27 @@ export class ClientService {
           .lean(),
         Client.countDocuments(filter)
       ]);
+      
+      // Transformation
+      let transformedClients;
+      try {
+        transformedClients = clients.map((client, index) => {
+          try {
+            return new ClientResponseDTO(client);
+          } catch (transformError) {
+            logger.error(`Erreur lors de la transformation du client ${index}:`, transformError);
+            return null; // Retourner null pour les clients qui causent des erreurs
+          }
+        }).filter(client => client !== null); // Filtrer les null
+      } catch (error) {
+        logger.error('Erreur dans le processus de transformation:', error);
+        throw error;
+      }
 
       const totalPages = Math.ceil(total / limit);
 
       return {
-        clients: clients.map(client => new ClientResponseDTO(client)),
+        clients: transformedClients,
         total,
         page,
         limit,

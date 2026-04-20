@@ -23,7 +23,18 @@ export const getClients = async (req: AuthRequest, res: Response): Promise<void>
     const query = validateData(queryClientSchema, req.query) as Record<string, unknown>;
     const result = await clientService.findAll(userId, query, req.user?.role);
 
-    apiResponse.success(res, result, 'Clients récupérés avec succès');
+    // Debug temporaire - retourner les données brutes
+    console.log('DEBUG getClients - user:', req.user?.email, 'role:', req.user?.role, 'result count:', result.total);
+    
+    // Temporairement retourner les données brutes pour debug
+    apiResponse.success(res, {
+      ...result,
+      debug: {
+        userId,
+        role: req.user?.role,
+        filter: 'empty for admin'
+      }
+    }, 'Clients récupérés avec succès');
   } catch (error) {
     const err = error as Error;
 

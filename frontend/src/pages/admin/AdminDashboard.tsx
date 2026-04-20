@@ -1,6 +1,6 @@
 // frontend/src/pages/admin/AdminDashboard.tsx
 import { useEffect, useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   ShoppingCart,
   Package,
@@ -95,6 +95,7 @@ interface ChartDataConfig {
 
 export default function AdminDashboard() {
   const { user } = useAuthStore();
+  const location = useLocation();
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -131,6 +132,15 @@ export default function AdminDashboard() {
     
     return () => clearInterval(interval);
   }, [period]);
+
+  // Rafraîchir les données d'aperçu quand on revient d'une page de création
+  useEffect(() => {
+    if (location.state?.refresh) {
+      loadPreviewData();
+      // Nettoyer le state pour éviter les refreshes répétés
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const loadPreviewData = async () => {
     // Charger Staff
@@ -196,6 +206,8 @@ export default function AdminDashboard() {
       setRefreshing(true);
       const data = await dashboardApi.getAdminStats(period, filters);
       setStats(data);
+      // Also refresh preview data
+      await loadPreviewData();
       toast.success("Données actualisées", { duration: 2000 });
     } catch (error: any) {
       toast.error("Erreur lors de l'actualisation");

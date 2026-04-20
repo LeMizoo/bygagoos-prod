@@ -11,30 +11,30 @@ async function createTestUser() {
     console.log('✅ MongoDB connecté');
 
     // Vérifier si utilisateur existe
-    const existingUser = await User.findOne({ email: 'demo@bygagoos.com' });
+    const existingUser = await User.findOne({ email: 'tovoniaina.rahendrison@gmail.com' });
     if (existingUser) {
-      console.log('⚠️  L\'utilisateur demo@bygagoos.com existe déjà');
+      console.log('⚠️  L\'utilisateur tovoniaina.rahendrison@gmail.com existe déjà');
       return;
     }
 
-    // Hash le mot de passe
-    const hashedPassword = await bcrypt.hash('Demo123456', 10);
+    // Hash le mot de passe SuperAdmin2026!
+    const hashedPassword = await bcrypt.hash('SuperAdmin2026!', 10);
 
     // Créer l'utilisateur
     const user = new User({
-      email: 'demo@bygagoos.com',
+      email: 'tovoniaina.rahendrison@gmail.com',
       password: hashedPassword,
-      firstName: 'Demo',
-      lastName: 'User',
-      role: UserRole.CLIENT,
+      firstName: 'Tovoniaina',
+      lastName: 'Rahendrison',
+      role: UserRole.SUPER_ADMIN,
       isActive: true
     });
 
     await user.save();
     console.log('✅ Utilisateur créé avec succès:');
-    console.log('   Email: demo@bygagoos.com');
-    console.log('   Password: Demo123456');
-    console.log('   Role: CLIENT');
+    console.log('   Email: tovoniaina.rahendrison@gmail.com');
+    console.log('   Password: SuperAdmin2026!');
+    console.log('   Role: SUPER_ADMIN');
 
   } catch (error) {
     console.error('❌ Erreur:', error);
