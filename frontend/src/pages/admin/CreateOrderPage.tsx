@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import dev from '../../utils/devLogger';
+import { adminClientsApi } from "../../api/adminClients.api";
+import { adminDesignsApi } from "../../api/adminDesigns.api";
+import { adminOrdersApi } from "../../api/adminOrders.api";
 import {
   ArrowLeft,
   Save,
@@ -39,39 +42,30 @@ export default function CreateOrderPage() {
     priority: "NORMAL" as const,
   });
 
-  // Simuler le chargement des données
+  // Récupérer les vraies données du backend
   useEffect(() => {
-    // TODO: Remplacer par des appels API réels
-    const mockClients: Client[] = [
-      {
-        _id: "1",
-        name: "Jean Dupont",
-        email: "jean@example.com",
-        phone: "034 12 345 67",
-      },
-      {
-        _id: "2",
-        name: "Marie Martin",
-        email: "marie@example.com",
-        phone: "034 98 765 43",
-      },
-      {
-        _id: "3",
-        name: "Entreprise ABC",
-        email: "contact@abc.mg",
-        phone: "020 22 333 44",
-      },
-    ];
+    const fetchData = async () => {
+      try {
+        dev.log("📦 Chargement des clients et designs...");
+        const [clientsRes, designsRes] = await Promise.all([
+          adminClientsApi.getAll(),
+          adminDesignsApi.getAllDesigns()
+        ]);
+        
+        setClients(clientsRes.data || []);
+        setDesigns((designsRes.data || []).map(d => ({
+          _id: d._id || d.id,
+          title: d.title,
+          price: d.price || 0
+        })));
+        
+        dev.log("✅ Données chargées:", { clients: clientsRes.data?.length, designs: designsRes.data?.length });
+      } catch (error) {
+        dev.error("❌ Erreur chargement données:", error);
+      }
+    };
 
-    const mockDesigns: Design[] = [
-      { _id: "1", title: "T-shirt ByGagoos Édition Limitée", price: 25000 },
-      { _id: "2", title: "Sweatshirt Artisanat Malgache", price: 45000 },
-      { _id: "3", title: "Sac Sérigraphié Tradition", price: 15000 },
-      { _id: "4", title: "Casquette Design Moderne", price: 12000 },
-    ];
-
-    setClients(mockClients);
-    setDesigns(mockDesigns);
+    fetchData();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -23,6 +23,8 @@ import {
   ArrowRight,
 } from "lucide-react";
 import VaguesEmeraudeLogo from "../components/VaguesEmeraudeLogo";
+import { useGallery } from "../hooks/useDesigns";
+import { useAutoInvalidateQueries } from "../hooks/useAutoInvalidate";
 
 // Interface complète pour un design
 interface Design {
@@ -100,187 +102,7 @@ const teamPhotos: string[] = [
 ];
 
 // Designs mockés inspirés de Madagascar
-const designs: Design[] = [
-  // Collection Tana Urban
-  {
-    id: 1,
-    title: "Lamba Urban",
-    category: "T-Shirts",
-    collection: "Tana Urban",
-    image: "/images/gallery/lamba-urban.png",
-    likes: 42,
-    artist: "Miantsatiana",
-    featured: true,
-    price: 45,
-    description: "Motif géométrique traditionnel Merina revisité pour un style urbain",
-    ethnicGroup: "Merina",
-    colors: ["Bleu", "Blanc", "Noir"],
-    tags: ["géométrique", "hauts-plateaux", "minimaliste"]
-  },
-  {
-    id: 2,
-    title: "Vagues d'Émeraude",
-    category: "T-Shirts",
-    collection: "Tana Urban",
-    image: "/images/gallery/vagues-emeraude.png",
-    likes: 38,
-    artist: "Tovoniaina",
-    new: true,
-    price: 42,
-    description: "Motif océanique inspiré des tissages côtiers de l'Océan Indien",
-    ethnicGroup: "Sakalava",
-    colors: ["Turquoise", "Doré", "Noir"],
-    tags: ["océan", "vagues", "ethno-chic"]
-  },
-  {
-    id: 3,
-    title: "Baobab Sacré",
-    category: "T-Shirts",
-    collection: "Flore Endémique",
-    image: "/images/gallery/baobab-sacre.jpg",
-    likes: 56,
-    artist: "Volatiana",
-    featured: true,
-    price: 52,
-    description: "Illustration botanique des célèbres baobabs de Madagascar",
-    ethnicGroup: "Antandroy",
-    colors: ["Beige", "Vert", "Marron"],
-    tags: ["nature", "baobab", "botanique"]
-  },
-  {
-    id: 4,
-    title: "Ravinala",
-    category: "T-Shirts",
-    collection: "Flore Endémique",
-    image: "/images/gallery/ravinala.png",
-    likes: 29,
-    artist: "Miantsatiana",
-    price: 48,
-    description: "Motif ton-sur-ton de l'arbre du voyageur, symbole de Madagascar",
-    ethnicGroup: "Betsimisaraka",
-    colors: ["Blanc cassé", "Vert forêt"],
-    tags: ["flore", "élégant", "nature"]
-  },
-  {
-    id: 5,
-    title: "Omby Zébu",
-    category: "T-Shirts",
-    collection: "Fady & Symboles",
-    image: "/images/gallery/omby-zebu.png",
-    likes: 34,
-    artist: "Tia Faniry",
-    new: true,
-    price: 45,
-    description: "Graphisme moderne inspiré des peintures rupestres de l'Androy",
-    ethnicGroup: "Mahafaly",
-    colors: ["Noir", "Rouge", "Blanc"],
-    tags: ["zébu", "graphique", "tradition"]
-  },
-  {
-    id: 6,
-    title: "Tissage Tandroy",
-    category: "T-Shirts",
-    collection: "Fady & Symboles",
-    image: "/images/gallery/tissage-tandroy.png",
-    likes: 47,
-    artist: "Miantsatiana",
-    featured: true,
-    price: 49,
-    description: "Motifs géométriques inspirés des tissages traditionnels Antandroy",
-    ethnicGroup: "Antandroy",
-    colors: ["Bleu marine", "Orange brûlé", "Blanc"],
-    tags: ["géométrique", "tissage", "ethnique"]
-  },
-  {
-    id: 7,
-    title: "Lambahoany Moderne",
-    category: "T-Shirts",
-    collection: "Côtes et Cérémonies",
-    image: "/images/gallery/lambahoany-moderne.png",
-    likes: 31,
-    artist: "Mialy",
-    price: 44,
-    description: "Imprimé vif asymétrique, hommage aux lambas côtiers sakalava",
-    ethnicGroup: "Sakalava",
-    colors: ["Multicolore", "Blanc"],
-    tags: ["tropical", "côtier", "festif"]
-  },
-  {
-    id: 8,
-    title: "Akanjo Cérémonie",
-    category: "T-Shirts",
-    collection: "Côtes et Cérémonies",
-    image: "/images/gallery/akanjo-ceremonie.png",
-    likes: 28,
-    artist: "Fy Tia",
-    new: true,
-    price: 55,
-    description: "Broderies simulées inspirées des chemises de cérémonie betsileo",
-    ethnicGroup: "Betsileo",
-    colors: ["Jaune moutarde", "Orange", "Vert"],
-    tags: ["cérémonial", "broderie", "élégant"]
-  },
-  {
-    id: 9,
-    title: "Artisanat Malgache",
-    category: "Lamba & Lambahoany",
-    collection: "Artisanat",
-    image: "/production/atelier-serigraphie.jpg",
-    likes: 42,
-    artist: "Miantsatiana",
-    featured: true,
-    price: 45,
-    description: "Design unique inspiré des motifs traditionnels malgaches",
-    ethnicGroup: "Merina",
-    colors: ["Rouge", "Blanc", "Noir"],
-    tags: ["tradition", "artisanat"]
-  },
-  {
-    id: 10,
-    title: "Design Tropical",
-    category: "Art Mural",
-    collection: "Nature",
-    image: "/images/gallery/tropical.png",
-    likes: 38,
-    artist: "Tovoniaina",
-    new: true,
-    price: 39,
-    description: "Création contemporaine aux couleurs de Madagascar",
-    ethnicGroup: "Betsimisaraka",
-    colors: ["Vert", "Jaune", "Bleu"],
-    tags: ["tropical", "moderne"]
-  },
-  {
-    id: 11,
-    title: "Éléments Naturels",
-    category: "Édition Limitée",
-    collection: "Nature",
-    image: "/production/marcel-prod.jpg",
-    likes: 56,
-    artist: "Volatiana",
-    featured: true,
-    price: 52,
-    description: "Packaging éco-responsable inspiré de la nature malgache",
-    ethnicGroup: "Antandroy",
-    colors: ["Vert", "Marron", "Beige"],
-    tags: ["nature", "éco-friendly"]
-  },
-  {
-    id: 12,
-    title: "Série Océan Indien",
-    category: "Art Mural",
-    collection: "Tana Urban",
-    image: "/production/equipe-prod-02.jpg",
-    likes: 34,
-    artist: "Tia Faniry",
-    new: true,
-    price: 42,
-    description: "Collection inspirée par l'océan et ses couleurs",
-    ethnicGroup: "Vezo",
-    colors: ["Bleu", "Turquoise", "Blanc"],
-    tags: ["océan", "côtier"]
-  },
-];
+// ❌ SUPPRIMÉS - Utiliser useGallery() hook pour récupérer les designs du backend
 
 type SortOption = "popular" | "recent" | "price-asc" | "price-desc";
 type ViewMode = "grid" | "list";
@@ -298,6 +120,15 @@ export default function GalleryPage() {
     new: false,
     priceRange: [0, 100] as [number, number],
   });
+
+  // Récupérer les vraies données du backend
+  const { data: galleryData, isLoading } = useGallery();
+  
+  // Configuration auto-invalidation pour les mises à jour en temps réel
+  useAutoInvalidateQueries();
+
+  // Utiliser les vrais designs au lieu des mockés
+  const designs = galleryData?.data || [];
 
   // Options de filtres uniques (typées correctement)
   const categoryOptions = useMemo(() => {
@@ -692,7 +523,20 @@ export default function GalleryPage() {
 
           {/* Designs Grid/List */}
           <AnimatePresence mode="wait">
-            {filteredDesigns.length > 0 ? (
+            {isLoading ? (
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex justify-center items-center min-h-[400px]"
+              >
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto mb-4"></div>
+                  <p className="text-gray-600">Chargement des designs...</p>
+                </div>
+              </motion.div>
+            ) : filteredDesigns.length > 0 ? (
               <motion.div
                 key={viewMode}
                 initial={{ opacity: 0, y: 20 }}
@@ -708,7 +552,7 @@ export default function GalleryPage() {
                     className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-12"
                   >
                     {filteredDesigns.map((design) => (
-                      <DesignCard key={design.id} design={design} />
+                      <DesignCard key={design._id || design.id} design={design} />
                     ))}
                   </motion.div>
                 ) : (
@@ -719,7 +563,7 @@ export default function GalleryPage() {
                     className="space-y-6 mb-12"
                   >
                     {filteredDesigns.map((design) => (
-                      <DesignListItem key={design.id} design={design} />
+                      <DesignListItem key={design._id || design.id} design={design} />
                     ))}
                   </motion.div>
                 )}
