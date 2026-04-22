@@ -6,6 +6,7 @@ import { CreateOrderDto, UpdateOrderDto, AddPaymentDto, QueryOrderDto, OrderResp
 import { AppError } from '../../core/utils/errors/AppError';
 import { HTTP_STATUS } from '../../core/constants/httpStatus';
 import logger from '../../core/utils/logger';
+import eventEmitter, { AppEvent } from '../../core/utils/eventEmitter';
 
 export class OrderService {
   /**
@@ -186,6 +187,13 @@ export class OrderService {
 
       logger.info(`Nouvelle commande créée: ${order.orderNumber} par utilisateur ${userId}`);
 
+      // Émettre l'événement de création
+      eventEmitter.emit(AppEvent.ORDER_CREATED, {
+        orderId: order._id.toString(),
+        clientId: data.clientId,
+        userId
+      });
+
       // Récupérer avec les populations
       const populatedOrder = await Order.findById(order._id)
         .populate('client', 'firstName lastName email')
@@ -300,6 +308,22 @@ export class OrderService {
 
       logger.info(`Commande mise à jour: ${order.orderNumber}`);
 
+      // Émettre l'événement de mise à jour
+      eventEmitter.emit(AppEvent.ORDER_UPDATED, {
+        orderId: id,
+        changes: data
+      });
+
+      // Émettre l'événement de changement de statut si nécessaire
+      const previousOrder = await Order.findOne({ _id: id, user: userId });
+      if (data.status && previousOrder?.status !== data.status) {
+        eventEmitter.emit(AppEvent.ORDER_STATUS_CHANGED, {
+          orderId: id,
+          oldStatus: previousOrder?.status || OrderStatus.PENDING,
+          newStatus: data.status
+        });
+      }
+
       return new OrderResponseDTO(order);
     } catch (error) {
       if (error instanceof AppError) throw error;
@@ -386,6 +410,11 @@ export class OrderService {
       }
 
       logger.info(`Commande supprimée: ${id}`);
+
+      // Émettre l'événement de suppression
+      eventEmitter.emit(AppEvent.ORDER_DELETED, {
+        orderId: id
+      });
     } catch (error) {
       if (error instanceof AppError) throw error;
       logger.error('Erreur dans delete order:', error);

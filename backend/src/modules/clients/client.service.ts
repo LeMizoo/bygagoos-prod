@@ -5,6 +5,7 @@ import { AppError } from '../../core/utils/errors/AppError';
 import { HTTP_STATUS } from '../../core/constants/httpStatus';
 import logger from '../../core/utils/logger';
 import { UserRole } from '../../core/types/userRoles';
+import eventEmitter, { AppEvent } from '../../core/utils/eventEmitter';
 
 export class ClientService {
   private buildScopeFilter(userId: string, role?: UserRole): Record<string, unknown> {
@@ -144,7 +145,12 @@ export class ClientService {
       });
 
       logger.info(`Nouveau client cr??: ${client.email} par utilisateur ${userId}`);
-
+      // Émettre l'événement de création
+      eventEmitter.emit(AppEvent.CLIENT_CREATED, {
+        clientId: client._id.toString(),
+        clientName: `${client.firstName} ${client.lastName}`,
+        userId
+      });
       return new ClientResponseDTO(client.toObject());
     } catch (error) {
       if (error instanceof AppError) throw error;
@@ -188,6 +194,12 @@ export class ClientService {
 
       logger.info(`Client mis à jour: ${client.email}`);
 
+      // Émettre l'événement de mise à jour
+      eventEmitter.emit(AppEvent.CLIENT_UPDATED, {
+        clientId: id,
+        changes: data
+      });
+
       return new ClientResponseDTO(client);
     } catch (error) {
       if (error instanceof AppError) throw error;
@@ -216,6 +228,11 @@ export class ClientService {
       }
 
       logger.info(`Client désactivé: ${result.email}`);
+
+      // Émettre l'événement de suppression
+      eventEmitter.emit(AppEvent.CLIENT_DELETED, {
+        clientId: id
+      });
     } catch (error) {
       if (error instanceof AppError) throw error;
       logger.error('Erreur dans delete client:', error);

@@ -1,5 +1,3 @@
-// backend/src/index.ts
-
 import dns from 'dns';
 import http from 'http';
 import app from './app';
@@ -82,6 +80,7 @@ const startServer = async () => {
   🔗 URL: http://localhost:${activePort}
   📦 MongoDB: Connecté
   🧠 Redis: ${redisConnected ? 'Connecté' : 'Non connecté'}
+  🎯 Design Listeners: Activés
   ================================
     `);
 

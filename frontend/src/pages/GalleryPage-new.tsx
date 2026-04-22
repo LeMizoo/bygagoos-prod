@@ -12,35 +12,36 @@ import {
   ChevronUp,
   Sparkles,
   Eye,
-  Clock,
   Star,
   ShoppingBag,
   Tag,
   Palette,
   MapPin,
-  Users,
   Cross,
   ArrowRight,
+  Loader
 } from "lucide-react";
 import VaguesEmeraudeLogo from "../components/VaguesEmeraudeLogo";
+import { useGallery } from "../hooks/useDesigns";
+import { useAutoInvalidateQueries } from "../hooks/useAutoInvalidate";
 
-// Interface complète pour un design
-interface Design {
-  id: number;
-  _id?: string;
+// Type pour les designs de l'API (importé via useGallery)
+interface ApiDesign {
+  _id: string;
+  id?: string;
   title: string;
   name?: string;
   description?: string;
-  category: string;
+  category?: string;
   collection?: string;
-  image: string;
+  image?: string;
   thumbnail?: string;
   tags?: string[];
   price?: number;
-  isActive?: boolean;
-  createdAt?: string;
-  likes: number;
-  artist: string;
+  isActive: boolean;
+  createdAt: string;
+  likes?: number;
+  artist?: string;
   featured?: boolean;
   new?: boolean;
   ethnicGroup?: string;
@@ -58,29 +59,36 @@ interface Category {
 // Données des catégories
 const categories: Category[] = [
   {
+    title: "Tous",
+    count: 0,
+    image: "/production/atelier-serigraphie.jpg",
+    description: "Toutes les créations uniques",
+    slug: "all",
+  },
+  {
     title: "T-Shirts",
-    count: 24,
+    count: 0,
     image: "/production/atelier-serigraphie.jpg",
     description: "Créations uniques sur textile inspirées des motifs traditionnels",
     slug: "t-shirts",
   },
   {
     title: "Lamba & Lambahoany",
-    count: 18,
+    count: 0,
     image: "/production/equipe-serigraphie.jpg",
     description: "Tissages traditionnels revisités pour la mode contemporaine",
     slug: "lamba",
   },
   {
     title: "Art Mural",
-    count: 12,
+    count: 0,
     image: "/production/marcel-prod.jpg",
     description: "Sérigraphie inspirée des symboles et fady malgaches",
     slug: "art-mural",
   },
   {
     title: "Édition Limitée",
-    count: 8,
+    count: 0,
     image: "/production/marcelin-prod.jpg",
     description: "Collections exclusives hommage aux 18 ethnies",
     slug: "edition-limitee",
@@ -99,193 +107,13 @@ const teamPhotos: string[] = [
   "/production/equipe-prod-08.jpg",
 ];
 
-// Designs mockés inspirés de Madagascar
-const designs: Design[] = [
-  // Collection Tana Urban
-  {
-    id: 1,
-    title: "Lamba Urban",
-    category: "T-Shirts",
-    collection: "Tana Urban",
-    image: "/images/gallery/lamba-urban.png",
-    likes: 42,
-    artist: "Miantsatiana",
-    featured: true,
-    price: 45,
-    description: "Motif géométrique traditionnel Merina revisité pour un style urbain",
-    ethnicGroup: "Merina",
-    colors: ["Bleu", "Blanc", "Noir"],
-    tags: ["géométrique", "hauts-plateaux", "minimaliste"]
-  },
-  {
-    id: 2,
-    title: "Vagues d'Émeraude",
-    category: "T-Shirts",
-    collection: "Tana Urban",
-    image: "/images/gallery/vagues-emeraude.png",
-    likes: 38,
-    artist: "Tovoniaina",
-    new: true,
-    price: 42,
-    description: "Motif océanique inspiré des tissages côtiers de l'Océan Indien",
-    ethnicGroup: "Sakalava",
-    colors: ["Turquoise", "Doré", "Noir"],
-    tags: ["océan", "vagues", "ethno-chic"]
-  },
-  {
-    id: 3,
-    title: "Baobab Sacré",
-    category: "T-Shirts",
-    collection: "Flore Endémique",
-    image: "/images/gallery/baobab-sacre.jpg",
-    likes: 56,
-    artist: "Volatiana",
-    featured: true,
-    price: 52,
-    description: "Illustration botanique des célèbres baobabs de Madagascar",
-    ethnicGroup: "Antandroy",
-    colors: ["Beige", "Vert", "Marron"],
-    tags: ["nature", "baobab", "botanique"]
-  },
-  {
-    id: 4,
-    title: "Ravinala",
-    category: "T-Shirts",
-    collection: "Flore Endémique",
-    image: "/images/gallery/ravinala.png",
-    likes: 29,
-    artist: "Miantsatiana",
-    price: 48,
-    description: "Motif ton-sur-ton de l'arbre du voyageur, symbole de Madagascar",
-    ethnicGroup: "Betsimisaraka",
-    colors: ["Blanc cassé", "Vert forêt"],
-    tags: ["flore", "élégant", "nature"]
-  },
-  {
-    id: 5,
-    title: "Omby Zébu",
-    category: "T-Shirts",
-    collection: "Fady & Symboles",
-    image: "/images/gallery/omby-zebu.png",
-    likes: 34,
-    artist: "Tia Faniry",
-    new: true,
-    price: 45,
-    description: "Graphisme moderne inspiré des peintures rupestres de l'Androy",
-    ethnicGroup: "Mahafaly",
-    colors: ["Noir", "Rouge", "Blanc"],
-    tags: ["zébu", "graphique", "tradition"]
-  },
-  {
-    id: 6,
-    title: "Tissage Tandroy",
-    category: "T-Shirts",
-    collection: "Fady & Symboles",
-    image: "/images/gallery/tissage-tandroy.png",
-    likes: 47,
-    artist: "Miantsatiana",
-    featured: true,
-    price: 49,
-    description: "Motifs géométriques inspirés des tissages traditionnels Antandroy",
-    ethnicGroup: "Antandroy",
-    colors: ["Bleu marine", "Orange brûlé", "Blanc"],
-    tags: ["géométrique", "tissage", "ethnique"]
-  },
-  {
-    id: 7,
-    title: "Lambahoany Moderne",
-    category: "T-Shirts",
-    collection: "Côtes et Cérémonies",
-    image: "/images/gallery/lambahoany-moderne.png",
-    likes: 31,
-    artist: "Mialy",
-    price: 44,
-    description: "Imprimé vif asymétrique, hommage aux lambas côtiers sakalava",
-    ethnicGroup: "Sakalava",
-    colors: ["Multicolore", "Blanc"],
-    tags: ["tropical", "côtier", "festif"]
-  },
-  {
-    id: 8,
-    title: "Akanjo Cérémonie",
-    category: "T-Shirts",
-    collection: "Côtes et Cérémonies",
-    image: "/images/gallery/akanjo-ceremonie.png",
-    likes: 28,
-    artist: "Fy Tia",
-    new: true,
-    price: 55,
-    description: "Broderies simulées inspirées des chemises de cérémonie betsileo",
-    ethnicGroup: "Betsileo",
-    colors: ["Jaune moutarde", "Orange", "Vert"],
-    tags: ["cérémonial", "broderie", "élégant"]
-  },
-  {
-    id: 9,
-    title: "Artisanat Malgache",
-    category: "Lamba & Lambahoany",
-    collection: "Artisanat",
-    image: "/production/atelier-serigraphie.jpg",
-    likes: 42,
-    artist: "Miantsatiana",
-    featured: true,
-    price: 45,
-    description: "Design unique inspiré des motifs traditionnels malgaches",
-    ethnicGroup: "Merina",
-    colors: ["Rouge", "Blanc", "Noir"],
-    tags: ["tradition", "artisanat"]
-  },
-  {
-    id: 10,
-    title: "Design Tropical",
-    category: "Art Mural",
-    collection: "Nature",
-    image: "/images/gallery/tropical.png",
-    likes: 38,
-    artist: "Tovoniaina",
-    new: true,
-    price: 39,
-    description: "Création contemporaine aux couleurs de Madagascar",
-    ethnicGroup: "Betsimisaraka",
-    colors: ["Vert", "Jaune", "Bleu"],
-    tags: ["tropical", "moderne"]
-  },
-  {
-    id: 11,
-    title: "Éléments Naturels",
-    category: "Édition Limitée",
-    collection: "Nature",
-    image: "/production/marcel-prod.jpg",
-    likes: 56,
-    artist: "Volatiana",
-    featured: true,
-    price: 52,
-    description: "Packaging éco-responsable inspiré de la nature malgache",
-    ethnicGroup: "Antandroy",
-    colors: ["Vert", "Marron", "Beige"],
-    tags: ["nature", "éco-friendly"]
-  },
-  {
-    id: 12,
-    title: "Série Océan Indien",
-    category: "Art Mural",
-    collection: "Tana Urban",
-    image: "/production/equipe-prod-02.jpg",
-    likes: 34,
-    artist: "Tia Faniry",
-    new: true,
-    price: 42,
-    description: "Collection inspirée par l'océan et ses couleurs",
-    ethnicGroup: "Vezo",
-    colors: ["Bleu", "Turquoise", "Blanc"],
-    tags: ["océan", "côtier"]
-  },
-];
-
 type SortOption = "popular" | "recent" | "price-asc" | "price-desc";
 type ViewMode = "grid" | "list";
 
 export default function GalleryPage() {
+  useAutoInvalidateQueries();
+  const { data: galleryData, isLoading } = useGallery({ limit: 50 });
+
   const [search, setSearch] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<string>("Tous");
   const [selectedCollection, setSelectedCollection] = useState<string>("Tous");
@@ -299,79 +127,86 @@ export default function GalleryPage() {
     priceRange: [0, 100] as [number, number],
   });
 
-  // Options de filtres uniques (typées correctement)
+  const backendDesigns: ApiDesign[] = useMemo(() => {
+    return galleryData?.data?.designs || [];
+  }, [galleryData]);
+
   const categoryOptions = useMemo(() => {
-    return ["Tous", ...Array.from(new Set(designs.map((d) => d.category)))];
-  }, []);
+    const cats = Array.from(new Set(backendDesigns.map((d: ApiDesign) => d.category).filter(Boolean))) as string[];
+    return ["Tous", ...cats];
+  }, [backendDesigns]);
 
   const collectionOptions = useMemo(() => {
-    const collections = designs.filter(d => d.collection).map(d => d.collection!);
+    const collections = backendDesigns
+      .filter((d: ApiDesign) => d.collection)
+      .map((d: ApiDesign) => d.collection) as string[];
     return ["Tous", ...Array.from(new Set(collections))];
-  }, []);
+  }, [backendDesigns]);
 
   const ethnicGroupOptions = useMemo(() => {
-    const groups = designs.filter(d => d.ethnicGroup).map(d => d.ethnicGroup!);
+    const groups = backendDesigns
+      .filter((d: ApiDesign) => d.ethnicGroup)
+      .map((d: ApiDesign) => d.ethnicGroup) as string[];
     return ["Tous", ...Array.from(new Set(groups))];
-  }, []);
+  }, [backendDesigns]);
 
-  // Designs filtrés et triés
   const filteredDesigns = useMemo(() => {
-    let filtered = [...designs];
+    let filtered = [...backendDesigns];
 
     if (search) {
       const searchLower = search.toLowerCase();
       filtered = filtered.filter(
-        (design) =>
-          design.title.toLowerCase().includes(searchLower) ||
-          design.artist.toLowerCase().includes(searchLower) ||
-          (design.description?.toLowerCase().includes(searchLower)) ||
-          design.tags?.some(tag => tag.includes(searchLower))
+        (design: ApiDesign) =>
+          design.title?.toLowerCase().includes(searchLower) ||
+          design.description?.toLowerCase().includes(searchLower) ||
+          design.tags?.some(tag => tag.toLowerCase().includes(searchLower))
       );
     }
 
     if (selectedCategory !== "Tous") {
-      filtered = filtered.filter((design) => design.category === selectedCategory);
+      filtered = filtered.filter(
+        (design: ApiDesign) => design.category === selectedCategory
+      );
     }
 
     if (selectedCollection !== "Tous") {
-      filtered = filtered.filter((design) => design.collection === selectedCollection);
+      filtered = filtered.filter(
+        (design: ApiDesign) => design.collection === selectedCollection
+      );
     }
 
     if (selectedEthnicGroup !== "Tous") {
-      filtered = filtered.filter((design) => design.ethnicGroup === selectedEthnicGroup);
+      filtered = filtered.filter(
+        (design: ApiDesign) => design.ethnicGroup === selectedEthnicGroup
+      );
     }
 
     if (filters.featured) {
-      filtered = filtered.filter((design) => design.featured);
+      filtered = filtered.filter((design: ApiDesign) => design.featured);
     }
     if (filters.new) {
-      filtered = filtered.filter((design) => design.new);
-    }
-    if (filters.priceRange) {
-      filtered = filtered.filter(
-        (design) =>
-          (design.price || 0) >= filters.priceRange[0] &&
-          (design.price || 0) <= filters.priceRange[1]
-      );
+      filtered = filtered.filter((design: ApiDesign) => design.new);
     }
 
     switch (sortBy) {
       case "popular":
-        filtered.sort((a, b) => b.likes - a.likes);
+        filtered.sort((a: ApiDesign, b: ApiDesign) => (b.likes || 0) - (a.likes || 0));
         break;
       case "recent":
-        filtered.sort((a, b) => (b.new ? 1 : 0) - (a.new ? 1 : 0));
+        filtered.sort((a: ApiDesign, b: ApiDesign) => 
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
         break;
       case "price-asc":
-        filtered.sort((a, b) => (a.price || 0) - (b.price || 0));
+        filtered.sort((a: ApiDesign, b: ApiDesign) => (a.price || 0) - (b.price || 0));
         break;
       case "price-desc":
-        filtered.sort((a, b) => (b.price || 0) - (a.price || 0));
+        filtered.sort((a: ApiDesign, b: ApiDesign) => (b.price || 0) - (a.price || 0));
         break;
     }
 
     return filtered;
-  }, [search, selectedCategory, selectedCollection, selectedEthnicGroup, filters, sortBy]);
+  }, [search, selectedCategory, selectedCollection, selectedEthnicGroup, filters, sortBy, backendDesigns]);
 
   const resetFilters = () => {
     setSearch("");
@@ -395,6 +230,14 @@ export default function GalleryPage() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader className="h-8 w-8 animate-spin text-amber-600" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* En-tête décoratif */}
@@ -403,10 +246,12 @@ export default function GalleryPage() {
           <div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-amber-300 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
         </div>
+        
         <div className="absolute inset-0" style={{
           backgroundImage: `radial-gradient(circle at 2px 2px, rgba(255,255,255,0.1) 1px, transparent 0)`,
           backgroundSize: '40px 40px'
         }}></div>
+        
         <div className="relative h-full flex items-center justify-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -458,6 +303,7 @@ export default function GalleryPage() {
             <div className="flex-shrink-0 w-28 h-28 md:w-36 md:h-36 lg:w-40 lg:h-40">
               <VaguesEmeraudeLogo />
             </div>
+            
             <div className="flex-1 text-center md:text-left">
               <h2 className="text-2xl md:text-3xl lg:text-4xl font-light text-gray-900 mb-4">
                 <span className="font-semibold bg-gradient-to-r from-amber-700 to-amber-500 bg-clip-text text-transparent">
@@ -468,6 +314,7 @@ export default function GalleryPage() {
                 Une fusion unique entre l'art textile traditionnel malgache et le design contemporain.
                 Chaque pièce raconte une histoire, celle de nos racines et de notre créativité.
               </p>
+              
               <div className="flex items-center gap-2 mt-4">
                 <div className="w-12 h-px bg-gradient-to-r from-transparent via-amber-400 to-transparent"></div>
                 <Heart className="h-4 w-4 text-amber-500" />
@@ -492,14 +339,14 @@ export default function GalleryPage() {
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Rechercher un design, un artiste, un motif..."
+                  placeholder="Rechercher un design..."
                   className="w-full pl-12 pr-12 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent shadow-sm bg-white/80 backdrop-blur-sm"
                 />
                 {search && (
                   <button
                     onClick={() => setSearch("")}
                     className="absolute inset-y-0 right-0 pr-4 flex items-center"
-                    title="Effacer"
+                    title="Effacer la recherche"
                   >
                     <X className="h-5 w-5 text-gray-400 hover:text-gray-600 transition-colors" />
                   </button>
@@ -514,7 +361,7 @@ export default function GalleryPage() {
                       ? "bg-amber-600 text-white border-amber-600"
                       : "bg-white text-gray-700 border-gray-200 hover:border-amber-300"
                   } shadow-sm`}
-                  title="Filtres"
+                  title="Afficher les filtres"
                 >
                   <Filter className="h-5 w-5" />
                   <span className="hidden sm:inline font-medium">Filtres</span>
@@ -681,12 +528,6 @@ export default function GalleryPage() {
                 <span className="font-medium text-amber-600">{filteredDesigns.length}</span>
                 <span>design{filteredDesigns.length !== 1 ? "s" : ""} trouvé{filteredDesigns.length !== 1 ? "s" : ""}</span>
               </p>
-              {filteredDesigns.length > 0 && (
-                <p className="text-gray-500 flex items-center gap-1">
-                  <Clock className="h-4 w-4" />
-                  Page 1 sur {Math.ceil(filteredDesigns.length / 6)}
-                </p>
-              )}
             </motion.div>
           </motion.div>
 
@@ -707,8 +548,8 @@ export default function GalleryPage() {
                     animate="visible"
                     className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-12"
                   >
-                    {filteredDesigns.map((design) => (
-                      <DesignCard key={design.id} design={design} />
+                    {filteredDesigns.map((design: ApiDesign) => (
+                      <DesignCard key={design._id} design={design} />
                     ))}
                   </motion.div>
                 ) : (
@@ -718,8 +559,8 @@ export default function GalleryPage() {
                     animate="visible"
                     className="space-y-6 mb-12"
                   >
-                    {filteredDesigns.map((design) => (
-                      <DesignListItem key={design.id} design={design} />
+                    {filteredDesigns.map((design: ApiDesign) => (
+                      <DesignListItem key={design._id} design={design} />
                     ))}
                   </motion.div>
                 )}
@@ -740,7 +581,7 @@ export default function GalleryPage() {
 }
 
 // Composant DesignCard
-function DesignCard({ design }: { design: Design }) {
+function DesignCard({ design }: { design: ApiDesign }) {
   return (
     <motion.div
       variants={{
@@ -776,13 +617,10 @@ function DesignCard({ design }: { design: Design }) {
 
         <div className="aspect-square overflow-hidden">
           <img
-            src={design.image}
+            src={design.image || design.thumbnail || "/images/placeholder-tshirt.png"}
             alt={design.title}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
             loading="lazy"
-            onError={(e) => {
-              e.currentTarget.src = "/images/placeholder-tshirt.png";
-            }}
           />
         </div>
 
@@ -796,11 +634,6 @@ function DesignCard({ design }: { design: Design }) {
             </span>
           </div>
           
-          <p className="text-sm text-gray-600 mb-4 flex items-center gap-1">
-            <Users className="h-3 w-3" />
-            Par {design.artist}
-          </p>
-
           {design.description && (
             <p className="text-sm text-gray-500 mb-4 line-clamp-2">
               {design.description}
@@ -826,27 +659,11 @@ function DesignCard({ design }: { design: Design }) {
             </div>
           )}
 
-          {design.colors && (
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-xs text-gray-500">Couleurs:</span>
-              <div className="flex gap-1">
-                {design.colors.map((color, index) => (
-                  <div
-                    key={index}
-                    className="w-4 h-4 rounded-full border border-gray-300 shadow-sm"
-                    style={{ backgroundColor: color.toLowerCase() }}
-                    title={color}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
           <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-1 text-gray-500">
                 <Heart className="h-4 w-4" />
-                <span className="text-sm font-medium">{design.likes}</span>
+                <span className="text-sm font-medium">{design.likes || 0}</span>
               </div>
               {design.price && (
                 <span className="text-sm font-bold text-gray-900">
@@ -866,7 +683,7 @@ function DesignCard({ design }: { design: Design }) {
 }
 
 // Composant DesignListItem
-function DesignListItem({ design }: { design: Design }) {
+function DesignListItem({ design }: { design: ApiDesign }) {
   return (
     <motion.div
       variants={{
@@ -879,26 +696,11 @@ function DesignListItem({ design }: { design: Design }) {
       <div className="flex flex-col md:flex-row">
         <div className="md:w-48 h-48 overflow-hidden relative">
           <img
-            src={design.image}
+            src={design.image || design.thumbnail || "/images/placeholder-tshirt.jpg"}
             alt={design.title}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
             loading="lazy"
-            onError={(e) => {
-              e.currentTarget.src = "/images/placeholder-tshirt.jpg";
-            }}
           />
-          <div className="absolute top-2 left-2 flex gap-1">
-            {design.featured && (
-              <span className="bg-amber-500 text-white px-2 py-1 rounded-full text-xs font-medium">
-                <Sparkles className="h-3 w-3 inline" />
-              </span>
-            )}
-            {design.new && (
-              <span className="bg-green-500 text-white px-2 py-1 rounded-full text-xs font-medium">
-                <Star className="h-3 w-3 inline" />
-              </span>
-            )}
-          </div>
         </div>
 
         <div className="flex-1 p-6">
@@ -907,10 +709,6 @@ function DesignListItem({ design }: { design: Design }) {
               <h3 className="text-xl font-bold text-gray-900 group-hover:text-amber-600 transition-colors">
                 {design.title}
               </h3>
-              <p className="text-sm text-gray-600 mt-1 flex items-center gap-1">
-                <Users className="h-3 w-3" />
-                Par {design.artist}
-              </p>
             </div>
             <div className="flex gap-2">
               <span className="bg-amber-100 text-amber-600 px-3 py-1 rounded-full text-xs font-medium border border-amber-200">
@@ -928,24 +726,19 @@ function DesignListItem({ design }: { design: Design }) {
             <p className="text-gray-600 mb-4">{design.description}</p>
           )}
 
-          <div className="flex flex-wrap gap-4 mb-4">
-            {design.ethnicGroup && (
+          {design.ethnicGroup && (
+            <div className="flex flex-wrap gap-4 mb-4">
               <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full border border-amber-200">
                 {design.ethnicGroup}
               </span>
-            )}
-            {design.tags?.map((tag, i) => (
-              <span key={i} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
-                #{tag}
-              </span>
-            ))}
-          </div>
+            </div>
+          )}
 
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-6">
               <div className="flex items-center space-x-1 text-gray-500">
                 <Heart className="h-4 w-4" />
-                <span className="font-medium">{design.likes}</span>
+                <span className="font-medium">{design.likes || 0}</span>
               </div>
               {design.price && (
                 <span className="font-bold text-gray-900">
@@ -964,7 +757,7 @@ function DesignListItem({ design }: { design: Design }) {
   );
 }
 
-// Section inspiration
+// Composant InspirationSection
 function InspirationSection() {
   return (
     <motion.section
@@ -1019,7 +812,7 @@ function InspirationSection() {
   );
 }
 
-// État vide
+// Composant EmptyState
 function EmptyState({ onReset }: { onReset: () => void }) {
   return (
     <motion.div
@@ -1046,7 +839,7 @@ function EmptyState({ onReset }: { onReset: () => void }) {
   );
 }
 
-// Section catégories
+// Composant CategoriesSection
 function CategoriesSection({ categories }: { categories: Category[] }) {
   return (
     <motion.section
@@ -1085,14 +878,9 @@ function CategoriesSection({ categories }: { categories: Category[] }) {
                 <p className="text-gray-200 text-sm mb-3">
                   {category.description}
                 </p>
-                <div className="flex items-center justify-between">
-                  <span className="text-white/90 text-sm font-medium bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
-                    {category.count} créations
-                  </span>
-                  <span className="text-white bg-gradient-to-r from-amber-500 to-amber-600 rounded-full p-2 group-hover:scale-110 transition-transform">
-                    <ArrowRight className="h-4 w-4" />
-                  </span>
-                </div>
+                <span className="text-white bg-gradient-to-r from-amber-500 to-amber-600 rounded-full p-2 w-8 h-8 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <ArrowRight className="h-4 w-4" />
+                </span>
               </div>
             </div>
           </motion.div>
@@ -1102,7 +890,7 @@ function CategoriesSection({ categories }: { categories: Category[] }) {
   );
 }
 
-// Section photos d'atelier
+// Composant StudioPhotosSection
 function StudioPhotosSection({ photos }: { photos: string[] }) {
   return (
     <motion.section
@@ -1139,7 +927,7 @@ function StudioPhotosSection({ photos }: { photos: string[] }) {
   );
 }
 
-// CTA final
+// Composant CTASection
 function CTASection() {
   return (
     <motion.section

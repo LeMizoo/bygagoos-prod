@@ -1,15 +1,69 @@
+// backend/src/modules/designs/design.service.ts
 import { Types } from 'mongoose';
-import Design, { IDesign, DesignStatus } from './design.model';
+import Design, { DesignStatus, DesignType } from './design.model';
 import Client from '../clients/client.model';
 import { CreateDesignDto, UpdateDesignDto, QueryDesignDto, DesignResponseDTO } from './dto';
 import { AppError } from '../../core/utils/errors/AppError';
 import { HTTP_STATUS } from '../../core/constants/httpStatus';
 import logger from '../../core/utils/logger';
-import { uploadToCloudinary, deleteFromCloudinary } from '../../utils/cloudinary';
+import { uploadToCloudinary, deleteFromCloudinary } from '../../utils/cloudinary';import eventEmitter, { AppEvent } from '../../core/utils/eventEmitter';import appEventEmitter, { AppEvent } from '../../core/utils/eventEmitter';
+
+// Définir des types pour éviter 'any'
+interface DesignFilter {
+  user: Types.ObjectId;
+  isActive?: boolean;
+  status?: DesignStatus;
+  type?: DesignType;
+  client?: Types.ObjectId;
+  assignedTo?: Types.ObjectId;
+  tags?: { $in: string[] };
+  $or?: Array<Record<string, unknown>>;
+}
+
+interface SortOptions {
+  [key: string]: 1 | -1;
+}
+
+interface FileType {
+  _id?: Types.ObjectId;
+  url: string;
+  publicId: string;
+  filename: string;
+  mimetype: string;
+  size: number;
+  uploadedAt: Date;
+}
+
+interface UploadedFile {
+  url: string;
+  publicId: string;
+  filename: string;
+  mimetype: string;
+  size: number;
+  uploadedAt: Date;
+}
+
+interface CloudinaryResult {
+  url: string;
+  public_id: string;
+}
+
+// Type pour les données de mise à jour (pour MongoDB)
+interface MongoUpdateData {
+  title?: string;
+  description?: string;
+  type?: DesignType;
+  status?: DesignStatus;
+  assignedTo?: Types.ObjectId;
+  dueDate?: Date;
+  tags?: string[];
+  completedAt?: Date;
+  [key: string]: unknown;
+}
 
 export class DesignService {
   /**
-   * Récupère tous les designs
+   * Récupère tous les designs (authentifié)
    */
   async findAll(userId: string, query: QueryDesignDto): Promise<{
     designs: DesignResponseDTO[];
@@ -23,18 +77,18 @@ export class DesignService {
       const skip = (page - 1) * limit;
 
       // Construction du filtre
-      const filter: any = { user: new Types.ObjectId(userId) };
+      const filter: DesignFilter = { user: new Types.ObjectId(userId) };
       
       if (isActive !== undefined) {
         filter.isActive = isActive;
       }
 
       if (status) {
-        filter.status = status;
+        filter.status = status as DesignStatus;
       }
 
       if (type) {
-        filter.type = type;
+        filter.type = type as DesignType;
       }
 
       if (clientId) {
@@ -58,7 +112,7 @@ export class DesignService {
       }
 
       // Construction du tri
-      const sort: any = {};
+      const sort: SortOptions = {};
       sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
 
       // Exécution des requêtes avec population
@@ -86,6 +140,83 @@ export class DesignService {
     } catch (error) {
       logger.error('Erreur dans findAll designs:', error);
       throw new AppError('Erreur lors de la récupération des designs', HTTP_STATUS.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  /**
+   * Récupère tous les designs publics (actifs, sans restriction utilisateur)
+   */
+  async findAllPublic(query: QueryDesignDto): Promise<{
+    designs: DesignResponseDTO[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    try {
+      const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc', search, status, type, clientId, assignedTo, tags } = query;
+      const skip = (page - 1) * limit;
+
+      // Construction du filtre : uniquement les designs actifs
+      const filter: any = { isActive: true };
+
+      if (status) {
+        filter.status = status as DesignStatus;
+      }
+
+      if (type) {
+        filter.type = type as DesignType;
+      }
+
+      if (clientId) {
+        filter.client = new Types.ObjectId(clientId);
+      }
+
+      if (assignedTo) {
+        filter.assignedTo = new Types.ObjectId(assignedTo);
+      }
+
+      if (tags && tags.length > 0) {
+        filter.tags = { $in: tags };
+      }
+
+      if (search) {
+        filter.$or = [
+          { title: { $regex: search, $options: 'i' } },
+          { description: { $regex: search, $options: 'i' } },
+          { tags: { $in: [new RegExp(search, 'i')] } }
+        ];
+      }
+
+      // Construction du tri
+      const sort: SortOptions = {};
+      sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
+      // Exécution des requêtes avec population
+      const [designs, total] = await Promise.all([
+        Design.find(filter)
+          .populate('client', 'firstName lastName email')
+          .populate('createdBy', 'firstName lastName email')
+          .populate('assignedTo', 'firstName lastName email')
+          .sort(sort)
+          .skip(skip)
+          .limit(limit)
+          .lean(),
+        Design.countDocuments(filter)
+      ]);
+
+      const totalPages = Math.ceil(total / limit);
+
+      return {
+        designs: designs.map(design => new DesignResponseDTO(design)),
+        total,
+        page,
+        limit,
+        totalPages
+      };
+    } catch (error) {
+      logger.error('Erreur dans findAllPublic designs:', error);
+      throw new AppError('Erreur lors de la récupération des designs publics', HTTP_STATUS.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -148,6 +279,13 @@ export class DesignService {
 
       logger.info(`Nouveau design créé: ${design.title} par utilisateur ${userId}`);
 
+      // Émettre l'événement de création
+      eventEmitter.emit(AppEvent.DESIGN_CREATED, {
+        designId: design._id.toString(),
+        designTitle: design.title,
+        userId: userId
+      });
+
       // Récupérer avec les populations
       const populatedDesign = await Design.findById(design._id)
         .populate('client', 'firstName lastName email')
@@ -172,6 +310,12 @@ export class DesignService {
         throw new AppError('ID de design invalide', HTTP_STATUS.BAD_REQUEST);
       }
 
+      // Récupérer l'état précédent pour les événements
+      const previousDesign = await Design.findOne({ _id: id, user: userId });
+      if (!previousDesign) {
+        throw new AppError('Design non trouvé', HTTP_STATUS.NOT_FOUND);
+      }
+
       // Vérifier si le client existe (si fourni)
       if (data.clientId) {
         const client = await Client.findOne({
@@ -184,35 +328,49 @@ export class DesignService {
         }
       }
 
-      // Préparer les données de mise à jour
-      const updateData: any = { ...data };
+      // Préparer les données de mise à jour pour MongoDB
+      const updateData: MongoUpdateData = {};
+      
+      // Copier les propriétés avec conversion de type appropriée
+      if (data.title !== undefined) {
+        updateData.title = data.title;
+      }
+      if (data.description !== undefined) {
+        updateData.description = data.description;
+      }
+      if (data.type !== undefined) {
+        updateData.type = data.type as DesignType;
+      }
+      if (data.status !== undefined) {
+        updateData.status = data.status as DesignStatus;
+      }
+      if (data.assignedTo !== undefined) {
+        updateData.assignedTo = data.assignedTo ? new Types.ObjectId(data.assignedTo) : undefined;
+      }
+      if (data.dueDate !== undefined) {
+        updateData.dueDate = data.dueDate;
+      }
       
       // Gérer les tags
       if (data.addTags || data.removeTags) {
-        const design = await Design.findOne({ _id: id, user: userId });
-        if (!design) {
-          throw new AppError('Design non trouvé', HTTP_STATUS.NOT_FOUND);
-        }
-
-        let currentTags = design.tags || [];
+        let currentTags = previousDesign.tags || [];
         
-        if (data.addTags) {
+        if (data.addTags && data.addTags.length > 0) {
           currentTags = [...new Set([...currentTags, ...data.addTags])];
         }
         
-        if (data.removeTags) {
+        if (data.removeTags && data.removeTags.length > 0) {
           currentTags = currentTags.filter(tag => !data.removeTags?.includes(tag));
         }
         
         updateData.tags = currentTags;
       }
 
-      // Supprimer les propriétés temporaires
-      delete updateData.addTags;
-      delete updateData.removeTags;
+      // Sauvegarder l'ancien statut pour l'événement
+      const oldStatus = previousDesign.status;
 
       // Mettre à jour le statut et la date de complétion si nécessaire
-      if (data.status === DesignStatus.COMPLETED && !updateData.completedAt) {
+      if (data.status === DesignStatus.COMPLETED) {
         updateData.completedAt = new Date();
       }
 
@@ -232,6 +390,20 @@ export class DesignService {
       }
 
       logger.info(`Design mis à jour: ${design.title}`);
+
+      // Émettre l'événement de mise à jour
+      const changes: Record<string, unknown> = {};
+      Object.keys(data).forEach(key => {
+        const value = (data as Record<string, unknown>)[key];
+        if (value !== undefined) {
+          changes[key] = value;
+        }
+      });
+      
+      eventEmitter.emit(AppEvent.DESIGN_UPDATED, {
+        designId: id,
+        changes: changes
+      });
 
       return new DesignResponseDTO(design);
     } catch (error) {
@@ -256,9 +428,9 @@ export class DesignService {
       }
 
       // Uploader les fichiers vers Cloudinary
-      const uploadedFiles = await Promise.all(
+      const uploadedFiles: UploadedFile[] = await Promise.all(
         files.map(async (file) => {
-          const result = await uploadToCloudinary(file as any, 'designs');
+          const result = await uploadToCloudinary(file.buffer, 'designs') as CloudinaryResult;
           return {
             url: result.url,
             publicId: result.public_id,
@@ -312,7 +484,7 @@ export class DesignService {
       }
 
       // Trouver le fichier
-      const file = design.files.find((f: any) => (f as any)._id?.toString() === fileId);
+      const file = design.files.find((f: FileType) => f._id?.toString() === fileId);
       if (!file) {
         throw new AppError('Fichier non trouvé', HTTP_STATUS.NOT_FOUND);
       }
@@ -321,7 +493,7 @@ export class DesignService {
       await deleteFromCloudinary(file.publicId);
 
       // Supprimer du design
-      design.files = design.files.filter((f: any) => (f as any)._id?.toString() !== fileId);
+      design.files = design.files.filter((f: FileType) => f._id?.toString() !== fileId);
       
       // Mettre à jour le thumbnail si nécessaire
       if (design.thumbnail === file.url) {
@@ -367,6 +539,11 @@ export class DesignService {
       await design.save();
 
       logger.info(`Design désactivé: ${design.title}`);
+
+      // Émettre l'événement de suppression
+      eventEmitter.emit(AppEvent.DESIGN_DELETED, {
+        designId: id
+      });
     } catch (error) {
       if (error instanceof AppError) throw error;
       logger.error('Erreur dans delete design:', error);
@@ -412,12 +589,12 @@ export class DesignService {
       ]);
 
       const statusStats: Record<string, number> = {};
-      byStatus.forEach((item: any) => {
+      byStatus.forEach((item: { _id: string; count: number }) => {
         statusStats[item._id] = item.count;
       });
 
       const typeStats: Record<string, number> = {};
-      byType.forEach((item: any) => {
+      byType.forEach((item: { _id: string; count: number }) => {
         typeStats[item._id] = item.count;
       });
 

@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { AuthRequest } from '../../middlewares/auth.middleware';
 import { DesignService } from './design.service';
 import { apiResponse } from '../../core/utils/apiResponse';
@@ -9,7 +9,7 @@ import { createDesignSchema, updateDesignSchema, queryDesignSchema } from './dto
 const designService = new DesignService();
 
 /**
- * Récupère tous les designs
+ * Récupère tous les designs (authentifié)
  */
 export const getDesigns = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -30,7 +30,23 @@ export const getDesigns = async (req: AuthRequest, res: Response): Promise<void>
 };
 
 /**
- * Récupère un design par son ID
+ * Récupère les designs publics (sans authentification)
+ */
+export const getPublicDesigns = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const query = validateData(queryDesignSchema, req.query) as any;
+    // Forcer l'affichage uniquement des designs actifs
+    query.isActive = true;
+    const designs = await designService.findAllPublic(query);
+    apiResponse.success(res, designs, 'Designs publics récupérés avec succès');
+  } catch (error: any) {
+    console.error('Erreur getPublicDesigns:', error);
+    apiResponse.error(res, error.message || 'Erreur lors de la récupération des designs publics', HTTP_STATUS.INTERNAL_SERVER_ERROR);
+  }
+};
+
+/**
+ * Récupère un design par son ID (authentifié)
  */
 export const getDesignById = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -140,10 +156,12 @@ export const addDesignFiles = async (req: AuthRequest, res: Response): Promise<v
       return;
     }
 
-    const { id } = req.params;    if (!id) {
+    const { id } = req.params;    
+    if (!id) {
       apiResponse.error(res, 'ID design requis', HTTP_STATUS.BAD_REQUEST);
       return;
-    }    const files = req.files as Express.Multer.File[];
+    }    
+    const files = req.files as Express.Multer.File[];
 
     if (!files || files.length === 0) {
       apiResponse.error(res, 'Aucun fichier fourni', HTTP_STATUS.BAD_REQUEST);

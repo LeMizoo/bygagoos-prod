@@ -1,6 +1,6 @@
 // frontend/src/api/adminDesigns.api.ts
 
-import api from './client';
+import { axiosInstance } from './axiosInstance'; // ← utilise l'instance avec intercepteurs
 import { dev } from '../utils/devLogger';
 import type {
   Design,
@@ -25,14 +25,14 @@ export const adminDesignsApi = {
     },
   ): Promise<PaginatedResponse<Design>> => {
     dev.log('🌐 Designs API: GET /api/designs', params);
-    const response = await api.get('/designs', { params });
+    const response = await axiosInstance.get('/designs', { params });
     return response.data;
   },
 
   // Récupérer un design par ID
   getDesignById: async (id: string): Promise<apiResponse<Design>> => {
     dev.log(`🌐 Designs API: GET /api/designs/${id}`);
-    const response = await api.get(`/designs/${id}`);
+    const response = await axiosInstance.get(`/designs/${id}`);
     return response.data;
   },
 
@@ -60,12 +60,10 @@ export const adminDesignsApi = {
       }
     });
 
-    // Ajouter le statut si fourni
     if (designData.status) {
       formData.append("status", designData.status);
     }
 
-    // Ajouter les champs numériques
     if (designData.basePrice !== undefined) {
       formData.append("basePrice", designData.basePrice.toString());
     }
@@ -76,7 +74,6 @@ export const adminDesignsApi = {
       formData.append("productionTime", designData.productionTime.toString());
     }
 
-    // Ajouter les tableaux
     if (designData.colors && designData.colors.length > 0) {
       formData.append("colors", JSON.stringify(designData.colors));
     }
@@ -87,7 +84,6 @@ export const adminDesignsApi = {
       formData.append("tags", JSON.stringify(designData.tags));
     }
 
-    // Ajouter les images
     if (designData.images && designData.images.length > 0) {
       designData.images.forEach((file, index) => {
         formData.append("images", file);
@@ -97,7 +93,7 @@ export const adminDesignsApi = {
       });
     }
 
-    const response = await api.post('/designs', formData, {
+    const response = await axiosInstance.post('/designs', formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -113,7 +109,6 @@ export const adminDesignsApi = {
     dev.log(`🌐 Designs API: PUT /api/designs/${id}`);
     const formData = new FormData();
 
-    // Ajouter les champs texte
     const textFields = [
       "title",
       "description",
@@ -130,12 +125,10 @@ export const adminDesignsApi = {
       }
     });
 
-    // Ajouter le statut si fourni
     if (designData.status) {
       formData.append("status", designData.status);
     }
 
-    // Ajouter les champs numériques
     if (designData.basePrice !== undefined) {
       formData.append("basePrice", designData.basePrice.toString());
     }
@@ -149,7 +142,6 @@ export const adminDesignsApi = {
       formData.append("popularity", designData.popularity.toString());
     }
 
-    // Ajouter les tableaux
     if (designData.colors && designData.colors.length > 0) {
       formData.append("colors", JSON.stringify(designData.colors));
     }
@@ -160,14 +152,13 @@ export const adminDesignsApi = {
       formData.append("tags", JSON.stringify(designData.tags));
     }
 
-    // Ajouter les nouvelles images
     if (designData.images) {
       designData.images.forEach((file) => {
         formData.append("images", file);
       });
     }
 
-    const response = await api.put(`/designs/${id}`, formData, {
+    const response = await axiosInstance.put(`/designs/${id}`, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -178,21 +169,21 @@ export const adminDesignsApi = {
   // Supprimer un design
   deleteDesign: async (id: string): Promise<apiResponse<void>> => {
     dev.log(`🌐 Designs API: DELETE /api/designs/${id}`);
-    const response = await api.delete(`/designs/${id}`);
+    const response = await axiosInstance.delete(`/designs/${id}`);
     return response.data;
   },
 
-  // Mettre à jour le statut d'un design
+  // Mettre à jour le statut
   updateDesignStatus: async (
     id: string,
     status: "active" | "inactive" | "archived",
   ): Promise<apiResponse<Design>> => {
     dev.log(`🌐 Designs API: PATCH /api/designs/${id}/status`);
-    const response = await api.patch(`/designs/${id}/status`, { status });
+    const response = await axiosInstance.patch(`/designs/${id}/status`, { status });
     return response.data;
   },
 
-  // Récupérer les statistiques des designs
+  // Récupérer les statistiques
   getDesignStats: async (): Promise<
     apiResponse<{
       total: number;
@@ -204,7 +195,7 @@ export const adminDesignsApi = {
     }>
   > => {
     dev.log('🌐 Designs API: GET /api/designs/stats');
-    const response = await api.get('/designs/stats');
+    const response = await axiosInstance.get('/designs/stats');
     return response.data;
   },
 
@@ -217,7 +208,7 @@ export const adminDesignsApi = {
     const formData = new FormData();
     images.forEach((file) => formData.append("images", file));
 
-    const response = await api.post(`/designs/${id}/images`, formData, {
+    const response = await axiosInstance.post(`/designs/${id}/images`, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },

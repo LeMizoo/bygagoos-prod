@@ -1,5 +1,3 @@
-// backend/src/app.ts
-
 import express, { Application, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -23,6 +21,9 @@ import uploadRoutes from './modules/upload/upload.routes';
 import formRoutes from './modules/forms/form.routes';
 // Route pour les paramètres et templates
 import settingsRoutes from './modules/settings/settings.routes';
+
+// Import des listeners des designs
+import { initializeDesignListeners, setupDesignMetrics } from './modules/designs/design.listener';
 
 // Import des utilitaires et types
 import { HTTP_STATUS } from './core/constants/httpStatus';
@@ -154,6 +155,12 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/forms', formRoutes);
 // Routes des paramètres et templates modifiables
 app.use('/api/settings', settingsRoutes);
+
+// ==================== INITIALISATION DES LISTENERS ====================
+// Initialiser les listeners des designs (après les routes)
+initializeDesignListeners();
+setupDesignMetrics();
+logger.info('🎯 Design event listeners initialized');
 
 // Route de santé améliorée avec infos CORS
 app.get('/health', (_req, res) => {
