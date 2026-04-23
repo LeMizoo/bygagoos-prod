@@ -8,11 +8,6 @@ import { useEffect } from 'react';
 
 export type QueryKey = readonly unknown[];
 
-interface QueryInvalidationRule {
-  events: string[];
-  keys: QueryKey[];
-}
-
 const invalidationRules: Record<string, QueryKey[]> = {
   'client:created': [['clients'], ['client', 'stats']],
   'client:updated': [['clients'], ['client', 'stats']],
@@ -51,15 +46,17 @@ export const useAutoInvalidateQueries = () => {
         keysToInvalidate.forEach(key => {
           queryClient.invalidateQueries({ queryKey: key });
         });
-        console.log(`🔄 Invalidated queries for event: ${eventType}`, keysToInvalidate);
       }
     };
 
     // Exposer globalement pour que les autres modules puissent l'utiliser
-    (window as any).invalidateQueriesOnEvent = handleServerEvent;
+    const globalWindow = window as Window & {
+      invalidateQueriesOnEvent?: (eventType: string) => void;
+    };
+    globalWindow.invalidateQueriesOnEvent = handleServerEvent;
 
     return () => {
-      delete (window as any).invalidateQueriesOnEvent;
+      delete globalWindow.invalidateQueriesOnEvent;
     };
   }, [queryClient]);
 };

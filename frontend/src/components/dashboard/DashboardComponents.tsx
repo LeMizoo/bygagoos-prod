@@ -4,13 +4,8 @@ import {
   LucideIcon, 
   TrendingUp, 
   TrendingDown,
-  MoreHorizontal,
-  Eye,
-  Edit,
-  Trash2,
   ChevronRight,
   Download,
-  Filter,
   Calendar,
   RefreshCw,
 } from "lucide-react";
@@ -290,11 +285,11 @@ export function ListItem({
 }
 
 // ==================== DATA TABLE ====================
-interface DataTableProps {
+interface DataTableProps<T = unknown> {
   title: string;
   headers: string[];
-  rows: any[];
-  renderRow: (row: any, index: number) => ReactNode;
+  rows: T[];
+  renderRow: (row: T, index: number) => ReactNode;
   loading?: boolean;
   emptyMessage?: string;
   action?: {
@@ -313,7 +308,7 @@ interface DataTableProps {
   onExport?: () => void;
 }
 
-export function DataTable({
+export function DataTable<T>({
   title,
   headers,
   rows,
@@ -324,7 +319,7 @@ export function DataTable({
   filters,
   onRefresh,
   onExport,
-}: DataTableProps) {
+}: DataTableProps<T>) {
   return (
     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
       {/* En-tête */}
@@ -488,7 +483,6 @@ export function ChartCard({
           </div>
         )}
       </div>
-      {/* eslint-disable-next-line react/no-inline-styles */}
       <div style={{ height: `${height}px` }}>{children}</div>
     </div>
   );
@@ -541,7 +535,6 @@ export function KpiCard({
             </span>
           </div>
           <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-            {/* eslint-disable-next-line react/no-inline-styles */}
             <div
               className={`h-full ${kpiColors[color].progress} rounded-full transition-all duration-500`}
               style={{ width: `${percentage}%` }}

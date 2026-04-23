@@ -59,9 +59,6 @@ import { EditOrderPage } from "./pages/admin/EditOrderPage";
 import { UserOrdersPage } from "./pages/user/UserOrdersPage";
 import { UserOrderTrackingPage } from './pages/user/UserOrderTrackingPage';
 
-// Page de test
-import TestCreateClient from "./pages/admin/TestCreateClient";
-
 // Pages utilisateur
 import ProfilePage from "./pages/user/ProfilePage";
 import MyOrdersPage from "./pages/user/MyOrdersPage";
@@ -74,7 +71,7 @@ import UnauthorizedPage from "./pages/errors/UnauthorizedPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 function App() {
-  const { checkAuth, isAuthenticated, user } = useAuthStore();
+  const { checkAuth } = useAuthStore();
 
   useEffect(() => {
     checkAuth();
@@ -161,7 +158,6 @@ function App() {
             <Route path="create" element={<CreateClientPage />} />
             <Route path=":id" element={<ClientDetailPage />} />
             <Route path="edit/:id" element={<EditClientPage />} />
-            <Route path="test-client" element={<TestCreateClient />} />
           </Route>
           <Route path="settings" element={<SettingsPage />} />
         </Route>

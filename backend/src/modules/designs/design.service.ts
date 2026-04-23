@@ -6,7 +6,8 @@ import { CreateDesignDto, UpdateDesignDto, QueryDesignDto, DesignResponseDTO } f
 import { AppError } from '../../core/utils/errors/AppError';
 import { HTTP_STATUS } from '../../core/constants/httpStatus';
 import logger from '../../core/utils/logger';
-import { uploadToCloudinary, deleteFromCloudinary } from '../../utils/cloudinary';import eventEmitter, { AppEvent } from '../../core/utils/eventEmitter';import appEventEmitter, { AppEvent } from '../../core/utils/eventEmitter';
+import { uploadToCloudinary, deleteFromCloudinary } from '../../utils/cloudinary';
+import eventEmitter, { AppEvent } from '../../core/utils/eventEmitter';
 
 // Définir des types pour éviter 'any'
 interface DesignFilter {
@@ -19,6 +20,8 @@ interface DesignFilter {
   tags?: { $in: string[] };
   $or?: Array<Record<string, unknown>>;
 }
+
+type PublicDesignFilter = Omit<DesignFilter, 'user'>;
 
 interface SortOptions {
   [key: string]: 1 | -1;
@@ -158,7 +161,7 @@ export class DesignService {
       const skip = (page - 1) * limit;
 
       // Construction du filtre : uniquement les designs actifs
-      const filter: any = { isActive: true };
+      const filter: PublicDesignFilter = { isActive: true };
 
       if (status) {
         filter.status = status as DesignStatus;
@@ -365,9 +368,6 @@ export class DesignService {
         
         updateData.tags = currentTags;
       }
-
-      // Sauvegarder l'ancien statut pour l'événement
-      const oldStatus = previousDesign.status;
 
       // Mettre à jour le statut et la date de complétion si nécessaire
       if (data.status === DesignStatus.COMPLETED) {

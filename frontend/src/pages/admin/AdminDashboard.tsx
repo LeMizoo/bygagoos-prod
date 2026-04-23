@@ -1025,17 +1025,17 @@ export default function AdminDashboard() {
                 label: 'Catégorie',
               },
               {
-                key: 'style',
-                label: 'Style',
+                key: 'description',
+                label: 'Description',
               },
               {
-                key: 'status',
+                key: 'isActive',
                 label: 'Statut',
                 render: (value) => (
                   <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                    value === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                    value === true || value === 'true' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                   }`}>
-                    {value === 'active' ? 'Actif' : 'Brouillon'}
+                    {value === true || value === 'true' ? 'Actif' : 'Inactif'}
                   </span>
                 ),
               },

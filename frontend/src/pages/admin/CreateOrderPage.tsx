@@ -3,7 +3,6 @@ import { useNavigate, Link } from "react-router-dom";
 import dev from '../../utils/devLogger';
 import { adminClientsApi } from "../../api/adminClients.api";
 import { adminDesignsApi } from "../../api/adminDesigns.api";
-import { adminOrdersApi } from "../../api/adminOrders.api";
 import {
   ArrowLeft,
   Save,
@@ -13,6 +12,7 @@ import {
   Calendar,
 } from "lucide-react";
 
+// Interface locale pour un client (simplifiée, correspondant à ce que l'API retourne vraiment)
 interface Client {
   _id: string;
   name: string;
@@ -20,6 +20,7 @@ interface Client {
   phone?: string;
 }
 
+// Interface locale pour un design (uniquement ce dont on a besoin)
 interface Design {
   _id: string;
   title: string;
@@ -42,7 +43,7 @@ export default function CreateOrderPage() {
     priority: "NORMAL" as const,
   });
 
-  // Récupérer les vraies données du backend
+  // Récupération des données avec extraction robuste
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -52,14 +53,23 @@ export default function CreateOrderPage() {
           adminDesignsApi.getAllDesigns()
         ]);
         
-        setClients(clientsRes.data || []);
-        setDesigns((designsRes.data || []).map(d => ({
-          _id: d._id || d.id,
-          title: d.title,
-          price: d.price || 0
-        })));
+        const clientsArray: Client[] = (Array.isArray(clientsRes) ? clientsRes : []).map((client) => ({
+          _id: client._id || client.id || '',
+          name: `${client.firstName} ${client.lastName}`.trim(),
+          email: client.email,
+          phone: client.phone,
+        }));
+        setClients(clientsArray);
         
-        dev.log("✅ Données chargées:", { clients: clientsRes.data?.length, designs: designsRes.data?.length });
+        const designsArray = designsRes.data || [];
+        const normalizedDesigns = designsArray.map((design) => ({
+          _id: design._id,
+          title: design.title,
+          price: design.price ?? design.priceRange?.min ?? 0,
+        }));
+        
+        setDesigns(normalizedDesigns);
+        dev.log("✅ Données chargées:", { clients: clientsArray.length, designs: normalizedDesigns.length });
       } catch (error) {
         dev.error("❌ Erreur chargement données:", error);
       }
@@ -79,13 +89,11 @@ export default function CreateOrderPage() {
     try {
       setLoading(true);
 
-      // Calculer le total
       const total = selectedDesigns.reduce(
         (sum, item) => sum + item.design.price * item.quantity,
         0,
       );
 
-      // Préparer les données de la commande
       const orderData = {
         clientId: formData.clientId,
         designs: selectedDesigns.map((item) => ({
@@ -102,10 +110,8 @@ export default function CreateOrderPage() {
 
       dev.log("Création de la commande:", orderData);
 
-      // TODO: Implémenter l'API de création de commande
-      // await createOrder(orderData)
-
-      // Simuler une requête API
+      // TODO: Appel API réel à décommenter quand disponible
+      // await createOrder(orderData);
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       alert("Commande créée avec succès!");
@@ -204,8 +210,7 @@ export default function CreateOrderPage() {
                 <option value="">Sélectionnez un client</option>
                 {clients.map((client) => (
                   <option key={client._id} value={client._id}>
-                    {client.name} - {client.email}{" "}
-                    {client.phone && `(${client.phone})`}
+                    {client.name} - {client.email} {client.phone && `(${client.phone})`}
                   </option>
                 ))}
               </select>
@@ -275,7 +280,6 @@ export default function CreateOrderPage() {
           </div>
 
           <div className="space-y-6">
-            {/* Sélection d'un design à ajouter */}
             <div>
               <label htmlFor="addDesign" className="block text-sm font-medium text-gray-700 mb-2">
                 Ajouter un design
@@ -308,7 +312,6 @@ export default function CreateOrderPage() {
               </div>
             </div>
 
-            {/* Liste des designs sélectionnés */}
             {selectedDesigns.length > 0 ? (
               <div className="space-y-4">
                 {selectedDesigns.map((item) => (
@@ -352,8 +355,7 @@ export default function CreateOrderPage() {
                       </div>
 
                       <div className="w-32 text-right font-medium">
-                        {(item.design.price * item.quantity).toLocaleString()}{" "}
-                        Ar
+                        {(item.design.price * item.quantity).toLocaleString()} Ar
                       </div>
 
                       <button
@@ -367,7 +369,6 @@ export default function CreateOrderPage() {
                   </div>
                 ))}
 
-                {/* Total */}
                 <div className="pt-4 border-t border-gray-200">
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-semibold">

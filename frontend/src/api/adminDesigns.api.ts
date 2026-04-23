@@ -53,8 +53,9 @@ export const adminDesignsApi = {
       "printArea",
       "notes",
     ];
+    const textSource = designData as unknown as Record<string, unknown>;
     textFields.forEach((field) => {
-      const value = (designData as any)[field];
+      const value = textSource[field];
       if (value !== undefined && value !== null && value !== "") {
         formData.append(field, String(value));
       }
@@ -118,8 +119,9 @@ export const adminDesignsApi = {
       "printArea",
       "notes",
     ];
+    const textSource = designData as unknown as Record<string, unknown>;
     textFields.forEach((field) => {
-      const value = (designData as any)[field];
+      const value = textSource[field];
       if (value !== undefined && value !== null && value !== "") {
         formData.append(field, String(value));
       }

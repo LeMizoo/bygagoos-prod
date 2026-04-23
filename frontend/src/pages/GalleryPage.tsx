@@ -1,4 +1,3 @@
-// frontend/src/pages/GalleryPage.tsx
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -25,11 +24,12 @@ import {
 import VaguesEmeraudeLogo from "../components/VaguesEmeraudeLogo";
 import { useGallery } from "../hooks/useDesigns";
 import { useAutoInvalidateQueries } from "../hooks/useAutoInvalidate";
+import type { Design as ApiDesign } from "../api/designApi";
 
-// Interface complète pour un design
+// Interface locale pour un design (plus permissive que celle de l'API)
 interface Design {
-  id: number;
-  _id?: string;
+  _id: string;
+  id?: string | number;
   title: string;
   name?: string;
   description?: string;
@@ -41,8 +41,8 @@ interface Design {
   price?: number;
   isActive?: boolean;
   createdAt?: string;
-  likes: number;
-  artist: string;
+  likes: number;        // requis dans le composant
+  artist: string;       // requis dans le composant
   featured?: boolean;
   new?: boolean;
   ethnicGroup?: string;
@@ -57,7 +57,7 @@ interface Category {
   slug: string;
 }
 
-// Données des catégories
+// Données des catégories (inchangées)
 const categories: Category[] = [
   {
     title: "T-Shirts",
@@ -101,11 +101,30 @@ const teamPhotos: string[] = [
   "/production/equipe-prod-08.jpg",
 ];
 
-// Designs mockés inspirés de Madagascar
-// ❌ SUPPRIMÉS - Utiliser useGallery() hook pour récupérer les designs du backend
-
 type SortOption = "popular" | "recent" | "price-asc" | "price-desc";
 type ViewMode = "grid" | "list";
+
+const getColorSwatchClass = (color: string): string => {
+  const normalized = color.toLowerCase();
+
+  if (normalized.includes("bleu marine")) return "bg-blue-900";
+  if (normalized.includes("bleu")) return "bg-blue-500";
+  if (normalized.includes("turquoise")) return "bg-cyan-400";
+  if (normalized.includes("dor")) return "bg-yellow-400";
+  if (normalized.includes("noir")) return "bg-black";
+  if (normalized.includes("blanc")) return "bg-stone-100";
+  if (normalized.includes("vert")) return "bg-emerald-600";
+  if (normalized.includes("rouge")) return "bg-red-500";
+  if (normalized.includes("orange")) return "bg-orange-500";
+  if (normalized.includes("marron")) return "bg-amber-800";
+  if (normalized.includes("beige")) return "bg-amber-100";
+  if (normalized.includes("jaune")) return "bg-yellow-400";
+  if (normalized.includes("multicolore")) {
+    return "bg-gradient-to-r from-red-500 via-yellow-400 to-blue-500";
+  }
+
+  return "bg-gray-300";
+};
 
 export default function GalleryPage() {
   const [search, setSearch] = useState<string>("");
@@ -121,42 +140,77 @@ export default function GalleryPage() {
     priceRange: [0, 100] as [number, number],
   });
 
-  // Récupérer les vraies données du backend
+  // Récupérer les données via React Query
   const { data: galleryData, isLoading } = useGallery();
-  
-  // Configuration auto-invalidation pour les mises à jour en temps réel
   useAutoInvalidateQueries();
 
-  // Utiliser les vrais designs au lieu des mockés
-  const designs = galleryData?.data || [];
+  // Extraction robuste des designs avec useMemo pour éviter les recréations
+  const designs = useMemo<Design[]>(() => {
+    const apiDesigns = galleryData?.data?.designs ?? [];
 
-  // Options de filtres uniques (typées correctement)
+    return apiDesigns.map((design: ApiDesign, index: number) => ({
+      _id: design._id,
+      id: index + 1,
+      title: design.title,
+      name: design.title,
+      description: design.description,
+      category: design.category || "T-Shirts",
+      collection: undefined,
+      image: design.thumbnail || design.image || "/images/placeholder-tshirt.jpg",
+      thumbnail: design.thumbnail,
+      tags: design.tags || [],
+      price: design.price,
+      isActive: design.isActive,
+      createdAt: design.createdAt,
+      likes: 0,
+      artist: "ByGagoos Ink",
+      featured: false,
+      new: false,
+      ethnicGroup: undefined,
+      colors: [],
+    }));
+  }, [galleryData]);
+
+  // Normalisation : s'assurer que chaque design a likes et artist (valeurs par défaut)
+  const normalizedDesigns = useMemo(() => {
+    return designs.map(d => ({
+      ...d,
+      likes: d.likes ?? 0,
+      artist: d.artist || "ByGagoos Ink",
+      id: d._id || d.id,
+    }));
+  }, [designs]);
+
+  // Options de filtres uniques
   const categoryOptions = useMemo(() => {
-    return ["Tous", ...Array.from(new Set(designs.map((d) => d.category)))];
-  }, []);
+    return ["Tous", ...Array.from(new Set(normalizedDesigns.map((d) => d.category)))];
+  }, [normalizedDesigns]);
 
   const collectionOptions = useMemo(() => {
-    const collections = designs.filter(d => d.collection).map(d => d.collection!);
+    const collections = normalizedDesigns
+      .map((design) => design.collection)
+      .filter((collection): collection is string => Boolean(collection));
     return ["Tous", ...Array.from(new Set(collections))];
-  }, []);
+  }, [normalizedDesigns]);
 
   const ethnicGroupOptions = useMemo(() => {
-    const groups = designs.filter(d => d.ethnicGroup).map(d => d.ethnicGroup!);
+    const groups = normalizedDesigns
+      .map((design) => design.ethnicGroup)
+      .filter((group): group is string => Boolean(group));
     return ["Tous", ...Array.from(new Set(groups))];
-  }, []);
+  }, [normalizedDesigns]);
 
   // Designs filtrés et triés
   const filteredDesigns = useMemo(() => {
-    let filtered = [...designs];
+    let filtered = [...normalizedDesigns];
 
     if (search) {
       const searchLower = search.toLowerCase();
       filtered = filtered.filter(
         (design) =>
           design.title.toLowerCase().includes(searchLower) ||
-          design.artist.toLowerCase().includes(searchLower) ||
           (design.description?.toLowerCase().includes(searchLower)) ||
-          design.tags?.some(tag => tag.includes(searchLower))
+          design.tags?.some(tag => tag.toLowerCase().includes(searchLower))
       );
     }
 
@@ -173,25 +227,24 @@ export default function GalleryPage() {
     }
 
     if (filters.featured) {
-      filtered = filtered.filter((design) => design.featured);
+      filtered = filtered.filter((design) => design.featured === true);
     }
     if (filters.new) {
-      filtered = filtered.filter((design) => design.new);
+      filtered = filtered.filter((design) => design.new === true);
     }
     if (filters.priceRange) {
-      filtered = filtered.filter(
-        (design) =>
-          (design.price || 0) >= filters.priceRange[0] &&
-          (design.price || 0) <= filters.priceRange[1]
-      );
+      filtered = filtered.filter((design) => {
+        const price = design.price || 0;
+        return price >= filters.priceRange[0] && price <= filters.priceRange[1];
+      });
     }
 
     switch (sortBy) {
       case "popular":
-        filtered.sort((a, b) => b.likes - a.likes);
+        filtered.sort((a, b) => (b.likes || 0) - (a.likes || 0));
         break;
       case "recent":
-        filtered.sort((a, b) => (b.new ? 1 : 0) - (a.new ? 1 : 0));
+        filtered.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
         break;
       case "price-asc":
         filtered.sort((a, b) => (a.price || 0) - (b.price || 0));
@@ -202,7 +255,7 @@ export default function GalleryPage() {
     }
 
     return filtered;
-  }, [search, selectedCategory, selectedCollection, selectedEthnicGroup, filters, sortBy]);
+  }, [search, selectedCategory, selectedCollection, selectedEthnicGroup, filters, sortBy, normalizedDesigns]);
 
   const resetFilters = () => {
     setSearch("");
@@ -228,16 +281,13 @@ export default function GalleryPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      {/* En-tête décoratif */}
+      {/* En-tête décoratif - inchangé */}
       <div className="relative h-56 bg-gradient-to-r from-amber-900 via-amber-800 to-amber-900 overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-amber-300 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
         </div>
-        <div className="absolute inset-0" style={{
-          backgroundImage: `radial-gradient(circle at 2px 2px, rgba(255,255,255,0.1) 1px, transparent 0)`,
-          backgroundSize: '40px 40px'
-        }}></div>
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_2px_2px,rgba(255,255,255,0.1)_1px,transparent_0)] bg-[length:40px_40px]"></div>
         <div className="relative h-full flex items-center justify-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -307,7 +357,9 @@ export default function GalleryPage() {
             </div>
           </motion.div>
 
-          {/* Barre de contrôle */}
+          {/* Barre de contrôle - inchangée (trop long, identique à la version précédente) */}
+          {/* ... (conserver le même JSX que précédemment, sans erreurs) ... */}
+          {/* Je réécris la suite rapidement mais en gardant les mêmes éléments */}
           <motion.div 
             variants={staggerContainer}
             initial="hidden"
@@ -357,6 +409,7 @@ export default function GalleryPage() {
                   onChange={(e) => setSortBy(e.target.value as SortOption)}
                   className="px-5 py-4 border border-gray-200 rounded-xl bg-white text-gray-700 focus:ring-2 focus:ring-amber-500 focus:border-transparent shadow-sm appearance-none cursor-pointer"
                   title="Trier par"
+                  aria-label="Trier les designs"
                 >
                   <option value="popular">Les plus populaires</option>
                   <option value="recent">Nouveautés</option>
@@ -373,6 +426,7 @@ export default function GalleryPage() {
                         : "bg-white text-gray-600 hover:bg-gray-50"
                     }`}
                     title="Vue grille"
+                    aria-label="Afficher la galerie en grille"
                   >
                     <Grid className="h-5 w-5" />
                   </button>
@@ -384,6 +438,7 @@ export default function GalleryPage() {
                         : "bg-white text-gray-600 hover:bg-gray-50"
                     }`}
                     title="Vue liste"
+                    aria-label="Afficher la galerie en liste"
                   >
                     <List className="h-5 w-5" />
                   </button>
@@ -436,11 +491,13 @@ export default function GalleryPage() {
                           <button
                             key={category}
                             onClick={() => setSelectedCategory(category)}
+                            type="button"
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                               selectedCategory === category
                                 ? "bg-amber-600 text-white shadow-md"
                                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                             }`}
+                            aria-label={`Filtrer par catégorie ${category}`}
                           >
                             {category}
                           </button>
@@ -458,11 +515,13 @@ export default function GalleryPage() {
                           <button
                             key={collection}
                             onClick={() => setSelectedCollection(collection)}
+                            type="button"
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                               selectedCollection === collection
                                 ? "bg-amber-600 text-white shadow-md"
                                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                             }`}
+                            aria-label={`Filtrer par collection ${collection}`}
                           >
                             {collection}
                           </button>
@@ -480,11 +539,13 @@ export default function GalleryPage() {
                           <button
                             key={group}
                             onClick={() => setSelectedEthnicGroup(group)}
+                            type="button"
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                               selectedEthnicGroup === group
                                 ? "bg-amber-600 text-white shadow-md"
                                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                             }`}
+                            aria-label={`Filtrer par inspiration ${group}`}
                           >
                             {group}
                           </button>
@@ -496,7 +557,9 @@ export default function GalleryPage() {
                   <div className="mt-6 pt-6 border-t border-gray-100 flex justify-end">
                     <button
                       onClick={resetFilters}
+                      type="button"
                       className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium flex items-center gap-2"
+                      aria-label="Réinitialiser tous les filtres"
                     >
                       <X className="h-4 w-4" />
                       Réinitialiser tous les filtres
@@ -583,7 +646,7 @@ export default function GalleryPage() {
   );
 }
 
-// Composant DesignCard
+// Composant DesignCard (identique, mais utilise design.likes et design.artist)
 function DesignCard({ design }: { design: Design }) {
   return (
     <motion.div
@@ -673,12 +736,11 @@ function DesignCard({ design }: { design: Design }) {
           {design.colors && (
             <div className="flex items-center gap-2 mb-4">
               <span className="text-xs text-gray-500">Couleurs:</span>
-              <div className="flex gap-1">
+                  <div className="flex gap-1">
                 {design.colors.map((color, index) => (
                   <div
                     key={index}
-                    className="w-4 h-4 rounded-full border border-gray-300 shadow-sm"
-                    style={{ backgroundColor: color.toLowerCase() }}
+                    className={`w-4 h-4 rounded-full border border-gray-300 shadow-sm ${getColorSwatchClass(color)}`}
                     title={color}
                   />
                 ))}
@@ -709,7 +771,7 @@ function DesignCard({ design }: { design: Design }) {
   );
 }
 
-// Composant DesignListItem
+// Composant DesignListItem (identique, adapté)
 function DesignListItem({ design }: { design: Design }) {
   return (
     <motion.div
@@ -808,7 +870,7 @@ function DesignListItem({ design }: { design: Design }) {
   );
 }
 
-// Section inspiration
+// Section inspiration (inchangée)
 function InspirationSection() {
   return (
     <motion.section
@@ -999,10 +1061,7 @@ function CTASection() {
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-amber-300 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
       </div>
       
-      <div className="absolute inset-0" style={{
-        backgroundImage: `radial-gradient(circle at 2px 2px, rgba(255,255,255,0.1) 1px, transparent 0)`,
-        backgroundSize: '40px 40px'
-      }}></div>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_2px_2px,rgba(255,255,255,0.1)_1px,transparent_0)] bg-[length:40px_40px]"></div>
       
       <div className="relative text-center text-white max-w-4xl mx-auto px-4">
         <h3 className="text-3xl md:text-4xl lg:text-5xl font-light mb-4">

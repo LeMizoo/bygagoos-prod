@@ -76,8 +76,7 @@ const fetchApi = async <T>(
 
   const url = `${API_URL}${normalizedEndpoint}`;
 
-  try {
-    const response = await fetch(url, {
+  const response = await fetch(url, {
       ...options,
       headers,
       credentials: "include",
@@ -121,10 +120,7 @@ const fetchApi = async <T>(
       throw new Error((errorData.message as string) || (errorData.error as string) || `Erreur: ${response.status}`);
     }
 
-    return await response.json();
-  } catch (error) {
-    throw error;
-  }
+  return await response.json();
 };
 
 export const authApi = {
