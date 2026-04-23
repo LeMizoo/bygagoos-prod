@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   PlusCircle,
   Image,
@@ -100,6 +100,7 @@ const normalizeDesign = (design: BackendDesign): DesignRow | null => {
 const categories = ["", "LOGO", "BRANDING", "PACKAGING", "PRINT", "DIGITAL", "ILLUSTRATION", "OTHER"];
 
 export default function DesignsPage() {
+  const location = useLocation();
   const [designs, setDesigns] = useState<DesignRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -127,6 +128,13 @@ export default function DesignsPage() {
   useEffect(() => {
     loadDesigns();
   }, []);
+
+  useEffect(() => {
+    if ((location.state as { refresh?: boolean } | null)?.refresh) {
+      loadDesigns();
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const filteredDesigns = useMemo(() => {
     const term = search.trim().toLowerCase();

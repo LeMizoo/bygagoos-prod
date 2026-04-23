@@ -11,7 +11,10 @@ export const queryDesignSchema = z.object({
   assignedTo: z.string().optional(),
   sortBy: z.enum(['title', 'status', 'type', 'createdAt', 'dueDate']).optional().default('createdAt'),
   sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),
-  isActive: z.union([z.string(), z.boolean()]).optional().transform(val => val === true || val === 'true'),
+  isActive: z.union([z.string(), z.boolean()]).optional().transform(val => {
+    if (val === undefined) return undefined;
+    return val === true || val === 'true';
+  }),
   tags: z.union([z.string(), z.array(z.string())]).optional().transform(val => {
     if (Array.isArray(val)) return val;
     return val ? val.split(',') : [];
