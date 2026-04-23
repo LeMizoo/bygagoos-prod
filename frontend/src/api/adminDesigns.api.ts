@@ -10,6 +10,19 @@ import type {
 
 export type { Design };
 
+const backendStatusFromUi = (status: "active" | "inactive" | "archived") => {
+  switch (status) {
+    case "active":
+      return "APPROVED";
+    case "inactive":
+      return "REJECTED";
+    case "archived":
+      return "ARCHIVED";
+    default:
+      return "APPROVED";
+  }
+};
+
 type AdminDesignCreateInput = {
   title: string;
   description?: string;
@@ -75,8 +88,10 @@ export const adminDesignsApi = {
     id: string,
     status: "active" | "inactive" | "archived",
   ): Promise<apiResponse<Design>> => {
-    dev.log(`🌐 Designs API: PATCH /api/designs/${id}/status`);
-    const response = await axiosInstance.patch(`/designs/${id}/status`, { status });
+    dev.log(`🌐 Designs API: PUT /api/designs/${id}`);
+    const response = await axiosInstance.put(`/designs/${id}`, {
+      status: backendStatusFromUi(status),
+    });
     return response.data;
   },
 
