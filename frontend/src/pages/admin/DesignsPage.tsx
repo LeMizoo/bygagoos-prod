@@ -239,6 +239,7 @@ export default function DesignsPage() {
               onChange={(e) => setCategory(e.target.value)}
               className="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               aria-label="Filtrer par catégorie"
+              title="Filtrer par catégorie"
             >
               {categories.map((cat) => (
                 <option key={cat || "all"} value={cat}>
@@ -350,6 +351,8 @@ export default function DesignsPage() {
                       value={design.status}
                       onChange={(e) => handleUpdateStatus(design.id, e.target.value as "active" | "inactive" | "archived")}
                       className="flex-1 text-sm border border-gray-300 rounded-lg px-3 py-2"
+                      aria-label="Changer le statut du design"
+                      title="Changer le statut"
                     >
                       <option value="draft">Brouillon</option>
                       <option value="active">Actif</option>
@@ -427,6 +430,8 @@ export default function DesignsPage() {
                             value={design.status}
                             onChange={(e) => handleUpdateStatus(design.id, e.target.value as "active" | "inactive" | "archived")}
                             className="text-xs border border-gray-300 rounded p-1"
+                            aria-label="Changer le statut"
+                            title="Changer le statut"
                           >
                             <option value="draft">Brouillon</option>
                             <option value="active">Actif</option>

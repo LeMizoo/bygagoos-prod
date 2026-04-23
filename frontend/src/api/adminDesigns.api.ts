@@ -75,8 +75,15 @@ export const adminDesignsApi = {
     id: string,
     status: "active" | "inactive" | "archived",
   ): Promise<apiResponse<Design>> => {
-    dev.log(`🌐 Designs API: PATCH /api/designs/${id}/status`);
-    const response = await axiosInstance.patch(`/designs/${id}/status`, { status });
+    const backendStatus =
+      status === "active"
+        ? "APPROVED"
+        : status === "inactive"
+          ? "REJECTED"
+          : "ARCHIVED";
+
+    dev.log(`🌐 Designs API: PUT /api/designs/${id}`);
+    const response = await axiosInstance.put(`/designs/${id}`, { status: backendStatus });
     return response.data;
   },
 
