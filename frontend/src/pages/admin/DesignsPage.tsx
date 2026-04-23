@@ -1,66 +1,121 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   PlusCircle,
   Image,
-  Tag,
   Filter,
   Search,
   Download,
   RefreshCw,
-  Eye,
-  Edit,
   Trash2,
 } from "lucide-react";
 import { adminDesignsApi } from "../../api/adminDesigns.api";
-// Importer directement depuis design.ts pour éviter les conflits
-import type { Design as DesignType, DesignCategory } from "../../types/design";
-import dev from '../../utils/devLogger';
+import dev from "../../utils/devLogger";
+
+type BackendDesignStatus = "DRAFT" | "PENDING" | "APPROVED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED" | "ARCHIVED";
+type UiDesignStatus = "draft" | "active" | "inactive" | "archived";
+
+interface BackendDesign {
+  id?: string;
+  _id?: string;
+  title: string;
+  type?: string;
+  status?: BackendDesignStatus | string;
+  files?: Array<{ url?: string }>;
+  thumbnail?: string;
+  tags?: string[];
+  isActive?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  metadata?: Record<string, unknown>;
+}
+
+interface DesignRow {
+  id: string;
+  title: string;
+  category: string;
+  price: number;
+  thumbnail?: string;
+  tags: string[];
+  status: UiDesignStatus;
+  isActive: boolean;
+}
+
+interface DesignsApiPayload {
+  data?: {
+    designs?: BackendDesign[];
+  };
+}
+
+const backendTypeLabels: Record<string, string> = {
+  LOGO: "Logo",
+  BRANDING: "Branding",
+  PACKAGING: "Packaging",
+  PRINT: "Print",
+  DIGITAL: "Digital",
+  ILLUSTRATION: "Illustration",
+  OTHER: "Autre",
+};
+
+const uiStatusLabels: Record<UiDesignStatus, string> = {
+  draft: "Brouillon",
+  active: "Actif",
+  inactive: "Inactif",
+  archived: "Archivé",
+};
+
+const normalizeStatus = (status?: string, isActive?: boolean): UiDesignStatus => {
+  const normalized = String(status || "").toUpperCase();
+  if (normalized === "ARCHIVED") return "archived";
+  if (normalized === "REJECTED") return "inactive";
+  if (normalized === "DRAFT" || normalized === "PENDING") return "draft";
+  if (normalized === "APPROVED" || normalized === "IN_PROGRESS" || normalized === "COMPLETED") return "active";
+  return isActive === false ? "inactive" : "active";
+};
+
+const normalizeDesign = (design: BackendDesign): DesignRow | null => {
+  const id = design.id || design._id;
+  if (!id) return null;
+
+  const metadata = design.metadata || {};
+  const categoryValue =
+    typeof metadata.category === "string" ? metadata.category : design.type || "OTHER";
+  const priceValue = metadata.basePrice ?? metadata.price ?? metadata.amount ?? 0;
+  const resolvedStatus = normalizeStatus(design.status, design.isActive);
+
+  return {
+    id,
+    title: design.title,
+    category:
+      backendTypeLabels[String(categoryValue).toUpperCase()] ||
+      String(categoryValue).replace(/_/g, " "),
+    price: Number(priceValue) || 0,
+    thumbnail: design.thumbnail || design.files?.[0]?.url,
+    tags: design.tags || [],
+    status: resolvedStatus,
+    isActive: design.isActive ?? resolvedStatus === "active",
+  };
+};
+
+const categories = ["", "LOGO", "BRANDING", "PACKAGING", "PRINT", "DIGITAL", "ILLUSTRATION", "OTHER"];
 
 export default function DesignsPage() {
-  const [designs, setDesigns] = useState<DesignType[]>([]);
+  const [designs, setDesigns] = useState<DesignRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState<DesignCategory | "">("");
-  const [stats, setStats] = useState({
-    total: 0,
-    active: 0,
-    byCategory: {} as Record<string, number>,
-    popular: [] as DesignType[],
-  });
-
-  const categories: DesignCategory[] = [
-    "T-SHIRT",
-    "HOODIE",
-    "SWEATSHIRT",
-    "POLO",
-    "TANK_TOP",
-    "POSTER",
-    "STICKER",
-    "MUG",
-    "BAG",
-    "CAP",
-    "OTHER",
-  ];
-
-  useEffect(() => {
-    loadDesigns();
-    loadStats();
-  }, [search, category]);
+  const [category, setCategory] = useState("");
 
   const loadDesigns = async () => {
     try {
       setLoading(true);
-      const response = await adminDesignsApi.getAllDesigns({
-        search,
-        category: category || undefined,
-        page: 1,
-        limit: 50,
-      });
-      const designsData = Array.isArray(response.data)
-        ? response.data
-        : (response.data as any)?.designs || [];
-      setDesigns(designsData.filter((d: any) => d && d._id)); // Filtrer les designs valides avec _id
+      const response = await adminDesignsApi.getAllDesigns({ page: 1, limit: 100 });
+      const payload = (response as unknown as DesignsApiPayload).data;
+      const designsData = Array.isArray(payload?.designs) ? payload.designs : [];
+      setDesigns(
+        designsData
+          .map((design: BackendDesign) => normalizeDesign(design))
+          .filter((design): design is DesignRow => design !== null),
+      );
     } catch (error) {
       dev.error("Erreur lors du chargement des designs:", error);
       setDesigns([]);
@@ -69,41 +124,60 @@ export default function DesignsPage() {
     }
   };
 
-  const loadStats = async () => {
-    try {
-      const response = await adminDesignsApi.getDesignStats();
-      const statsData = response.data as any;
-      setStats({
-        total: statsData?.total || 0,
-        active: statsData?.byStatus?.["active"] || 0,
-        byCategory: statsData?.byCategory || {},
-        popular: (statsData?.popular || []) as any[],
-      });
-    } catch (error) {
-      dev.error("Erreur lors du chargement des statistiques:", error);
-    }
-  };
+  useEffect(() => {
+    loadDesigns();
+  }, []);
+
+  const filteredDesigns = useMemo(() => {
+    const term = search.trim().toLowerCase();
+
+    return designs.filter((design) => {
+      const matchesSearch =
+        !term ||
+        design.title.toLowerCase().includes(term) ||
+        design.category.toLowerCase().includes(term) ||
+        design.tags.some((tag) => tag.toLowerCase().includes(term));
+
+      const matchesCategory = !category || design.category.toUpperCase() === category;
+
+      return matchesSearch && matchesCategory;
+    });
+  }, [designs, search, category]);
+
+  const stats = useMemo(() => {
+    const byCategory = filteredDesigns.reduce<Record<string, number>>((acc, design) => {
+      acc[design.category] = (acc[design.category] || 0) + 1;
+      return acc;
+    }, {});
+
+    return {
+      total: designs.length,
+      active: designs.filter((design) => design.isActive).length,
+      byCategory,
+      popular: [...designs]
+        .sort((a, b) => b.price - a.price)
+        .slice(0, 4),
+    };
+  }, [designs, filteredDesigns]);
 
   const handleDeleteDesign = async (id: string) => {
-    if (window.confirm("Êtes-vous sûr de vouloir supprimer ce design ?")) {
-      try {
-        await adminDesignsApi.deleteDesign(id);
-        loadDesigns();
-        loadStats();
-      } catch (error) {
-        dev.error("Erreur lors de la suppression:", error);
-        alert("Erreur lors de la suppression du design");
-      }
+    if (!window.confirm("Êtes-vous sûr de vouloir supprimer ce design ?")) {
+      return;
+    }
+
+    try {
+      await adminDesignsApi.deleteDesign(id);
+      await loadDesigns();
+    } catch (error) {
+      dev.error("Erreur lors de la suppression:", error);
+      alert("Erreur lors de la suppression du design");
     }
   };
 
-  const handleUpdateStatus = async (
-    id: string,
-    status: "active" | "inactive" | "archived",
-  ) => {
+  const handleUpdateStatus = async (id: string, status: "active" | "inactive" | "archived") => {
     try {
       await adminDesignsApi.updateDesignStatus(id, status);
-      loadDesigns();
+      await loadDesigns();
     } catch (error) {
       dev.error("Erreur lors de la mise à jour du statut:", error);
       alert("Erreur lors de la mise à jour du statut");
@@ -112,117 +186,74 @@ export default function DesignsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Catalogue des Designs
-          </h1>
-          <p className="text-gray-600 mt-1">
-            Gérez votre bibliothèque de créations
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900">Catalogue des Designs</h1>
+          <p className="text-gray-600 mt-1">Gérez votre bibliothèque de créations</p>
         </div>
         <Link
           to="/admin/designs/create"
-          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="inline-flex w-full sm:w-auto items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
           <PlusCircle className="h-4 w-4 mr-2" />
           Nouveau design
         </Link>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Designs totaux</p>
-              <p className="text-2xl font-bold text-blue-600">
-                {stats.total || 0}
-              </p>
-            </div>
-            <div className="p-3 rounded-full bg-blue-100">
-              <span className="font-bold">📊</span>
-            </div>
-          </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+          <p className="text-sm text-gray-600">Designs totaux</p>
+          <p className="text-2xl font-bold text-blue-600">{stats.total}</p>
         </div>
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Actifs</p>
-              <p className="text-2xl font-bold text-green-600">
-                {stats.active || 0}
-              </p>
-            </div>
-            <div className="p-3 rounded-full bg-green-100">
-              <span className="font-bold">✅</span>
-            </div>
-          </div>
+        <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+          <p className="text-sm text-gray-600">Actifs</p>
+          <p className="text-2xl font-bold text-green-600">{stats.active}</p>
         </div>
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Populaires</p>
-              <p className="text-2xl font-bold text-purple-600">
-                {stats.popular?.length || 0}
-              </p>
-            </div>
-            <div className="p-3 rounded-full bg-purple-100">
-              <span className="font-bold">🔥</span>
-            </div>
-          </div>
+        <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+          <p className="text-sm text-gray-600">Populaires</p>
+          <p className="text-2xl font-bold text-purple-600">{stats.popular.length}</p>
         </div>
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Catégories</p>
-              <p className="text-2xl font-bold text-yellow-600">
-                {Object.keys(stats.byCategory || {}).length}
-              </p>
-            </div>
-            <div className="p-3 rounded-full bg-yellow-100">
-              <span className="font-bold">🏷️</span>
-            </div>
-          </div>
+        <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+          <p className="text-sm text-gray-600">Catégories</p>
+          <p className="text-2xl font-bold text-yellow-600">{Object.keys(stats.byCategory).length}</p>
         </div>
       </div>
 
-      {/* Filtres et Recherche */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
+      <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+            <div className="flex items-center gap-2">
               <Filter className="h-5 w-5 text-gray-400" />
               <h2 className="text-lg font-semibold text-gray-800">Filtres</h2>
             </div>
             <select
               value={category}
-              onChange={(e) =>
-                setCategory(e.target.value as DesignCategory | "")
-              }
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              onChange={(e) => setCategory(e.target.value)}
+              className="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              aria-label="Filtrer par catégorie"
             >
-              <option value="">Toutes les catégories</option>
               {categories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat.replace("_", " ")}
+                <option key={cat || "all"} value={cat}>
+                  {cat ? backendTypeLabels[cat] || cat : "Toutes les catégories"}
                 </option>
               ))}
             </select>
           </div>
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="relative w-full sm:w-72">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="text"
                 placeholder="Rechercher un design..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-64"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
             <button
               onClick={loadDesigns}
-              className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+              className="inline-flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
               Actualiser
@@ -231,44 +262,35 @@ export default function DesignsPage() {
         </div>
       </div>
 
-      {/* Tableau des Designs */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Image className="h-5 w-5 text-gray-400" />
-              <h2 className="text-lg font-semibold text-gray-800">
-                Tous les designs
-              </h2>
-              <span className="text-sm bg-gray-100 text-gray-600 px-2 py-1 rounded">
-                {designs.length} designs
-              </span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <button className="flex items-center px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
-                <Download className="h-4 w-4 mr-1" />
-                Exporter
-              </button>
-            </div>
+        <div className="p-4 sm:p-6 border-b border-gray-200 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <Image className="h-5 w-5 text-gray-400" />
+            <h2 className="text-lg font-semibold text-gray-800">Tous les designs</h2>
+            <span className="text-sm bg-gray-100 text-gray-600 px-2 py-1 rounded">
+              {filteredDesigns.length} designs
+            </span>
           </div>
+          <button className="inline-flex items-center justify-center px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
+            <Download className="h-4 w-4 mr-1" />
+            Exporter
+          </button>
         </div>
 
         {loading ? (
           <div className="p-8 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto" />
             <p className="mt-2 text-gray-600">Chargement des designs...</p>
           </div>
-        ) : designs.length === 0 ? (
+        ) : filteredDesigns.length === 0 ? (
           <div className="p-8 text-center">
             <div className="text-gray-400 mb-4">
               <Image className="h-16 w-16 mx-auto" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Aucun design trouvé
-            </h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun design trouvé</h3>
             <p className="text-gray-600 mb-6">
               {search || category
-                ? "Aucun résultat correspond à vos critères de recherche."
+                ? "Aucun résultat ne correspond à vos critères."
                 : "Commencez par créer votre premier design."}
             </p>
             <Link
@@ -280,178 +302,155 @@ export default function DesignsPage() {
             </Link>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Design
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Catégorie
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Prix
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Statut
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {designs && designs.length > 0 ? (
-                  designs.map((design, index) => {
-                    // Type assertion pour accéder aux propriétés
-                    const designTyped = design as DesignType;
-                    const key = designTyped._id || `design-${index}`;
-                    return (
-                      <tr key={key} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="h-10 w-10 flex-shrink-0">
-                              {designTyped.thumbnail ? (
-                                <img
-                                  className="h-10 w-10 rounded-lg object-cover"
-                                  src={designTyped.thumbnail}
-                                  alt={designTyped.title}
-                                />
-                              ) : (
-                                <div className="h-10 w-10 rounded-lg bg-gray-200 flex items-center justify-center">
-                                  <Image className="h-5 w-5 text-gray-400" />
-                                </div>
-                              )}
-                            </div>
-                            <div className="ml-4">
-                              <div className="text-sm font-medium text-gray-900">
-                                {designTyped.title}
-                              </div>
-                              <div className="text-sm text-gray-500">
-                                {designTyped.tags?.slice(0, 2).join(", ")}
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                            {designTyped.category?.replace("_", " ") ||
-                              "Non catégorisé"}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {designTyped.basePrice?.toLocaleString() || "0"} Ar
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center space-x-2">
-                            <span
-                              className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                designTyped.status === "active"
-                                  ? "bg-green-100 text-green-800"
-                                  : designTyped.status === "draft"
-                                    ? "bg-yellow-100 text-yellow-800"
-                                    : designTyped.status === "archived"
-                                      ? "bg-gray-100 text-gray-800"
-                                      : "bg-red-100 text-red-800"
-                              }`}
-                            >
-                              {designTyped.status === "active"
-                                ? "Actif"
-                                : designTyped.status === "draft"
-                                  ? "Brouillon"
-                                  : designTyped.status === "archived"
-                                    ? "Archivé"
-                                    : "Inactif"}
-                            </span>
-                            <select
-                              value={designTyped.status || "draft"}
-                              onChange={(e) =>
-                                handleUpdateStatus(
-                                  designTyped._id,
-                                  e.target.value as
-                                    | "active"
-                                    | "inactive"
-                                    | "archived",
-                                )
-                              }
-                              className="text-xs border border-gray-300 rounded p-1"
-                            >
-                              <option value="draft">Brouillon</option>
-                              <option value="active">Actif</option>
-                              <option value="inactive">Inactif</option>
-                              <option value="archived">Archivé</option>
-                            </select>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex space-x-3">
-                            <Link
-                              to={`/admin/designs/${designTyped._id}`}
-                              className="text-blue-600 hover:text-blue-900"
-                              title="Voir"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Link>
-                            <Link
-                              to={`/admin/designs/edit/${designTyped._id}`}
-                              className="text-green-600 hover:text-green-900"
-                              title="Éditer"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Link>
-                            <button
-                              onClick={() =>
-                                handleDeleteDesign(designTyped._id)
-                              }
-                              className="text-red-600 hover:text-red-900"
-                              title="Supprimer"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td
-                      colSpan={5}
-                      className="px-6 py-4 text-center text-gray-500"
+          <>
+            <div className="md:hidden divide-y divide-gray-200">
+              {filteredDesigns.map((design) => (
+                <div key={design.id} className="p-4 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="h-12 w-12 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
+                      {design.thumbnail ? (
+                        <img src={design.thumbnail} alt={design.title} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="h-full w-full flex items-center justify-center">
+                          <Image className="h-5 w-5 text-gray-400" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-medium text-gray-900 truncate">{design.title}</p>
+                      <p className="text-sm text-gray-500">{design.category}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-sm text-gray-900 font-medium">{design.price.toLocaleString()} Ar</span>
+                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                      design.status === "active"
+                        ? "bg-green-100 text-green-800"
+                        : design.status === "draft"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : design.status === "archived"
+                            ? "bg-gray-100 text-gray-800"
+                            : "bg-red-100 text-red-800"
+                    }`}>
+                      {uiStatusLabels[design.status]}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={design.status}
+                      onChange={(e) => handleUpdateStatus(design.id, e.target.value as "active" | "inactive" | "archived")}
+                      className="flex-1 text-sm border border-gray-300 rounded-lg px-3 py-2"
                     >
-                      {loading ? "Chargement..." : "Aucun design disponible"}
-                    </td>
+                      <option value="draft">Brouillon</option>
+                      <option value="active">Actif</option>
+                      <option value="inactive">Inactif</option>
+                      <option value="archived">Archivé</option>
+                    </select>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteDesign(design.id)}
+                      className="inline-flex items-center justify-center rounded-lg border border-red-200 px-3 py-2 text-red-600 hover:bg-red-50"
+                      aria-label={`Supprimer ${design.title}`}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="hidden md:block overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Design</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Catégorie</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prix</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredDesigns.map((design) => (
+                    <tr key={design.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="h-10 w-10 flex-shrink-0">
+                            {design.thumbnail ? (
+                              <img className="h-10 w-10 rounded-lg object-cover" src={design.thumbnail} alt={design.title} />
+                            ) : (
+                              <div className="h-10 w-10 rounded-lg bg-gray-200 flex items-center justify-center">
+                                <Image className="h-5 w-5 text-gray-400" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900">{design.title}</div>
+                            <div className="text-sm text-gray-500">{design.tags.slice(0, 2).join(", ")}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                          {design.category}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {design.price.toLocaleString()} Ar
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          design.status === "active"
+                            ? "bg-green-100 text-green-800"
+                            : design.status === "draft"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : design.status === "archived"
+                                ? "bg-gray-100 text-gray-800"
+                                : "bg-red-100 text-red-800"
+                        }`}>
+                          {uiStatusLabels[design.status]}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex items-center gap-3">
+                          <select
+                            value={design.status}
+                            onChange={(e) => handleUpdateStatus(design.id, e.target.value as "active" | "inactive" | "archived")}
+                            className="text-xs border border-gray-300 rounded p-1"
+                          >
+                            <option value="draft">Brouillon</option>
+                            <option value="active">Actif</option>
+                            <option value="inactive">Inactif</option>
+                            <option value="archived">Archivé</option>
+                          </select>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteDesign(design.id)}
+                            className="text-red-600 hover:text-red-900 inline-flex items-center gap-1"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Supprimer
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 
-      {/* Guide */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-blue-800 mb-2">
-          💡 Comment utiliser cette section
-        </h3>
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 sm:p-6">
+        <h3 className="text-lg font-semibold text-blue-800 mb-2">💡 Comment utiliser cette section</h3>
         <ul className="text-blue-700 space-y-1">
-          <li>
-            • <strong>Créer un design</strong> : Ajoutez des images, définissez
-            les prix et caractéristiques
-          </li>
-          <li>
-            • <strong>Organiser</strong> : Utilisez les catégories et tags pour
-            structurer votre catalogue
-          </li>
-          <li>
-            • <strong>Gérer la visibilité</strong> : Activez/désactivez les
-            designs selon leur disponibilité
-          </li>
-          <li>
-            • <strong>Suivre la popularité</strong> : Les designs les plus
-            vus/commandés sont mis en avant
-          </li>
+          <li>• <strong>Créer un design</strong> : Ajoutez des images, définissez les prix et caractéristiques</li>
+          <li>• <strong>Organiser</strong> : Utilisez les catégories et tags pour structurer votre catalogue</li>
+          <li>• <strong>Gérer la visibilité</strong> : Activez/désactivez les designs selon leur disponibilité</li>
+          <li>• <strong>Suivre la popularité</strong> : Les designs les plus vus/commandés sont mis en avant</li>
         </ul>
       </div>
     </div>
