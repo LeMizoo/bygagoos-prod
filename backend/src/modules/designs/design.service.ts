@@ -273,6 +273,12 @@ export class DesignService {
       // Créer le design
       const design = await Design.create({
         ...data,
+        type: data.type || DesignType.OTHER,
+        metadata: {
+          ...(data.metadata || {}),
+          category: data.category || data.metadata?.category,
+          basePrice: data.basePrice ?? data.metadata?.basePrice,
+        },
         user: new Types.ObjectId(userId),
         client: data.clientId ? new Types.ObjectId(data.clientId) : undefined,
         createdBy: new Types.ObjectId(createdBy),

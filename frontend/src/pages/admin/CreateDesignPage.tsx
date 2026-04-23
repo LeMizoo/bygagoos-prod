@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { ArrowLeft, Save, Upload, Image, Tag, DollarSign } from "lucide-react";
-import dev from '../../utils/devLogger';
+import { adminDesignsApi } from "../../api/adminDesigns.api";
+import dev from "../../utils/devLogger";
 
 export default function CreateDesignPage() {
   const navigate = useNavigate();
@@ -21,14 +22,28 @@ export default function CreateDesignPage() {
 
     try {
       setLoading(true);
-      // TODO: Implémenter l'API de création de design
-      dev.log("Création du design:", formData);
 
-      // Simuler une requête API
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const created = await adminDesignsApi.createDesign({
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        type: "OTHER",
+        category: formData.category || undefined,
+        basePrice: Number(formData.price || 0),
+        status: "DRAFT",
+        tags: formData.tags,
+        metadata: {
+          category: formData.category || undefined,
+          basePrice: Number(formData.price || 0),
+        },
+      });
+
+      const createdId = created?.data?._id;
+      if (createdId && formData.image) {
+        await adminDesignsApi.uploadDesignImages(createdId, [formData.image]);
+      }
 
       alert("Design créé avec succès!");
-      navigate("/admin/designs");
+      navigate("/admin/designs", { state: { refresh: true } });
     } catch (error) {
       alert("Erreur lors de la création du design");
       dev.error(error);
@@ -51,7 +66,6 @@ export default function CreateDesignPage() {
     if (file) {
       setFormData((prev) => ({ ...prev, image: file }));
 
-      // Créer une preview
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreview(reader.result as string);
@@ -61,18 +75,18 @@ export default function CreateDesignPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-4xl mx-auto px-4 py-6 sm:py-8">
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:space-x-4">
             <Link
               to="/admin/designs"
-              className="flex items-center text-gray-600 hover:text-gray-900"
+              className="inline-flex items-center text-gray-600 hover:text-gray-900"
             >
               <ArrowLeft className="h-5 w-5 mr-2" />
               Retour
             </Link>
-            <h1 className="text-3xl font-bold text-gray-900">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
               Ajouter un nouveau design
             </h1>
           </div>
@@ -80,8 +94,7 @@ export default function CreateDesignPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Informations de base */}
-        <div className="bg-white rounded-xl shadow-lg p-8">
+        <div className="bg-white rounded-xl shadow-lg p-4 sm:p-8">
           <h2 className="text-xl font-bold text-gray-900 mb-6">
             Informations du design
           </h2>
@@ -97,7 +110,7 @@ export default function CreateDesignPage() {
                 value={formData.title}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="ex: T-shirt ByGagoos Édition Limitée"
               />
             </div>
@@ -112,12 +125,12 @@ export default function CreateDesignPage() {
                 onChange={handleChange}
                 rows={4}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Décrivez le design, les techniques utilisées, l'inspiration..."
               />
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <div className="flex items-center mb-2">
                   <Tag className="h-4 w-4 text-gray-400 mr-2" />
@@ -132,7 +145,7 @@ export default function CreateDesignPage() {
                   required
                   aria-label="Catégorie du design"
                   title="Catégorie du design"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">Sélectionnez une catégorie</option>
                   <option value="T-SHIRT">T-Shirt</option>
@@ -159,7 +172,7 @@ export default function CreateDesignPage() {
                   required
                   min="0"
                   step="100"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="ex: 25000"
                 />
               </div>
@@ -180,15 +193,14 @@ export default function CreateDesignPage() {
                     .filter((t) => t);
                   setFormData((prev) => ({ ...prev, tags }));
                 }}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="ex: Madagascar, Art, Tradition, Moderne"
               />
             </div>
           </div>
         </div>
 
-        {/* Upload d'image */}
-        <div className="bg-white rounded-xl shadow-lg p-8">
+        <div className="bg-white rounded-xl shadow-lg p-4 sm:p-8">
           <div className="flex items-center mb-6">
             <Image className="h-6 w-6 text-blue-600 mr-2" />
             <h2 className="text-xl font-bold text-gray-900">Image du design</h2>
@@ -254,18 +266,17 @@ export default function CreateDesignPage() {
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex justify-end space-x-4">
+        <div className="flex flex-col-reverse sm:flex-row justify-end gap-4">
           <Link
             to="/admin/designs"
-            className="flex items-center px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+            className="inline-flex items-center justify-center px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
           >
             Annuler
           </Link>
           <button
             type="submit"
             disabled={loading || !formData.image}
-            className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
           >
             <Save className="h-4 w-4 mr-2" />
             {loading ? "Création en cours..." : "Créer le design"}
