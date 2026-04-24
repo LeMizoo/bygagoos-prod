@@ -617,7 +617,7 @@ function DesignCard({ design }: { design: ApiDesign }) {
 
         <div className="aspect-square overflow-hidden">
           <img
-            src={design.image || design.thumbnail || "/images/placeholder-tshirt.png"}
+            src={design.thumbnail || "/images/placeholder-tshirt.png"}
             alt={design.title}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
             loading="lazy"
@@ -696,7 +696,7 @@ function DesignListItem({ design }: { design: ApiDesign }) {
       <div className="flex flex-col md:flex-row">
         <div className="md:w-48 h-48 overflow-hidden relative">
           <img
-            src={design.image || design.thumbnail || "/images/placeholder-tshirt.jpg"}
+            src={design.thumbnail || "/images/placeholder-tshirt.jpg"}
             alt={design.title}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
             loading="lazy"
