@@ -156,7 +156,7 @@ export default function GalleryPage() {
       description: design.description,
       category: design.category || "T-Shirts",
       collection: undefined,
-      image: design.thumbnail || design.image || "/images/placeholder-tshirt.jpg",
+      image: design.thumbnail || "/images/placeholder-tshirt.jpg",
       thumbnail: design.thumbnail,
       tags: design.tags || [],
       price: design.price,
