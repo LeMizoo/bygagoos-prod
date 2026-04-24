@@ -1,4 +1,4 @@
-// frontend/src/pages/GalleryPage.tsx
+// frontend/src/pages/GalleryPage-new.tsx
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -25,7 +25,7 @@ import VaguesEmeraudeLogo from "../components/VaguesEmeraudeLogo";
 import { useGallery } from "../hooks/useDesigns";
 import { useAutoInvalidateQueries } from "../hooks/useAutoInvalidate";
 
-// Type pour les designs de l'API (importé via useGallery)
+// Type pour les designs de l'API (identique à celui de GalleryPage)
 interface ApiDesign {
   _id: string;
   id?: string;
@@ -56,7 +56,7 @@ interface Category {
   slug: string;
 }
 
-// Données des catégories
+// Données des catégories (inchangées)
 const categories: Category[] = [
   {
     title: "Tous",
@@ -110,7 +110,7 @@ const teamPhotos: string[] = [
 type SortOption = "popular" | "recent" | "price-asc" | "price-desc";
 type ViewMode = "grid" | "list";
 
-export default function GalleryPage() {
+export default function GalleryPageNew() {
   useAutoInvalidateQueries();
   const { data: galleryData, isLoading } = useGallery({ limit: 50 });
 

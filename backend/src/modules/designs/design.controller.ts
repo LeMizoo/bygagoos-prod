@@ -4,7 +4,7 @@ import { DesignService } from './design.service';
 import { apiResponse } from '../../core/utils/apiResponse';
 import { HTTP_STATUS } from '../../core/constants/httpStatus';
 import { validateData } from '../../core/middlewares/validate';
-import { createDesignSchema, updateDesignSchema, queryDesignSchema } from './dto';
+import { createDesignSchema, updateDesignSchema, queryDesignSchema, QueryDesignDto } from './dto';
 
 const designService = new DesignService();
 
@@ -19,7 +19,7 @@ export const getDesigns = async (req: AuthRequest, res: Response): Promise<void>
       return;
     }
 
-    const query = validateData(queryDesignSchema, req.query) as any;
+    const query = validateData(queryDesignSchema, req.query) as QueryDesignDto;
     const designs = await designService.findAll(userId, query);
 
     apiResponse.success(res, designs, 'Designs récupérés avec succès');

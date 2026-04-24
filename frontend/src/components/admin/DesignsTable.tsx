@@ -110,6 +110,7 @@ const DesignsTable: React.FC<DesignsTableProps> = ({
           </div>
           <div className="flex items-center space-x-4">
             <select
+              aria-label="Filtrer par catégorie"
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
