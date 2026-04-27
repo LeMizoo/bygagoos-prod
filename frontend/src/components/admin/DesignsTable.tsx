@@ -182,9 +182,9 @@ const DesignsTable: React.FC<DesignsTableProps> = ({
                 <td className="px-6 py-4">
                   <div className="flex items-center">
                     <div className="flex-shrink-0 h-12 w-12 mr-4">
-                      {design.images?.[0] ? (
+                      {design.thumbnail ? (
                         <img
-                          src={design.images[0]}
+                          src={design.thumbnail}
                           alt={design.title}
                           className="h-12 w-12 object-cover rounded-lg border border-gray-200"
                           onError={(e) => {
