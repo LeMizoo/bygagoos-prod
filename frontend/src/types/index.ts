@@ -210,24 +210,6 @@ export interface Client {
   status?: "active" | "inactive" | "pending";
 }
 
-export interface Design {
-  _id: string;
-  title: string;
-  description: string;
-  category: string;
-  tags: string[];
-  images: string[];
-  priceRange: {
-    min: number;
-    max: number;
-  };
-  isFeatured: boolean;
-  isActive?: boolean;
-  price?: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface Order {
   _id: string;
   orderNumber: string;
