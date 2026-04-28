@@ -9,16 +9,16 @@ export interface IFormField {
   type: 'text' | 'number' | 'dropdown' | 'textarea' | 'email' | 'tel';
   required: boolean;
   placeholder?: string;
-  options?: string[]; // Utilisé uniquement si le type est 'dropdown'
-  order: number;      // Pour gérer la position à l'affichage
+  options?: string[];
+  order: number;
 }
 
 /**
- * Interface pour le document complet en base de données
+ * Interface pour le document complet
  */
 export interface IDynamicForm extends Document {
-  slug: string;       // Identifiant unique (ex: 'contact', 'devis-serigraphie')
-  title: string;      // Nom affiché (ex: 'Formulaire de Devis')
+  slug: string;
+  title: string;
   description?: string;
   fields: IFormField[];
   isActive: boolean;
@@ -26,37 +26,54 @@ export interface IDynamicForm extends Document {
   updatedAt: Date;
 }
 
-const FormFieldSchema = new Schema({
-  id: { type: String, required: true },
-  label: { type: String, required: true },
-  type: { 
-    type: String, 
-    enum: ['text', 'number', 'dropdown', 'textarea', 'email', 'tel'], 
-    default: 'text' 
+/**
+ * Sous-schema pour les champs du formulaire
+ */
+const FormFieldSchema = new Schema<IFormField>(
+  {
+    id: { type: String, required: true },
+    label: { type: String, required: true },
+    type: {
+      type: String,
+      enum: ['text', 'number', 'dropdown', 'textarea', 'email', 'tel'],
+      default: 'text',
+    },
+    required: { type: Boolean, default: false },
+    placeholder: { type: String },
+    options: { type: [String], default: [] },
+    order: { type: Number, default: 0 },
   },
-  required: { type: Boolean, default: false },
-  placeholder: { type: String },
-  options: { type: [String], default: [] },
-  order: { type: Number, default: 0 }
-}, { _id: false }); // Pas besoin d'ID MongoDB pour chaque champ interne
+  { _id: false }
+);
 
-const DynamicFormSchema: Schema = new Schema({
-  slug: { 
-    type: String, 
-    required: true, 
-    unique: true, 
-    lowercase: true, 
-    trim: true 
+/**
+ * Schema principal
+ */
+const DynamicFormSchema = new Schema<IDynamicForm>(
+  {
+    slug: {
+      type: String,
+      required: true,
+      unique: true, // ✅ suffit pour créer l’index
+      lowercase: true,
+      trim: true,
+    },
+    title: { type: String, required: true },
+    description: { type: String },
+    fields: [FormFieldSchema],
+    isActive: { type: Boolean, default: true },
   },
-  title: { type: String, required: true },
-  description: { type: String },
-  fields: [FormFieldSchema],
-  isActive: { type: Boolean, default: true }
-}, { 
-  timestamps: true // Gère automatiquement createdAt et updatedAt
-});
+  {
+    timestamps: true,
+  }
+);
 
-// Indexation pour des recherches rapides par slug
-DynamicFormSchema.index({ slug: 1 });
+/**
+ * ❌ SUPPRIMÉ :
+ * DynamicFormSchema.index({ slug: 1 });
+ */
 
+/**
+ * Export du modèle
+ */
 export default mongoose.model<IDynamicForm>('DynamicForm', DynamicFormSchema);

@@ -26,7 +26,7 @@ import { useGallery } from "../hooks/useDesigns";
 import { useAutoInvalidateQueries } from "../hooks/useAutoInvalidate";
 import type { Design as ApiDesign } from "../api/designApi";
 
-// Interface locale pour un design (plus permissive que celle de l'API)
+// Interface locale pour un design
 interface Design {
   _id: string;
   id?: string | number;
@@ -41,8 +41,8 @@ interface Design {
   price?: number;
   isActive?: boolean;
   createdAt?: string;
-  likes: number;        // requis dans le composant
-  artist: string;       // requis dans le composant
+  likes: number;
+  artist: string;
   featured?: boolean;
   new?: boolean;
   ethnicGroup?: string;
@@ -57,7 +57,7 @@ interface Category {
   slug: string;
 }
 
-// Données des catégories (inchangées)
+// Données des catégories
 const categories: Category[] = [
   {
     title: "T-Shirts",
@@ -106,7 +106,6 @@ type ViewMode = "grid" | "list";
 
 const getColorSwatchClass = (color: string): string => {
   const normalized = color.toLowerCase();
-
   if (normalized.includes("bleu marine")) return "bg-blue-900";
   if (normalized.includes("bleu")) return "bg-blue-500";
   if (normalized.includes("turquoise")) return "bg-cyan-400";
@@ -122,7 +121,6 @@ const getColorSwatchClass = (color: string): string => {
   if (normalized.includes("multicolore")) {
     return "bg-gradient-to-r from-red-500 via-yellow-400 to-blue-500";
   }
-
   return "bg-gray-300";
 };
 
@@ -140,11 +138,9 @@ export default function GalleryPage() {
     priceRange: [0, 100] as [number, number],
   });
 
-  // Récupérer les données via React Query
   const { data: galleryData, isLoading } = useGallery();
   useAutoInvalidateQueries();
 
-  // Extraction robuste des designs avec useMemo pour éviter les recréations
   const designs = useMemo<Design[]>(() => {
     const apiDesigns = galleryData?.data?.designs ?? [];
 
@@ -171,7 +167,6 @@ export default function GalleryPage() {
     }));
   }, [galleryData]);
 
-  // Normalisation : s'assurer que chaque design a likes et artist (valeurs par défaut)
   const normalizedDesigns = useMemo(() => {
     return designs.map(d => ({
       ...d,
@@ -181,7 +176,6 @@ export default function GalleryPage() {
     }));
   }, [designs]);
 
-  // Options de filtres uniques
   const categoryOptions = useMemo(() => {
     return ["Tous", ...Array.from(new Set(normalizedDesigns.map((d) => d.category)))];
   }, [normalizedDesigns]);
@@ -200,7 +194,6 @@ export default function GalleryPage() {
     return ["Tous", ...Array.from(new Set(groups))];
   }, [normalizedDesigns]);
 
-  // Designs filtrés et triés
   const filteredDesigns = useMemo(() => {
     let filtered = [...normalizedDesigns];
 
@@ -281,13 +274,13 @@ export default function GalleryPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      {/* En-tête décoratif - inchangé */}
+      {/* En-tête décoratif */}
       <div className="relative h-56 bg-gradient-to-r from-amber-900 via-amber-800 to-amber-900 overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-amber-300 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
         </div>
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_2px_2px,rgba(255,255,255,0.1)_1px,transparent_0)] bg-[length:40px_40px]"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_2px_2px,rgba(255,255,255,0.1)_1px,transparent_0)] bg-[length:40px_40px]"></div>
         <div className="relative h-full flex items-center justify-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -357,9 +350,7 @@ export default function GalleryPage() {
             </div>
           </motion.div>
 
-          {/* Barre de contrôle - inchangée (trop long, identique à la version précédente) */}
-          {/* ... (conserver le même JSX que précédemment, sans erreurs) ... */}
-          {/* Je réécris la suite rapidement mais en gardant les mêmes éléments */}
+          {/* Barre de contrôle */}
           <motion.div 
             variants={staggerContainer}
             initial="hidden"
@@ -584,7 +575,6 @@ export default function GalleryPage() {
             </motion.div>
           </motion.div>
 
-          {/* Designs Grid/List */}
           <AnimatePresence mode="wait">
             {isLoading ? (
               <motion.div
@@ -646,8 +636,19 @@ export default function GalleryPage() {
   );
 }
 
-// Composant DesignCard (identique, mais utilise design.likes et design.artist)
+// Composant DesignCard (corrigé : normalisation HTTPS avec état local)
 function DesignCard({ design }: { design: Design }) {
+  const [imgSrc, setImgSrc] = useState<string>(() => {
+    const raw = design.thumbnail || design.image || "";
+    return raw.replace(/^http:/, "https:") || "/images/placeholder-tshirt.png";
+  });
+
+  const handleError = () => {
+    if (imgSrc !== "/images/placeholder-tshirt.png") {
+      setImgSrc("/images/placeholder-tshirt.png");
+    }
+  };
+
   return (
     <motion.div
       variants={{
@@ -683,13 +684,11 @@ function DesignCard({ design }: { design: Design }) {
 
         <div className="aspect-square overflow-hidden">
           <img
-            src={design.thumbnail || "/images/placeholder-tshirt.jpg"}
+            src={imgSrc}
             alt={design.title}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
             loading="lazy"
-            onError={(e) => {
-              e.currentTarget.src = "/images/placeholder-tshirt.png";
-            }}
+            onError={handleError}
           />
         </div>
 
@@ -736,7 +735,7 @@ function DesignCard({ design }: { design: Design }) {
           {design.colors && (
             <div className="flex items-center gap-2 mb-4">
               <span className="text-xs text-gray-500">Couleurs:</span>
-                  <div className="flex gap-1">
+              <div className="flex gap-1">
                 {design.colors.map((color, index) => (
                   <div
                     key={index}
@@ -771,8 +770,19 @@ function DesignCard({ design }: { design: Design }) {
   );
 }
 
-// Composant DesignListItem (identique, adapté)
+// Composant DesignListItem (corrigé : normalisation HTTPS avec état local)
 function DesignListItem({ design }: { design: Design }) {
+  const [imgSrc, setImgSrc] = useState<string>(() => {
+    const raw = design.thumbnail || design.image || "";
+    return raw.replace(/^http:/, "https:") || "/images/placeholder-tshirt.jpg";
+  });
+
+  const handleError = () => {
+    if (imgSrc !== "/images/placeholder-tshirt.jpg") {
+      setImgSrc("/images/placeholder-tshirt.jpg");
+    }
+  };
+
   return (
     <motion.div
       variants={{
@@ -785,13 +795,11 @@ function DesignListItem({ design }: { design: Design }) {
       <div className="flex flex-col md:flex-row">
         <div className="md:w-48 h-48 overflow-hidden relative">
           <img
-            src={design.thumbnail || "/images/placeholder-tshirt.jpg"}
+            src={imgSrc}
             alt={design.title}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
             loading="lazy"
-            onError={(e) => {
-              e.currentTarget.src = "/images/placeholder-tshirt.jpg";
-            }}
+            onError={handleError}
           />
           <div className="absolute top-2 left-2 flex gap-1">
             {design.featured && (

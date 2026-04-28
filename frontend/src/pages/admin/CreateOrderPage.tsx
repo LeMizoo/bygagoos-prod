@@ -65,7 +65,7 @@ export default function CreateOrderPage() {
         const normalizedDesigns = designsArray.map((design) => ({
           _id: design._id,
           title: design.title,
-          price: design.price ?? design.priceRange?.min ?? 0,
+          price: design.basePrice || 0,
         }));
         
         setDesigns(normalizedDesigns);

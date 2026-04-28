@@ -36,6 +36,7 @@ export interface Design {
   colors: string[]; // Codes hexadécimaux
   sizes: string[]; // ['S', 'M', 'L', 'XL', 'XXL']
   basePrice: number;
+  price?: number; // Mapped from basePrice for compatibility
   images: string[]; // URLs des images
   thumbnail?: string; // URL de la miniature
   /** @deprecated Utiliser `status` à la place */
@@ -145,6 +146,7 @@ export const apiToDesign = (apiData: ApiDesign): Design => {
     createdAt: apiData.createdAt,
     updatedAt: apiData.updatedAt,
     createdBy: apiData.createdBy,
+    price: apiData.basePrice,
   };
 };
 

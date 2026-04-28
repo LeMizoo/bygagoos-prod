@@ -1,619 +1,138 @@
-// backend/src/modules/designs/design.service.ts
 import { Types } from 'mongoose';
-import Design, { DesignStatus, DesignType } from './design.model';
+import Design from './design.model';
 import Client from '../clients/client.model';
 import { CreateDesignDto, UpdateDesignDto, QueryDesignDto, DesignResponseDTO } from './dto';
 import { AppError } from '../../core/utils/errors/AppError';
 import { HTTP_STATUS } from '../../core/constants/httpStatus';
 import logger from '../../core/utils/logger';
 import { uploadToCloudinary, deleteFromCloudinary } from '../../utils/cloudinary';
-import eventEmitter, { AppEvent } from '../../core/utils/eventEmitter';
-
-// Définir des types pour éviter 'any'
-interface DesignFilter {
-  user: Types.ObjectId;
-  isActive?: boolean;
-  status?: DesignStatus;
-  type?: DesignType;
-  client?: Types.ObjectId;
-  assignedTo?: Types.ObjectId;
-  tags?: { $in: string[] };
-  $or?: Array<Record<string, unknown>>;
-}
-
-type PublicDesignFilter = Omit<DesignFilter, 'user'>;
-
-interface SortOptions {
-  [key: string]: 1 | -1;
-}
-
-interface FileType {
-  _id?: Types.ObjectId;
-  url: string;
-  publicId: string;
-  filename: string;
-  mimetype: string;
-  size: number;
-  uploadedAt: Date;
-}
-
-interface UploadedFile {
-  url: string;
-  publicId: string;
-  filename: string;
-  mimetype: string;
-  size: number;
-  uploadedAt: Date;
-}
-
-interface CloudinaryResult {
-  url: string;
-  public_id: string;
-}
-
-// Type pour les données de mise à jour (pour MongoDB)
-interface MongoUpdateData {
-  title?: string;
-  description?: string;
-  type?: DesignType;
-  status?: DesignStatus;
-  assignedTo?: Types.ObjectId;
-  dueDate?: Date;
-  tags?: string[];
-  completedAt?: Date;
-  [key: string]: unknown;
-}
 
 export class DesignService {
-  /**
-   * Récupère tous les designs (authentifié)
-   */
-  async findAll(userId: string, query: QueryDesignDto): Promise<{
-    designs: DesignResponseDTO[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  }> {
-    try {
-      const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc', search, status, type, clientId, assignedTo, isActive, tags } = query;
-      const skip = (page - 1) * limit;
 
-      // Construction du filtre
-      const filter: DesignFilter = { user: new Types.ObjectId(userId) };
-      
-      if (isActive !== undefined) {
-        filter.isActive = isActive;
-      }
+  async findAll(userId: string, query: QueryDesignDto) {
+    const { page = 1, limit = 10 } = query;
 
-      if (status) {
-        filter.status = status as DesignStatus;
-      }
+    const filter = { user: new Types.ObjectId(userId) };
 
-      if (type) {
-        filter.type = type as DesignType;
-      }
+    const [designs, total] = await Promise.all([
+      Design.find(filter).skip((page - 1) * limit).limit(limit).lean(),
+      Design.countDocuments(filter),
+    ]);
 
-      if (clientId) {
-        filter.client = new Types.ObjectId(clientId);
-      }
-
-      if (assignedTo) {
-        filter.assignedTo = new Types.ObjectId(assignedTo);
-      }
-
-      if (tags && tags.length > 0) {
-        filter.tags = { $in: tags };
-      }
-      
-      if (search) {
-        filter.$or = [
-          { title: { $regex: search, $options: 'i' } },
-          { description: { $regex: search, $options: 'i' } },
-          { tags: { $regex: search, $options: 'i' } }
-        ];
-      }
-
-      // Construction du tri
-      const sort: SortOptions = {};
-      sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
-
-      // Exécution des requêtes avec population
-      const [designs, total] = await Promise.all([
-        Design.find(filter)
-          .populate('client', 'firstName lastName email')
-          .populate('createdBy', 'firstName lastName email')
-          .populate('assignedTo', 'firstName lastName email')
-          .sort(sort)
-          .skip(skip)
-          .limit(limit)
-          .lean(),
-        Design.countDocuments(filter)
-      ]);
-
-      const totalPages = Math.ceil(total / limit);
-
-      return {
-        designs: designs.map(design => new DesignResponseDTO(design)),
-        total,
-        page,
-        limit,
-        totalPages
-      };
-    } catch (error) {
-      logger.error('Erreur dans findAll designs:', error);
-      throw new AppError('Erreur lors de la récupération des designs', HTTP_STATUS.INTERNAL_SERVER_ERROR);
-    }
+    return {
+      designs: designs.map(d => new DesignResponseDTO(d)),
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
-  /**
-   * Récupère tous les designs publics (actifs, sans restriction utilisateur)
-   */
-  async findAllPublic(query: QueryDesignDto): Promise<{
-    designs: DesignResponseDTO[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  }> {
-    try {
-      const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc', search, status, type, clientId, assignedTo, tags } = query;
-      const skip = (page - 1) * limit;
-
-      // Construction du filtre : uniquement les designs actifs
-      const filter: PublicDesignFilter = { isActive: true };
-
-      if (status) {
-        filter.status = status as DesignStatus;
-      }
-
-      if (type) {
-        filter.type = type as DesignType;
-      }
-
-      if (clientId) {
-        filter.client = new Types.ObjectId(clientId);
-      }
-
-      if (assignedTo) {
-        filter.assignedTo = new Types.ObjectId(assignedTo);
-      }
-
-      if (tags && tags.length > 0) {
-        filter.tags = { $in: tags };
-      }
-
-      if (search) {
-        filter.$or = [
-          { title: { $regex: search, $options: 'i' } },
-          { description: { $regex: search, $options: 'i' } },
-          { tags: { $in: [new RegExp(search, 'i')] } }
-        ];
-      }
-
-      // Construction du tri
-      const sort: SortOptions = {};
-      sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
-
-      // Exécution des requêtes avec population
-      const [designs, total] = await Promise.all([
-        Design.find(filter)
-          .populate('client', 'firstName lastName email')
-          .populate('createdBy', 'firstName lastName email')
-          .populate('assignedTo', 'firstName lastName email')
-          .sort(sort)
-          .skip(skip)
-          .limit(limit)
-          .lean(),
-        Design.countDocuments(filter)
-      ]);
-
-      const totalPages = Math.ceil(total / limit);
-
-      return {
-        designs: designs.map(design => new DesignResponseDTO(design)),
-        total,
-        page,
-        limit,
-        totalPages
-      };
-    } catch (error) {
-      logger.error('Erreur dans findAllPublic designs:', error);
-      throw new AppError('Erreur lors de la récupération des designs publics', HTTP_STATUS.INTERNAL_SERVER_ERROR);
+  async findById(id: string, userId: string) {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new AppError('ID invalide', HTTP_STATUS.BAD_REQUEST);
     }
+
+    const design = await Design.findOne({
+      _id: id,
+      user: new Types.ObjectId(userId),
+    }).lean();
+
+    if (!design) throw new AppError('Design non trouvé', HTTP_STATUS.NOT_FOUND);
+
+    return new DesignResponseDTO(design);
   }
 
-  /**
-   * Récupère un design par son ID
-   */
-  async findById(id: string, userId: string): Promise<DesignResponseDTO> {
-    try {
-      if (!Types.ObjectId.isValid(id)) {
-        throw new AppError('ID de design invalide', HTTP_STATUS.BAD_REQUEST);
-      }
+  async create(userId: string, data: CreateDesignDto, createdBy: string) {
+    if (data.clientId) {
+      const client = await Client.findById(data.clientId);
+      if (!client) throw new AppError('Client non trouvé', HTTP_STATUS.NOT_FOUND);
+    }
 
-      const design = await Design.findOne({ 
-        _id: id, 
-        user: new Types.ObjectId(userId) 
+    const design = await Design.create({
+      ...data,
+      user: new Types.ObjectId(userId),
+      createdBy: new Types.ObjectId(createdBy),
+      tags: data.tags || [],
+    });
+
+    return new DesignResponseDTO(design.toObject());
+  }
+
+  async update(id: string, userId: string, data: UpdateDesignDto) {
+    const design = await Design.findOneAndUpdate(
+      { _id: id, user: userId },
+      { $set: data },
+      { new: true }
+    );
+
+    if (!design) throw new AppError('Design non trouvé', HTTP_STATUS.NOT_FOUND);
+
+    return new DesignResponseDTO(design.toObject());
+  }
+
+  async delete(id: string, userId: string) {
+    const design = await Design.findOne({ _id: id, user: userId });
+
+    if (!design) throw new AppError('Design non trouvé', HTTP_STATUS.NOT_FOUND);
+
+    design.isActive = false;
+    await design.save();
+  }
+
+  // 🔥 UPLOAD FILES FIX
+  async addFiles(id: string, userId: string, files: Express.Multer.File[]) {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new AppError('ID invalide', HTTP_STATUS.BAD_REQUEST);
+    }
+
+    const design = await Design.findOne({ _id: id, user: userId });
+
+    if (!design) {
+      throw new AppError('Design non trouvé', HTTP_STATUS.NOT_FOUND);
+    }
+
+    const uploadedFiles = await Promise.all(
+      files.map(async (file) => {
+        const result = await uploadToCloudinary(file.buffer, 'designs');
+
+        return {
+          url: result.secure_url,
+          publicId: result.public_id,
+          filename: file.originalname,
+          mimetype: file.mimetype,
+          size: file.size,
+          uploadedAt: new Date(),
+        };
       })
-        .populate('client', 'firstName lastName email')
-        .populate('createdBy', 'firstName lastName email')
-        .populate('assignedTo', 'firstName lastName email')
-        .lean();
+    );
 
-      if (!design) {
-        throw new AppError('Design non trouvé', HTTP_STATUS.NOT_FOUND);
-      }
+    design.files.push(...uploadedFiles);
 
-      return new DesignResponseDTO(design);
-    } catch (error) {
-      if (error instanceof AppError) throw error;
-      logger.error('Erreur dans findById design:', error);
-      throw new AppError('Erreur lors de la récupération du design', HTTP_STATUS.INTERNAL_SERVER_ERROR);
+    if (!design.thumbnail && uploadedFiles.length > 0) {
+      design.thumbnail = uploadedFiles[0].url;
     }
+
+    await design.save();
+
+    return new DesignResponseDTO(design.toObject());
   }
 
-  /**
-   * Crée un nouveau design
-   */
-  async create(userId: string, data: CreateDesignDto, createdBy: string | Types.ObjectId): Promise<DesignResponseDTO> {
-    try {
-      // Vérifier si le client existe (si fourni)
-      if (data.clientId) {
-        const client = await Client.findOne({
-          _id: data.clientId,
-          user: new Types.ObjectId(userId)
-        });
+  async removeFile(id: string, userId: string, fileId: string) {
+    const design = await Design.findOne({ _id: id, user: userId });
 
-        if (!client) {
-          throw new AppError('Client non trouvé', HTTP_STATUS.NOT_FOUND);
-        }
-      }
+    if (!design) throw new AppError('Design non trouvé', HTTP_STATUS.NOT_FOUND);
 
-      // Créer le design
-      const design = await Design.create({
-        ...data,
-        type: data.type || DesignType.OTHER,
-        metadata: {
-          ...(data.metadata || {}),
-          category: data.category || data.metadata?.category,
-          basePrice: data.basePrice ?? data.metadata?.basePrice,
-        },
-        user: new Types.ObjectId(userId),
-        client: data.clientId ? new Types.ObjectId(data.clientId) : undefined,
-        createdBy: new Types.ObjectId(createdBy),
-        assignedTo: data.assignedTo ? new Types.ObjectId(data.assignedTo) : undefined,
-        tags: data.tags || []
-      });
+    const file = design.files.find(f => f._id?.toString() === fileId);
 
-      logger.info(`Nouveau design créé: ${design.title} par utilisateur ${userId}`);
+    if (!file) throw new AppError('Fichier non trouvé', HTTP_STATUS.NOT_FOUND);
 
-      // Émettre l'événement de création
-      eventEmitter.emit(AppEvent.DESIGN_CREATED, {
-        designId: design._id.toString(),
-        designTitle: design.title,
-        userId: userId
-      });
+    await deleteFromCloudinary(file.publicId);
 
-      // Récupérer avec les populations
-      const populatedDesign = await Design.findById(design._id)
-        .populate('client', 'firstName lastName email')
-        .populate('createdBy', 'firstName lastName email')
-        .populate('assignedTo', 'firstName lastName email')
-        .lean();
+    design.files = design.files.filter(f => f._id?.toString() !== fileId);
 
-      return new DesignResponseDTO(populatedDesign);
-    } catch (error) {
-      if (error instanceof AppError) throw error;
-      logger.error('Erreur dans create design:', error);
-      throw new AppError('Erreur lors de la création du design', HTTP_STATUS.INTERNAL_SERVER_ERROR);
-    }
-  }
+    await design.save();
 
-  /**
-   * Met à jour un design
-   */
-  async update(id: string, userId: string, data: UpdateDesignDto): Promise<DesignResponseDTO> {
-    try {
-      if (!Types.ObjectId.isValid(id)) {
-        throw new AppError('ID de design invalide', HTTP_STATUS.BAD_REQUEST);
-      }
-
-      // Récupérer l'état précédent pour les événements
-      const previousDesign = await Design.findOne({ _id: id, user: userId });
-      if (!previousDesign) {
-        throw new AppError('Design non trouvé', HTTP_STATUS.NOT_FOUND);
-      }
-
-      // Vérifier si le client existe (si fourni)
-      if (data.clientId) {
-        const client = await Client.findOne({
-          _id: data.clientId,
-          user: new Types.ObjectId(userId)
-        });
-
-        if (!client) {
-          throw new AppError('Client non trouvé', HTTP_STATUS.NOT_FOUND);
-        }
-      }
-
-      // Préparer les données de mise à jour pour MongoDB
-      const updateData: MongoUpdateData = {};
-      
-      // Copier les propriétés avec conversion de type appropriée
-      if (data.title !== undefined) {
-        updateData.title = data.title;
-      }
-      if (data.description !== undefined) {
-        updateData.description = data.description;
-      }
-      if (data.type !== undefined) {
-        updateData.type = data.type as DesignType;
-      }
-      if (data.status !== undefined) {
-        updateData.status = data.status as DesignStatus;
-      }
-      if (data.assignedTo !== undefined) {
-        updateData.assignedTo = data.assignedTo ? new Types.ObjectId(data.assignedTo) : undefined;
-      }
-      if (data.dueDate !== undefined) {
-        updateData.dueDate = data.dueDate;
-      }
-      
-      // Gérer les tags
-      if (data.addTags || data.removeTags) {
-        let currentTags = previousDesign.tags || [];
-        
-        if (data.addTags && data.addTags.length > 0) {
-          currentTags = [...new Set([...currentTags, ...data.addTags])];
-        }
-        
-        if (data.removeTags && data.removeTags.length > 0) {
-          currentTags = currentTags.filter(tag => !data.removeTags?.includes(tag));
-        }
-        
-        updateData.tags = currentTags;
-      }
-
-      // Mettre à jour le statut et la date de complétion si nécessaire
-      if (data.status === DesignStatus.COMPLETED) {
-        updateData.completedAt = new Date();
-      }
-
-      // Mettre à jour le design
-      const design = await Design.findOneAndUpdate(
-        { _id: id, user: new Types.ObjectId(userId) },
-        { $set: updateData },
-        { new: true, runValidators: true }
-      )
-        .populate('client', 'firstName lastName email')
-        .populate('createdBy', 'firstName lastName email')
-        .populate('assignedTo', 'firstName lastName email')
-        .lean();
-
-      if (!design) {
-        throw new AppError('Design non trouvé', HTTP_STATUS.NOT_FOUND);
-      }
-
-      logger.info(`Design mis à jour: ${design.title}`);
-
-      // Émettre l'événement de mise à jour
-      const changes: Record<string, unknown> = {};
-      Object.keys(data).forEach(key => {
-        const value = (data as Record<string, unknown>)[key];
-        if (value !== undefined) {
-          changes[key] = value;
-        }
-      });
-      
-      eventEmitter.emit(AppEvent.DESIGN_UPDATED, {
-        designId: id,
-        changes: changes
-      });
-
-      return new DesignResponseDTO(design);
-    } catch (error) {
-      if (error instanceof AppError) throw error;
-      logger.error('Erreur dans update design:', error);
-      throw new AppError('Erreur lors de la mise à jour du design', HTTP_STATUS.INTERNAL_SERVER_ERROR);
-    }
-  }
-
-  /**
-   * Ajoute des fichiers à un design
-   */
-  async addFiles(id: string, userId: string, files: Express.Multer.File[]): Promise<DesignResponseDTO> {
-    try {
-      if (!Types.ObjectId.isValid(id)) {
-        throw new AppError('ID de design invalide', HTTP_STATUS.BAD_REQUEST);
-      }
-
-      const design = await Design.findOne({ _id: id, user: userId });
-      if (!design) {
-        throw new AppError('Design non trouvé', HTTP_STATUS.NOT_FOUND);
-      }
-
-      // Uploader les fichiers vers Cloudinary
-      const uploadedFiles: UploadedFile[] = await Promise.all(
-        files.map(async (file) => {
-          const result = await uploadToCloudinary(file.buffer, 'designs') as CloudinaryResult;
-          return {
-            url: result.url,
-            publicId: result.public_id,
-            filename: file.originalname,
-            mimetype: file.mimetype,
-            size: file.size,
-            uploadedAt: new Date()
-          };
-        })
-      );
-
-      // Ajouter les fichiers au design
-      design.files.push(...uploadedFiles);
-      
-      // Définir la première image comme thumbnail si pas déjà défini
-      if (!design.thumbnail && uploadedFiles.length > 0) {
-        design.thumbnail = uploadedFiles[0]?.url;
-      }
-
-      await design.save();
-
-      logger.info(`${uploadedFiles.length} fichier(s) ajouté(s) au design ${design.title}`);
-
-      // Récupérer avec les populations
-      const populatedDesign = await Design.findById(design._id)
-        .populate('client', 'firstName lastName email')
-        .populate('createdBy', 'firstName lastName email')
-        .populate('assignedTo', 'firstName lastName email')
-        .lean();
-
-      return new DesignResponseDTO(populatedDesign);
-    } catch (error) {
-      if (error instanceof AppError) throw error;
-      logger.error('Erreur dans addFiles design:', error);
-      throw new AppError('Erreur lors de l\'ajout des fichiers', HTTP_STATUS.INTERNAL_SERVER_ERROR);
-    }
-  }
-
-  /**
-   * Supprime un fichier d'un design
-   */
-  async removeFile(id: string, userId: string, fileId: string): Promise<DesignResponseDTO> {
-    try {
-      if (!Types.ObjectId.isValid(id) || !Types.ObjectId.isValid(fileId)) {
-        throw new AppError('ID invalide', HTTP_STATUS.BAD_REQUEST);
-      }
-
-      const design = await Design.findOne({ _id: id, user: userId });
-      if (!design) {
-        throw new AppError('Design non trouvé', HTTP_STATUS.NOT_FOUND);
-      }
-
-      // Trouver le fichier
-      const file = design.files.find((f: FileType) => f._id?.toString() === fileId);
-      if (!file) {
-        throw new AppError('Fichier non trouvé', HTTP_STATUS.NOT_FOUND);
-      }
-
-      // Supprimer de Cloudinary
-      await deleteFromCloudinary(file.publicId);
-
-      // Supprimer du design
-      design.files = design.files.filter((f: FileType) => f._id?.toString() !== fileId);
-      
-      // Mettre à jour le thumbnail si nécessaire
-      if (design.thumbnail === file.url) {
-        design.thumbnail = design.files.length > 0 ? design.files[0]?.url : undefined;
-      }
-
-      await design.save();
-
-      logger.info(`Fichier supprimé du design ${design.title}`);
-
-      // Récupérer avec les populations
-      const populatedDesign = await Design.findById(design._id)
-        .populate('client', 'firstName lastName email')
-        .populate('createdBy', 'firstName lastName email')
-        .populate('assignedTo', 'firstName lastName email')
-        .lean();
-
-      return new DesignResponseDTO(populatedDesign);
-    } catch (error) {
-      if (error instanceof AppError) throw error;
-      logger.error('Erreur dans removeFile design:', error);
-      throw new AppError('Erreur lors de la suppression du fichier', HTTP_STATUS.INTERNAL_SERVER_ERROR);
-    }
-  }
-
-  /**
-   * Supprime un design (soft delete)
-   */
-  async delete(id: string, userId: string): Promise<void> {
-    try {
-      if (!Types.ObjectId.isValid(id)) {
-        throw new AppError('ID de design invalide', HTTP_STATUS.BAD_REQUEST);
-      }
-
-      const design = await Design.findOne({ _id: id, user: userId });
-      
-      if (!design) {
-        throw new AppError('Design non trouvé', HTTP_STATUS.NOT_FOUND);
-      }
-
-      // Soft delete
-      design.isActive = false;
-      await design.save();
-
-      logger.info(`Design désactivé: ${design.title}`);
-
-      // Émettre l'événement de suppression
-      eventEmitter.emit(AppEvent.DESIGN_DELETED, {
-        designId: id
-      });
-    } catch (error) {
-      if (error instanceof AppError) throw error;
-      logger.error('Erreur dans delete design:', error);
-      throw new AppError('Erreur lors de la suppression du design', HTTP_STATUS.INTERNAL_SERVER_ERROR);
-    }
-  }
-
-  /**
-   * Récupère les statistiques des designs
-   */
-  async getStats(userId: string): Promise<{
-    total: number;
-    byStatus: Record<string, number>;
-    byType: Record<string, number>;
-    recent: number;
-    overdue: number;
-  }> {
-    try {
-      const userObjectId = new Types.ObjectId(userId);
-      const now = new Date();
-
-      const [total, byStatus, byType, recent, overdue] = await Promise.all([
-        Design.countDocuments({ user: userObjectId, isActive: true }),
-        Design.aggregate([
-          { $match: { user: userObjectId, isActive: true } },
-          { $group: { _id: '$status', count: { $sum: 1 } } }
-        ]),
-        Design.aggregate([
-          { $match: { user: userObjectId, isActive: true } },
-          { $group: { _id: '$type', count: { $sum: 1 } } }
-        ]),
-        Design.countDocuments({
-          user: userObjectId,
-          isActive: true,
-          createdAt: { $gte: new Date(now.setDate(now.getDate() - 30)) }
-        }),
-        Design.countDocuments({
-          user: userObjectId,
-          isActive: true,
-          status: { $nin: [DesignStatus.COMPLETED, DesignStatus.ARCHIVED] },
-          dueDate: { $lt: new Date() }
-        })
-      ]);
-
-      const statusStats: Record<string, number> = {};
-      byStatus.forEach((item: { _id: string; count: number }) => {
-        statusStats[item._id] = item.count;
-      });
-
-      const typeStats: Record<string, number> = {};
-      byType.forEach((item: { _id: string; count: number }) => {
-        typeStats[item._id] = item.count;
-      });
-
-      return {
-        total,
-        byStatus: statusStats,
-        byType: typeStats,
-        recent,
-        overdue
-      };
-    } catch (error) {
-      logger.error('Erreur dans getStats designs:', error);
-      throw new AppError('Erreur lors de la récupération des statistiques', HTTP_STATUS.INTERNAL_SERVER_ERROR);
-    }
+    return new DesignResponseDTO(design.toObject());
   }
 }

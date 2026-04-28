@@ -231,7 +231,7 @@ const DesignsTable: React.FC<DesignsTableProps> = ({
                   <div className="flex items-center">
                     <DollarSign className="h-4 w-4 text-gray-400 mr-2" />
                     <span className="text-sm font-medium text-gray-900">
-                      {formatPrice(design.priceRange?.min || 0)}
+                      {formatPrice(design.basePrice || 0)}
                     </span>
                   </div>
                 </td>

@@ -20,9 +20,16 @@ export default function CreateDesignPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!formData.image) {
+      alert("Veuillez sélectionner une image.");
+      return;
+    }
+
     try {
       setLoading(true);
 
+      // 1. Création du design
+      dev.log("📝 Création du design...");
       const created = await adminDesignsApi.createDesign({
         title: formData.title.trim(),
         description: formData.description.trim(),
@@ -38,15 +45,22 @@ export default function CreateDesignPage() {
       });
 
       const createdId = created?.data?._id;
-      if (createdId && formData.image) {
-        await adminDesignsApi.uploadDesignImages(createdId, [formData.image]);
+      if (!createdId) {
+        throw new Error("ID du design non reçu après création.");
       }
+      dev.log("✅ Design créé, ID:", createdId);
 
-      alert("Design créé avec succès!");
+      // 2. Upload de l'image
+      dev.log("📤 Envoi de l'image...");
+      await adminDesignsApi.uploadDesignImages(createdId, [formData.image]);
+      dev.log("✅ Image uploadée avec succès.");
+
+      alert("Design créé avec succès !");
       navigate("/admin/designs", { state: { refresh: true } });
-    } catch (error) {
-      alert("Erreur lors de la création du design");
-      dev.error(error);
+    } catch (error: any) {
+      console.error("❌ Erreur détaillée:", error);
+      const message = error?.response?.data?.message || error?.message || "Erreur lors de la création du design";
+      alert(message);
     } finally {
       setLoading(false);
     }
@@ -55,7 +69,7 @@ export default function CreateDesignPage() {
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >,
+    >
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -65,11 +79,8 @@ export default function CreateDesignPage() {
     const file = e.target.files?.[0];
     if (file) {
       setFormData((prev) => ({ ...prev, image: file }));
-
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreview(reader.result as string);
-      };
+      reader.onloadend = () => setPreview(reader.result as string);
       reader.readAsDataURL(file);
     }
   };

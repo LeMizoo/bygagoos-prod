@@ -1,3 +1,4 @@
+// src/modules/designs/dto/design-response.dto.ts
 import { IDesign, IDesignFile, DesignStatus, DesignType } from '../design.model';
 
 export class DesignResponseDTO {
@@ -8,6 +9,7 @@ export class DesignResponseDTO {
   status: DesignStatus;
   files: IDesignFile[];
   thumbnail?: string;
+  image?: string;        // ← ajouté pour compatibilité frontend
   tags: string[];
   isActive: boolean;
   client?: {
@@ -37,6 +39,8 @@ export class DesignResponseDTO {
     this.status = design.status;
     this.files = design.files || [];
     this.thumbnail = design.thumbnail;
+    // Alias pour que le frontend puisse utiliser indifféremment thumbnail ou image
+    this.image = design.thumbnail || (design.files?.[0]?.url);
     this.tags = design.tags || [];
     this.isActive = design.isActive;
     
