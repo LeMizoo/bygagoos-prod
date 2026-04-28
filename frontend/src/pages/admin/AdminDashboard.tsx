@@ -169,7 +169,9 @@ export default function AdminDashboard() {
     try {
       setDesignsLoading(true);
       const result = await adminDesignsApi.getAllDesigns({ limit: 10 });
-      setDesignsData(result.data || []);
+      // result.data is PaginatedResponse, extract data array
+      const designsList = result.data?.data || [];
+      setDesignsData(designsList);
     } catch (error: any) {
       dev.error("Erreur chargement designs:", error);
     } finally {

@@ -37,7 +37,7 @@ export const getPublicDesigns = async (req: Request, res: Response): Promise<voi
     const query = validateData(queryDesignSchema, req.query) as any;
     // Forcer l'affichage uniquement des designs actifs
     query.isActive = true;
-    const designs = await designService.findAllPublic(query);
+    const designs = await designService.findAll(null, query);
     apiResponse.success(res, designs, 'Designs publics récupérés avec succès');
   } catch (error: any) {
     console.error('Erreur getPublicDesigns:', error);

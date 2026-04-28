@@ -53,6 +53,11 @@ export default function CreateOrderPage() {
           adminDesignsApi.getAllDesigns()
         ]);
         
+        dev.log("📊 Response structures:", {
+          clientsRes,
+          designsRes
+        });
+        
         const clientsArray: Client[] = (Array.isArray(clientsRes) ? clientsRes : []).map((client) => ({
           _id: client._id || client.id || '',
           name: `${client.firstName} ${client.lastName}`.trim(),
@@ -61,17 +66,23 @@ export default function CreateOrderPage() {
         }));
         setClients(clientsArray);
         
-        const designsArray = designsRes.data || [];
-        const normalizedDesigns = designsArray.map((design) => ({
+        // Response structure: { success, data: { data: [...], total, ... }, message }
+        const paginatedData = (designsRes?.data as any) || {};
+        const designsArray = (paginatedData.data || []) as any[];
+        const normalizedDesigns = designsArray.map((design: any) => ({
           _id: design._id,
           title: design.title,
           price: design.basePrice || 0,
         }));
         
         setDesigns(normalizedDesigns);
-        dev.log("✅ Données chargées:", { clients: clientsArray.length, designs: normalizedDesigns.length });
+        dev.log("✅ Données chargées:", { clients: clientsArray.length, designs: normalizedDesigns.length, designsList: normalizedDesigns });
       } catch (error) {
-        dev.error("❌ Erreur chargement données:", error);
+        dev.error("❌ Erreur chargement données:", {
+          error,
+          message: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined
+        });
       }
     };
 

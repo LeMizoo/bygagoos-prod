@@ -1,5 +1,3 @@
-// frontend/src/App.tsx
-
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { useEffect } from "react";
@@ -17,7 +15,7 @@ import AboutPage from "./pages/AboutPage";
 import GalleryPage from "./pages/GalleryPage";
 import ContactPage from "./pages/ContactPage";
 
-// Pages Légales et Support (NOUVELLES)
+// Pages Légales et Support
 import { 
   PrivacyPage, 
   TermsPage, 
@@ -43,6 +41,7 @@ import EditStaffPage from "./pages/admin/EditStaffPage";
 import CreateStaffPage from "./pages/admin/CreateStaffPage";
 import DesignsPage from "./pages/admin/DesignsPage";
 import CreateDesignPage from "./pages/admin/CreateDesignPage";
+import EditDesignPage from "./pages/admin/EditDesignPage"; // ✅ Ajout
 import SettingsPage from "./pages/admin/SettingsPage";
 import ClientsPage from "./pages/admin/ClientsPage";
 import CreateClientPage from "./pages/admin/CreateClientPage";
@@ -106,7 +105,6 @@ function App() {
           <Route path="/gallery" element={<GalleryPage />} />
           <Route path="/contact" element={<ContactPage />} />
           
-          {/* Nouvelles routes issues du Footer */}
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/cookies" element={<CookiesPage />} />
@@ -146,6 +144,7 @@ function App() {
           <Route path="designs">
             <Route index element={<DesignsPage />} />
             <Route path="create" element={<CreateDesignPage />} />
+            <Route path=":id/edit" element={<EditDesignPage />} /> {/* ✅ Route d'édition */}
           </Route>
           <Route path="orders">
             <Route index element={<OrdersPage />} />

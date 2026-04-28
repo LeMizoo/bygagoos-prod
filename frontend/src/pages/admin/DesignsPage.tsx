@@ -8,6 +8,7 @@ import {
   Download,
   RefreshCw,
   Trash2,
+  Edit,
 } from "lucide-react";
 import { adminDesignsApi } from "../../api/adminDesigns.api";
 import dev from "../../utils/devLogger";
@@ -359,6 +360,13 @@ export default function DesignsPage() {
                       <option value="inactive">Inactif</option>
                       <option value="archived">Archivé</option>
                     </select>
+                    <Link
+                      to={`/admin/designs/${design.id}/edit`}
+                      className="inline-flex items-center justify-center rounded-lg border border-blue-200 px-3 py-2 text-blue-600 hover:bg-blue-50"
+                      aria-label={`Modifier ${design.title}`}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Link>
                     <button
                       type="button"
                       onClick={() => handleDeleteDesign(design.id)}
@@ -438,6 +446,13 @@ export default function DesignsPage() {
                             <option value="inactive">Inactif</option>
                             <option value="archived">Archivé</option>
                           </select>
+                          <Link
+                            to={`/admin/designs/${design.id}/edit`}
+                            className="text-blue-600 hover:text-blue-900 inline-flex items-center gap-1"
+                          >
+                            <Edit className="h-4 w-4" />
+                            Modifier
+                          </Link>
                           <button
                             type="button"
                             onClick={() => handleDeleteDesign(design.id)}

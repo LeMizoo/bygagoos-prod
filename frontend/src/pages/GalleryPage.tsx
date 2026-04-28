@@ -24,12 +24,11 @@ import {
 import VaguesEmeraudeLogo from "../components/VaguesEmeraudeLogo";
 import { useGallery } from "../hooks/useDesigns";
 import { useAutoInvalidateQueries } from "../hooks/useAutoInvalidate";
-import type { Design as ApiDesign } from "../api/designApi";
 
-// Interface locale pour un design
+// Interface complète pour un design
 interface Design {
+  id?: number;
   _id: string;
-  id?: string | number;
   title: string;
   name?: string;
   description?: string;
@@ -104,26 +103,6 @@ const teamPhotos: string[] = [
 type SortOption = "popular" | "recent" | "price-asc" | "price-desc";
 type ViewMode = "grid" | "list";
 
-const getColorSwatchClass = (color: string): string => {
-  const normalized = color.toLowerCase();
-  if (normalized.includes("bleu marine")) return "bg-blue-900";
-  if (normalized.includes("bleu")) return "bg-blue-500";
-  if (normalized.includes("turquoise")) return "bg-cyan-400";
-  if (normalized.includes("dor")) return "bg-yellow-400";
-  if (normalized.includes("noir")) return "bg-black";
-  if (normalized.includes("blanc")) return "bg-stone-100";
-  if (normalized.includes("vert")) return "bg-emerald-600";
-  if (normalized.includes("rouge")) return "bg-red-500";
-  if (normalized.includes("orange")) return "bg-orange-500";
-  if (normalized.includes("marron")) return "bg-amber-800";
-  if (normalized.includes("beige")) return "bg-amber-100";
-  if (normalized.includes("jaune")) return "bg-yellow-400";
-  if (normalized.includes("multicolore")) {
-    return "bg-gradient-to-r from-red-500 via-yellow-400 to-blue-500";
-  }
-  return "bg-gray-300";
-};
-
 export default function GalleryPage() {
   const [search, setSearch] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<string>("Tous");
@@ -138,64 +117,51 @@ export default function GalleryPage() {
     priceRange: [0, 100] as [number, number],
   });
 
+  // Récupérer les vraies données du backend
   const { data: galleryData, isLoading } = useGallery();
+
+  // Configuration auto-invalidation pour les mises à jour en temps réel
   useAutoInvalidateQueries();
 
-  const designs = useMemo<Design[]>(() => {
-    const apiDesigns = galleryData?.data?.designs ?? [];
+  // ✅ CORRECTION : extraction robuste selon la structure réelle
+  // La réponse peut être :
+  // - { data: Design[] }
+  // - { designs: Design[] }
+  // - directement un tableau Design[]
+  let designs: Design[] = [];
+  if (galleryData) {
+    if (Array.isArray(galleryData)) {
+      designs = galleryData;
+    } else if (galleryData.data && Array.isArray(galleryData.data)) {
+      designs = galleryData.data;
+    } else if (galleryData.designs && Array.isArray(galleryData.designs)) {
+      designs = galleryData.designs;
+    } else if (galleryData.data?.designs && Array.isArray(galleryData.data.designs)) {
+      designs = galleryData.data.designs;
+    }
+  }
 
-    return apiDesigns.map((design: ApiDesign, index: number) => ({
-      _id: design._id,
-      id: index + 1,
-      title: design.title,
-      name: design.title,
-      description: design.description,
-      category: design.category || "T-Shirts",
-      collection: undefined,
-      image: design.thumbnail || "/images/placeholder-tshirt.jpg",
-      thumbnail: design.thumbnail,
-      tags: design.tags || [],
-      price: design.price,
-      isActive: design.isActive,
-      createdAt: design.createdAt,
-      likes: 0,
-      artist: "ByGagoos Ink",
-      featured: false,
-      new: false,
-      ethnicGroup: undefined,
-      colors: [],
-    }));
-  }, [galleryData]);
+  // Debug (à retirer en production)
+  console.log("📦 GalleryPage - designs extraits:", designs.length);
 
-  const normalizedDesigns = useMemo(() => {
-    return designs.map(d => ({
-      ...d,
-      likes: d.likes ?? 0,
-      artist: d.artist || "ByGagoos Ink",
-      id: d._id || d.id,
-    }));
+  // Options de filtres uniques
+  const categoryOptions = useMemo(() => {
+    return ["Tous", ...Array.from(new Set(designs.map((d) => d.category)))];
   }, [designs]);
 
-  const categoryOptions = useMemo(() => {
-    return ["Tous", ...Array.from(new Set(normalizedDesigns.map((d) => d.category)))];
-  }, [normalizedDesigns]);
-
   const collectionOptions = useMemo(() => {
-    const collections = normalizedDesigns
-      .map((design) => design.collection)
-      .filter((collection): collection is string => Boolean(collection));
+    const collections = designs.filter(d => d.collection).map(d => d.collection!);
     return ["Tous", ...Array.from(new Set(collections))];
-  }, [normalizedDesigns]);
+  }, [designs]);
 
   const ethnicGroupOptions = useMemo(() => {
-    const groups = normalizedDesigns
-      .map((design) => design.ethnicGroup)
-      .filter((group): group is string => Boolean(group));
+    const groups = designs.filter(d => d.ethnicGroup).map(d => d.ethnicGroup!);
     return ["Tous", ...Array.from(new Set(groups))];
-  }, [normalizedDesigns]);
+  }, [designs]);
 
+  // Designs filtrés et triés
   const filteredDesigns = useMemo(() => {
-    let filtered = [...normalizedDesigns];
+    let filtered = [...designs];
 
     if (search) {
       const searchLower = search.toLowerCase();
@@ -248,7 +214,7 @@ export default function GalleryPage() {
     }
 
     return filtered;
-  }, [search, selectedCategory, selectedCollection, selectedEthnicGroup, filters, sortBy, normalizedDesigns]);
+  }, [search, selectedCategory, selectedCollection, selectedEthnicGroup, filters, sortBy, designs]);
 
   const resetFilters = () => {
     setSearch("");
@@ -280,7 +246,10 @@ export default function GalleryPage() {
           <div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-amber-300 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
         </div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_2px_2px,rgba(255,255,255,0.1)_1px,transparent_0)] bg-[length:40px_40px]"></div>
+        <div className="absolute inset-0" style={{
+          backgroundImage: `radial-gradient(circle at 2px 2px, rgba(255,255,255,0.1) 1px, transparent 0)`,
+          backgroundSize: '40px 40px'
+        }}></div>
         <div className="relative h-full flex items-center justify-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -400,7 +369,6 @@ export default function GalleryPage() {
                   onChange={(e) => setSortBy(e.target.value as SortOption)}
                   className="px-5 py-4 border border-gray-200 rounded-xl bg-white text-gray-700 focus:ring-2 focus:ring-amber-500 focus:border-transparent shadow-sm appearance-none cursor-pointer"
                   title="Trier par"
-                  aria-label="Trier les designs"
                 >
                   <option value="popular">Les plus populaires</option>
                   <option value="recent">Nouveautés</option>
@@ -417,7 +385,6 @@ export default function GalleryPage() {
                         : "bg-white text-gray-600 hover:bg-gray-50"
                     }`}
                     title="Vue grille"
-                    aria-label="Afficher la galerie en grille"
                   >
                     <Grid className="h-5 w-5" />
                   </button>
@@ -429,7 +396,6 @@ export default function GalleryPage() {
                         : "bg-white text-gray-600 hover:bg-gray-50"
                     }`}
                     title="Vue liste"
-                    aria-label="Afficher la galerie en liste"
                   >
                     <List className="h-5 w-5" />
                   </button>
@@ -482,13 +448,11 @@ export default function GalleryPage() {
                           <button
                             key={category}
                             onClick={() => setSelectedCategory(category)}
-                            type="button"
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                               selectedCategory === category
                                 ? "bg-amber-600 text-white shadow-md"
                                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                             }`}
-                            aria-label={`Filtrer par catégorie ${category}`}
                           >
                             {category}
                           </button>
@@ -506,13 +470,11 @@ export default function GalleryPage() {
                           <button
                             key={collection}
                             onClick={() => setSelectedCollection(collection)}
-                            type="button"
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                               selectedCollection === collection
                                 ? "bg-amber-600 text-white shadow-md"
                                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                             }`}
-                            aria-label={`Filtrer par collection ${collection}`}
                           >
                             {collection}
                           </button>
@@ -530,13 +492,11 @@ export default function GalleryPage() {
                           <button
                             key={group}
                             onClick={() => setSelectedEthnicGroup(group)}
-                            type="button"
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                               selectedEthnicGroup === group
                                 ? "bg-amber-600 text-white shadow-md"
                                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                             }`}
-                            aria-label={`Filtrer par inspiration ${group}`}
                           >
                             {group}
                           </button>
@@ -548,9 +508,7 @@ export default function GalleryPage() {
                   <div className="mt-6 pt-6 border-t border-gray-100 flex justify-end">
                     <button
                       onClick={resetFilters}
-                      type="button"
                       className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium flex items-center gap-2"
-                      aria-label="Réinitialiser tous les filtres"
                     >
                       <X className="h-4 w-4" />
                       Réinitialiser tous les filtres
@@ -575,6 +533,7 @@ export default function GalleryPage() {
             </motion.div>
           </motion.div>
 
+          {/* Designs Grid/List */}
           <AnimatePresence mode="wait">
             {isLoading ? (
               <motion.div
@@ -636,19 +595,8 @@ export default function GalleryPage() {
   );
 }
 
-// Composant DesignCard (corrigé : normalisation HTTPS avec état local)
+// Composant DesignCard
 function DesignCard({ design }: { design: Design }) {
-  const [imgSrc, setImgSrc] = useState<string>(() => {
-    const raw = design.thumbnail || design.image || "";
-    return raw.replace(/^http:/, "https:") || "/images/placeholder-tshirt.png";
-  });
-
-  const handleError = () => {
-    if (imgSrc !== "/images/placeholder-tshirt.png") {
-      setImgSrc("/images/placeholder-tshirt.png");
-    }
-  };
-
   return (
     <motion.div
       variants={{
@@ -684,11 +632,13 @@ function DesignCard({ design }: { design: Design }) {
 
         <div className="aspect-square overflow-hidden">
           <img
-            src={imgSrc}
+            src={design.image}
             alt={design.title}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
             loading="lazy"
-            onError={handleError}
+            onError={(e) => {
+              e.currentTarget.src = "/images/placeholder-tshirt.png";
+            }}
           />
         </div>
 
@@ -739,7 +689,8 @@ function DesignCard({ design }: { design: Design }) {
                 {design.colors.map((color, index) => (
                   <div
                     key={index}
-                    className={`w-4 h-4 rounded-full border border-gray-300 shadow-sm ${getColorSwatchClass(color)}`}
+                    className="w-4 h-4 rounded-full border border-gray-300 shadow-sm"
+                    style={{ backgroundColor: color.toLowerCase() }}
                     title={color}
                   />
                 ))}
@@ -770,19 +721,8 @@ function DesignCard({ design }: { design: Design }) {
   );
 }
 
-// Composant DesignListItem (corrigé : normalisation HTTPS avec état local)
+// Composant DesignListItem
 function DesignListItem({ design }: { design: Design }) {
-  const [imgSrc, setImgSrc] = useState<string>(() => {
-    const raw = design.thumbnail || design.image || "";
-    return raw.replace(/^http:/, "https:") || "/images/placeholder-tshirt.jpg";
-  });
-
-  const handleError = () => {
-    if (imgSrc !== "/images/placeholder-tshirt.jpg") {
-      setImgSrc("/images/placeholder-tshirt.jpg");
-    }
-  };
-
   return (
     <motion.div
       variants={{
@@ -795,11 +735,13 @@ function DesignListItem({ design }: { design: Design }) {
       <div className="flex flex-col md:flex-row">
         <div className="md:w-48 h-48 overflow-hidden relative">
           <img
-            src={imgSrc}
+            src={design.image}
             alt={design.title}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
             loading="lazy"
-            onError={handleError}
+            onError={(e) => {
+              e.currentTarget.src = "/images/placeholder-tshirt.jpg";
+            }}
           />
           <div className="absolute top-2 left-2 flex gap-1">
             {design.featured && (
@@ -878,7 +820,7 @@ function DesignListItem({ design }: { design: Design }) {
   );
 }
 
-// Section inspiration (inchangée)
+// Section inspiration
 function InspirationSection() {
   return (
     <motion.section
@@ -1069,7 +1011,10 @@ function CTASection() {
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-amber-300 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
       </div>
       
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_2px_2px,rgba(255,255,255,0.1)_1px,transparent_0)] bg-[length:40px_40px]"></div>
+      <div className="absolute inset-0" style={{
+        backgroundImage: `radial-gradient(circle at 2px 2px, rgba(255,255,255,0.1) 1px, transparent 0)`,
+        backgroundSize: '40px 40px'
+      }}></div>
       
       <div className="relative text-center text-white max-w-4xl mx-auto px-4">
         <h3 className="text-3xl md:text-4xl lg:text-5xl font-light mb-4">

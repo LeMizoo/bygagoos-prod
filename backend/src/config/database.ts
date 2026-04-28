@@ -27,3 +27,4 @@ export const connectDatabase = async (): Promise<void> => {
     process.exit(1);
   }
 };
+console.log(`✅ Connecté à MongoDB : ${mongoose.connection.db?.databaseName}`);

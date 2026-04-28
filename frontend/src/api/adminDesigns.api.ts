@@ -29,7 +29,7 @@ export const adminDesignsApi = {
       sortBy?: string;
       order?: "asc" | "desc";
     },
-  ): Promise<PaginatedResponse<Design>> => {
+  ): Promise<apiResponse<PaginatedResponse<Design>>> => {
     dev.log('🌐 Designs API: GET /api/designs', params);
     const response = await axiosInstance.get('/designs', { params });
     return response.data;

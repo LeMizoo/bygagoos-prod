@@ -8,7 +8,6 @@ import {
   Clock, 
   AlertCircle,
   Heart,
-  MessageCircle,
   Instagram,
   Facebook,
   Linkedin,
@@ -431,10 +430,11 @@ export default function ContactPage() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.4 }}
                     >
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
                         Sujet <span className="text-amber-500">*</span>
                       </label>
                       <select
+                        id="subject"
                         name="subject"
                         value={formData.subject}
                         onChange={handleChange}

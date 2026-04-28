@@ -21,6 +21,7 @@ export enum DesignType {
 }
 
 export interface IDesignFile {
+  _id?: mongoose.Types.ObjectId;
   url: string;
   publicId: string;
   filename: string;
