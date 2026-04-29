@@ -14,6 +14,7 @@ import HomePage from "./pages/HomePage";
 import AboutPage from "./pages/AboutPage";
 import GalleryPage from "./pages/GalleryPage";
 import ContactPage from "./pages/ContactPage";
+import DesignDetailPage from "./pages/DesignDetailPage";
 
 // Pages Légales et Support
 import { 
@@ -103,6 +104,7 @@ function App() {
           <Route path="/home" element={<HomePage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/gallery" element={<GalleryPage />} />
+          <Route path="/gallery/:designId" element={<DesignDetailPage />} />
           <Route path="/contact" element={<ContactPage />} />
           
           <Route path="/privacy" element={<PrivacyPage />} />

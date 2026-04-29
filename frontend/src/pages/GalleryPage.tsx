@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
@@ -597,6 +598,8 @@ export default function GalleryPage() {
 
 // Composant DesignCard
 function DesignCard({ design }: { design: Design }) {
+  const navigate = useNavigate();
+
   return (
     <motion.div
       variants={{
@@ -710,7 +713,10 @@ function DesignCard({ design }: { design: Design }) {
                 </span>
               )}
             </div>
-            <button className="text-amber-600 hover:text-amber-700 text-sm font-medium transition-colors flex items-center gap-1 group/btn">
+            <button
+              onClick={() => navigate(`/gallery/${design._id}`)}
+              className="text-amber-600 hover:text-amber-700 text-sm font-medium transition-colors flex items-center gap-1 group/btn"
+            >
               Voir détails
               <ArrowRight className="h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
             </button>
@@ -723,6 +729,8 @@ function DesignCard({ design }: { design: Design }) {
 
 // Composant DesignListItem
 function DesignListItem({ design }: { design: Design }) {
+  const navigate = useNavigate();
+
   return (
     <motion.div
       variants={{
@@ -809,7 +817,10 @@ function DesignListItem({ design }: { design: Design }) {
                 </span>
               )}
             </div>
-            <button className="px-6 py-2 bg-gradient-to-r from-amber-600 to-amber-500 text-white rounded-lg hover:from-amber-700 hover:to-amber-600 transition-all shadow-md hover:shadow-lg flex items-center gap-2">
+            <button
+              onClick={() => navigate(`/gallery/${design._id}`)}
+              className="px-6 py-2 bg-gradient-to-r from-amber-600 to-amber-500 text-white rounded-lg hover:from-amber-700 hover:to-amber-600 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+            >
               Voir les détails
               <ArrowRight className="h-4 w-4" />
             </button>
