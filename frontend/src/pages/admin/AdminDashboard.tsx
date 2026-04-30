@@ -119,28 +119,32 @@ export default function AdminDashboard() {
   // Vérification des permissions
   const canViewRevenue = user && hasPermission(user.role as UserRole, 'read:revenue');
 
-  useEffect(() => {
-    fetchStats();
-    loadPreviewData();
-    
-    // Rafraîchissement automatique toutes les 5 minutes
-    const interval = setInterval(() => {
-      if (!showFilters) {
-        refreshStats();
-      }
-    }, 300000);
-    
-    return () => clearInterval(interval);
-  }, [period]);
-
-  // Rafraîchir les données d'aperçu quand on revient d'une page de création
-  useEffect(() => {
-    if (location.state?.refresh) {
-      loadPreviewData();
-      // Nettoyer le state pour éviter les refreshes répétés
-      window.history.replaceState({}, document.title);
+  const fetchStats = async () => {
+    try {
+      setLoading(true);
+      const data = await dashboardApi.getAdminStats(period, filters);
+      setStats(data);
+    } catch (error: any) {
+      toast.error(error.message || "Erreur lors du chargement des statistiques");
+      dev.error("Error fetching stats:", error);
+    } finally {
+      setLoading(false);
     }
-  }, [location.state]);
+  };
+
+  const refreshStats = async () => {
+    try {
+      setRefreshing(true);
+      const data = await dashboardApi.getAdminStats(period, filters);
+      setStats(data);
+      await loadPreviewData();
+      toast.success("Données actualisées", { duration: 2000 });
+    } catch (error: any) {
+      toast.error("Erreur lors de l'actualisation");
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const loadPreviewData = async () => {
     // Charger Staff
@@ -165,18 +169,28 @@ export default function AdminDashboard() {
       setClientsLoading(false);
     }
 
-    // Charger Designs
-    try {
-      setDesignsLoading(true);
-      const result = await adminDesignsApi.getAllDesigns({ limit: 10 });
-      // result.data is PaginatedResponse, extract data array
-      const designsList = result.data?.data || [];
-      setDesignsData(designsList);
-    } catch (error: any) {
-      dev.error("Erreur chargement designs:", error);
-    } finally {
-      setDesignsLoading(false);
-    }
+    // Charger Designs - ✅ Version corrigée
+try {
+  setDesignsLoading(true);
+  const result = await adminDesignsApi.getAllDesigns({ limit: 10 });
+  
+  let designsList: Design[] = [];
+  const data: any = result;
+  
+  if (Array.isArray(data)) {
+    designsList = data;
+  } else if (data?.data && Array.isArray(data.data)) {
+    designsList = data.data;
+  } else if (data?.data?.data && Array.isArray(data.data.data)) {
+    designsList = data.data.data;
+  }
+  
+  setDesignsData(designsList);
+} catch (error: any) {
+  dev.error("Erreur chargement designs:", error);
+} finally {
+  setDesignsLoading(false);
+}
 
     // Charger Orders
     try {
@@ -190,33 +204,25 @@ export default function AdminDashboard() {
     }
   };
 
-  const fetchStats = async () => {
-    try {
-      setLoading(true);
-      const data = await dashboardApi.getAdminStats(period, filters);
-      setStats(data);
-    } catch (error: any) {
-      toast.error(error.message || "Erreur lors du chargement des statistiques");
-      dev.error("Error fetching stats:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    fetchStats();
+    loadPreviewData();
+    
+    const interval = setInterval(() => {
+      if (!showFilters) {
+        refreshStats();
+      }
+    }, 300000);
+    
+    return () => clearInterval(interval);
+  }, [period]);
 
-  const refreshStats = async () => {
-    try {
-      setRefreshing(true);
-      const data = await dashboardApi.getAdminStats(period, filters);
-      setStats(data);
-      // Also refresh preview data
-      await loadPreviewData();
-      toast.success("Données actualisées", { duration: 2000 });
-    } catch (error: any) {
-      toast.error("Erreur lors de l'actualisation");
-    } finally {
-      setRefreshing(false);
+  useEffect(() => {
+    if (location.state?.refresh) {
+      loadPreviewData();
+      window.history.replaceState({}, document.title);
     }
-  };
+  }, [location.state]);
 
   const handleApplyFilters = () => {
     setShowFilters(false);
@@ -327,10 +333,10 @@ export default function AdminDashboard() {
             stats.orders.byStatus.completed,
           ],
           backgroundColor: [
-            'rgba(156, 163, 175, 0.8)', // gray
-            'rgba(59, 130, 246, 0.8)',  // blue
-            'rgba(245, 158, 11, 0.8)',  // orange
-            'rgba(34, 197, 94, 0.8)',   // green
+            'rgba(156, 163, 175, 0.8)',
+            'rgba(59, 130, 246, 0.8)',
+            'rgba(245, 158, 11, 0.8)',
+            'rgba(34, 197, 94, 0.8)',
           ],
           borderWidth: 1,
         },
@@ -363,7 +369,6 @@ export default function AdminDashboard() {
     );
   }
 
-  // Calcul des tendances
   const revenueTrend = stats.revenue.thisPeriod - stats.revenue.previousPeriod;
   const revenueTrendPercent = stats.revenue.previousPeriod > 0 
     ? (revenueTrend / stats.revenue.previousPeriod) * 100 
@@ -389,7 +394,6 @@ export default function AdminDashboard() {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {/* Sélecteur de période */}
           <select
             value={period}
             onChange={(e) => setPeriod(e.target.value as PeriodType)}
@@ -402,7 +406,6 @@ export default function AdminDashboard() {
             <option value="year">Cette année</option>
           </select>
 
-          {/* Bouton filtres */}
           <button
             onClick={() => setShowFilters(!showFilters)}
             className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 flex items-center gap-2"
@@ -411,7 +414,6 @@ export default function AdminDashboard() {
             Filtres
           </button>
 
-          {/* Bouton export */}
           <button
             onClick={handleExport}
             disabled={exporting}
@@ -421,7 +423,6 @@ export default function AdminDashboard() {
             {exporting ? 'Export...' : 'Exporter'}
           </button>
 
-          {/* Bouton actualiser */}
           <button
             onClick={refreshStats}
             disabled={refreshing}
@@ -496,7 +497,6 @@ export default function AdminDashboard() {
 
       {/* KPIs principaux */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Commandes actives */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="bg-orange-100 p-3 rounded-lg">
@@ -520,7 +520,6 @@ export default function AdminDashboard() {
           </p>
         </div>
 
-        {/* Commandes complétées */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="bg-green-100 p-3 rounded-lg">
@@ -539,7 +538,6 @@ export default function AdminDashboard() {
           </p>
         </div>
 
-        {/* Chiffre d'affaires */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="bg-blue-100 p-3 rounded-lg">
@@ -565,7 +563,6 @@ export default function AdminDashboard() {
           </p>
         </div>
 
-        {/* Designs actifs */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="bg-purple-100 p-3 rounded-lg">
@@ -585,7 +582,6 @@ export default function AdminDashboard() {
 
       {/* Graphiques */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Graphique d'évolution */}
         <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-6">
             <h3 className="font-bold text-gray-900">Évolution</h3>
@@ -659,7 +655,6 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Répartition par statut */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <h3 className="font-bold text-gray-900 mb-6">Répartition des commandes</h3>
           <div className="h-64">
@@ -702,7 +697,6 @@ export default function AdminDashboard() {
 
       {/* Tableaux */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Clients récents */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-gray-900 flex items-center gap-2">
@@ -754,7 +748,6 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Designs populaires */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-gray-900 flex items-center gap-2">
@@ -887,10 +880,7 @@ export default function AdminDashboard() {
                 ))
               ) : (
                 <tr>
-                  <td
-                    colSpan={6}
-                    className="px-4 py-8 text-center text-gray-600"
-                  >
+                  <td colSpan={6} className="px-4 py-8 text-center text-gray-600">
                     Aucune commande récente
                   </td>
                 </tr>
@@ -936,7 +926,6 @@ export default function AdminDashboard() {
       <div>
         <h2 className="text-2xl font-bold text-gray-900 mb-6">Aperçus des données</h2>
         <div className="space-y-6">
-          {/* Tableau Staff */}
           <PreviewTable
             title="Personnel"
             columns={[
@@ -975,7 +964,6 @@ export default function AdminDashboard() {
             viewAllLink="/admin/staff"
           />
 
-          {/* Tableau Clients */}
           <PreviewTable
             title="Clients"
             columns={[
@@ -1014,7 +1002,6 @@ export default function AdminDashboard() {
             viewAllLink="/admin/clients"
           />
 
-          {/* Tableau Designs */}
           <PreviewTable
             title="Designs"
             columns={[
@@ -1053,7 +1040,6 @@ export default function AdminDashboard() {
             viewAllLink="/admin/designs"
           />
 
-          {/* Tableau Commandes */}
           <PreviewTable
             title="Commandes"
             columns={[

@@ -33,15 +33,10 @@ export default function CreateDesignPage() {
       const created = await adminDesignsApi.createDesign({
         title: formData.title.trim(),
         description: formData.description.trim(),
-        type: "OTHER",
-        category: formData.category || undefined,
+        category: formData.category || "OTHER",
         basePrice: Number(formData.price || 0),
-        status: "DRAFT",
+        status: "draft",
         tags: formData.tags,
-        metadata: {
-          category: formData.category || undefined,
-          basePrice: Number(formData.price || 0),
-        },
       });
 
       const createdId = created?.data?._id;

@@ -13,7 +13,7 @@ import {
 import { adminDesignsApi } from "../../api/adminDesigns.api";
 import dev from "../../utils/devLogger";
 
-type BackendDesignStatus = "DRAFT" | "PENDING" | "APPROVED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED" | "ARCHIVED";
+type BackendDesignStatus = "DRAFT" | "PENDING" | "ACTIVE" | "IN_PROGRESS" | "COMPLETED" | "REJECTED" | "ARCHIVED" | "INACTIVE";
 type UiDesignStatus = "draft" | "active" | "inactive" | "archived";
 
 interface BackendDesign {
@@ -21,14 +21,17 @@ interface BackendDesign {
   _id?: string;
   title: string;
   type?: string;
+  category?: string;
   status?: BackendDesignStatus | string;
   files?: Array<{ url?: string }>;
   thumbnail?: string;
+  images?: string[];
   tags?: string[];
   isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
   metadata?: Record<string, unknown>;
+  basePrice?: number;
 }
 
 interface DesignRow {
@@ -40,12 +43,7 @@ interface DesignRow {
   tags: string[];
   status: UiDesignStatus;
   isActive: boolean;
-}
-
-interface DesignsApiPayload {
-  data?: {
-    designs?: BackendDesign[];
-  };
+  type?: string;
 }
 
 const backendTypeLabels: Record<string, string> = {
@@ -56,6 +54,12 @@ const backendTypeLabels: Record<string, string> = {
   DIGITAL: "Digital",
   ILLUSTRATION: "Illustration",
   OTHER: "Autre",
+  "T-SHIRT": "T-Shirt",
+  SWEATSHIRT: "Sweatshirt",
+  ACCESSOIRE: "Accessoire",
+  ART_MURAL: "Art Mural",
+  EDITION_LIMITEE: "Édition Limitée",
+  SERIGRAPHIE: "Sérigraphie",
 };
 
 const uiStatusLabels: Record<UiDesignStatus, string> = {
@@ -68,9 +72,9 @@ const uiStatusLabels: Record<UiDesignStatus, string> = {
 const normalizeStatus = (status?: string, isActive?: boolean): UiDesignStatus => {
   const normalized = String(status || "").toUpperCase();
   if (normalized === "ARCHIVED") return "archived";
-  if (normalized === "REJECTED") return "inactive";
+  if (normalized === "REJECTED" || normalized === "INACTIVE") return "inactive";
   if (normalized === "DRAFT" || normalized === "PENDING") return "draft";
-  if (normalized === "APPROVED" || normalized === "IN_PROGRESS" || normalized === "COMPLETED") return "active";
+  if (normalized === "ACTIVE" || normalized === "APPROVED" || normalized === "IN_PROGRESS" || normalized === "COMPLETED") return "active";
   return isActive === false ? "inactive" : "active";
 };
 
@@ -79,26 +83,24 @@ const normalizeDesign = (design: BackendDesign): DesignRow | null => {
   if (!id) return null;
 
   const metadata = design.metadata || {};
-  const categoryValue =
-    typeof metadata.category === "string" ? metadata.category : design.type || "OTHER";
-  const priceValue = metadata.basePrice ?? metadata.price ?? metadata.amount ?? 0;
+  const categoryValue = metadata.category || design.category || design.type || "OTHER";
+  const priceValue = metadata.basePrice ?? design.basePrice ?? 0;
   const resolvedStatus = normalizeStatus(design.status, design.isActive);
 
   return {
     id,
     title: design.title,
-    category:
-      backendTypeLabels[String(categoryValue).toUpperCase()] ||
-      String(categoryValue).replace(/_/g, " "),
+    category: backendTypeLabels[String(categoryValue).toUpperCase()] || String(categoryValue).replace(/_/g, " "),
     price: Number(priceValue) || 0,
-    thumbnail: design.thumbnail || design.files?.[0]?.url,
+    thumbnail: design.thumbnail || design.images?.[0] || design.files?.[0]?.url,
     tags: design.tags || [],
     status: resolvedStatus,
     isActive: design.isActive ?? resolvedStatus === "active",
+    type: design.type,
   };
 };
 
-const categories = ["", "LOGO", "BRANDING", "PACKAGING", "PRINT", "DIGITAL", "ILLUSTRATION", "OTHER"];
+const categories = ["", "T-SHIRT", "SWEATSHIRT", "ACCESSOIRE", "ART_MURAL", "EDITION_LIMITEE", "SERIGRAPHIE", "LOGO", "BRANDING", "PACKAGING", "PRINT", "DIGITAL", "ILLUSTRATION", "OTHER"];
 
 export default function DesignsPage() {
   const location = useLocation();
@@ -107,24 +109,34 @@ export default function DesignsPage() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
 
-  const loadDesigns = async () => {
-    try {
-      setLoading(true);
-      const response = await adminDesignsApi.getAllDesigns({ page: 1, limit: 100 });
-      const payload = (response as unknown as DesignsApiPayload).data;
-      const designsData = Array.isArray(payload?.designs) ? payload.designs : [];
-      setDesigns(
-        designsData
-          .map((design: BackendDesign) => normalizeDesign(design))
-          .filter((design): design is DesignRow => design !== null),
-      );
-    } catch (error) {
-      dev.error("Erreur lors du chargement des designs:", error);
-      setDesigns([]);
-    } finally {
-      setLoading(false);
+const loadDesigns = async () => {
+  try {
+    setLoading(true);
+    const response = await adminDesignsApi.getAllDesigns({ page: 1, limit: 100 });
+    
+    let designsData: BackendDesign[] = [];
+    const data: any = response;
+    
+    if (Array.isArray(data)) {
+      designsData = data;
+    } else if (data?.data && Array.isArray(data.data)) {
+      designsData = data.data;
+    } else if (data?.data?.data && Array.isArray(data.data.data)) {
+      designsData = data.data.data;
     }
-  };
+    
+    setDesigns(
+      designsData
+        .map((design) => normalizeDesign(design))
+        .filter((design): design is DesignRow => design !== null)
+    );
+  } catch (error) {
+    dev.error("Erreur lors du chargement des designs:", error);
+    setDesigns([]);
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     loadDesigns();
@@ -312,114 +324,47 @@ export default function DesignsPage() {
             </Link>
           </div>
         ) : (
-          <>
-            <div className="md:hidden divide-y divide-gray-200">
-              {filteredDesigns.map((design) => (
-                <div key={design.id} className="p-4 space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="h-12 w-12 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
-                      {design.thumbnail ? (
-                        <img src={design.thumbnail} alt={design.title} className="h-full w-full object-cover" />
-                      ) : (
-                        <div className="h-full w-full flex items-center justify-center">
-                          <Image className="h-5 w-5 text-gray-400" />
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Design</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Catégorie</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prix</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredDesigns.map((design) => (
+                  <tr key={design.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="h-10 w-10 flex-shrink-0">
+                          {design.thumbnail ? (
+                            <img className="h-10 w-10 rounded-lg object-cover" src={design.thumbnail} alt={design.title} />
+                          ) : (
+                            <div className="h-10 w-10 rounded-lg bg-gray-200 flex items-center justify-center">
+                              <Image className="h-5 w-5 text-gray-400" />
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-medium text-gray-900 truncate">{design.title}</p>
-                      <p className="text-sm text-gray-500">{design.category}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-sm text-gray-900 font-medium">{design.price.toLocaleString()} Ar</span>
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                      design.status === "active"
-                        ? "bg-green-100 text-green-800"
-                        : design.status === "draft"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : design.status === "archived"
-                            ? "bg-gray-100 text-gray-800"
-                            : "bg-red-100 text-red-800"
-                    }`}>
-                      {uiStatusLabels[design.status]}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <select
-                      value={design.status}
-                      onChange={(e) => handleUpdateStatus(design.id, e.target.value as "active" | "inactive" | "archived")}
-                      className="flex-1 text-sm border border-gray-300 rounded-lg px-3 py-2"
-                      aria-label="Changer le statut du design"
-                      title="Changer le statut"
-                    >
-                      <option value="draft">Brouillon</option>
-                      <option value="active">Actif</option>
-                      <option value="inactive">Inactif</option>
-                      <option value="archived">Archivé</option>
-                    </select>
-                    <Link
-                      to={`/admin/designs/${design.id}/edit`}
-                      className="inline-flex items-center justify-center rounded-lg border border-blue-200 px-3 py-2 text-blue-600 hover:bg-blue-50"
-                      aria-label={`Modifier ${design.title}`}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteDesign(design.id)}
-                      className="inline-flex items-center justify-center rounded-lg border border-red-200 px-3 py-2 text-red-600 hover:bg-red-50"
-                      aria-label={`Supprimer ${design.title}`}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="hidden md:block overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Design</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Catégorie</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prix</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredDesigns.map((design) => (
-                    <tr key={design.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="h-10 w-10 flex-shrink-0">
-                            {design.thumbnail ? (
-                              <img className="h-10 w-10 rounded-lg object-cover" src={design.thumbnail} alt={design.title} />
-                            ) : (
-                              <div className="h-10 w-10 rounded-lg bg-gray-200 flex items-center justify-center">
-                                <Image className="h-5 w-5 text-gray-400" />
-                              </div>
-                            )}
-                          </div>
-                          <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">{design.title}</div>
-                            <div className="text-sm text-gray-500">{design.tags.slice(0, 2).join(", ")}</div>
-                          </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">{design.title}</div>
+                          <div className="text-sm text-gray-500">{design.tags.slice(0, 2).join(", ")}</div>
                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                          {design.category}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {design.price.toLocaleString()} Ar
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                        {design.category}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {design.price.toLocaleString()} Ar
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                           design.status === "active"
                             ? "bg-green-100 text-green-800"
@@ -431,44 +376,46 @@ export default function DesignsPage() {
                         }`}>
                           {uiStatusLabels[design.status]}
                         </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex items-center gap-3">
-                          <select
-                            value={design.status}
-                            onChange={(e) => handleUpdateStatus(design.id, e.target.value as "active" | "inactive" | "archived")}
-                            className="text-xs border border-gray-300 rounded p-1"
-                            aria-label="Changer le statut"
-                            title="Changer le statut"
-                          >
-                            <option value="draft">Brouillon</option>
-                            <option value="active">Actif</option>
-                            <option value="inactive">Inactif</option>
-                            <option value="archived">Archivé</option>
-                          </select>
-                          <Link
-                            to={`/admin/designs/${design.id}/edit`}
-                            className="text-blue-600 hover:text-blue-900 inline-flex items-center gap-1"
-                          >
-                            <Edit className="h-4 w-4" />
-                            Modifier
-                          </Link>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteDesign(design.id)}
-                            className="text-red-600 hover:text-red-900 inline-flex items-center gap-1"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            Supprimer
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </>
+                        <select
+                          value={design.status}
+                          onChange={(e) => handleUpdateStatus(design.id, e.target.value as "active" | "inactive" | "archived")}
+                          className="text-xs border border-gray-300 rounded p-1"
+                          aria-label="Changer le statut"
+                          title="Changer le statut"
+                        >
+                          <option value="draft">Brouillon</option>
+                          <option value="active">Actif</option>
+                          <option value="inactive">Inactif</option>
+                          <option value="archived">Archivé</option>
+                        </select>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex items-center gap-3">
+                        <Link
+                          to={`/admin/designs/edit/${design.id}`}
+                          className="text-blue-600 hover:text-blue-900 inline-flex items-center gap-1"
+                          title="Modifier"
+                        >
+                          <Edit className="h-4 w-4" />
+                          Modifier
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteDesign(design.id)}
+                          className="text-red-600 hover:text-red-900 inline-flex items-center gap-1"
+                          title="Supprimer"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Supprimer
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 

@@ -35,9 +35,7 @@ export const getDesigns = async (req: AuthRequest, res: Response): Promise<void>
 export const getPublicDesigns = async (req: Request, res: Response): Promise<void> => {
   try {
     const query = validateData(queryDesignSchema, req.query) as any;
-    // Forcer l'affichage uniquement des designs actifs
-    query.isActive = true;
-    const designs = await designService.findAll(null, query);
+    const designs = await designService.findAllPublic(query);
     apiResponse.success(res, designs, 'Designs publics récupérés avec succès');
   } catch (error: any) {
     console.error('Erreur getPublicDesigns:', error);
@@ -161,12 +159,16 @@ export const addDesignFiles = async (req: AuthRequest, res: Response): Promise<v
       apiResponse.error(res, 'ID design requis', HTTP_STATUS.BAD_REQUEST);
       return;
     }    
+    
     const files = req.files as Express.Multer.File[];
 
     if (!files || files.length === 0) {
       apiResponse.error(res, 'Aucun fichier fourni', HTTP_STATUS.BAD_REQUEST);
       return;
     }
+
+    console.log(`📤 Upload de ${files.length} fichier(s) pour le design ${id}`);
+    console.log(`📁 Fichiers reçus:`, files.map(f => ({ name: f.originalname, size: f.size, mimetype: f.mimetype })));
 
     const design = await designService.addFiles(id, userId, files);
     apiResponse.success(res, design, `${files.length} fichier(s) ajouté(s) avec succès`);

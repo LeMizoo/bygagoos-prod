@@ -27,59 +27,99 @@ export type DesignStyle =
 
 export type DesignStatus = "draft" | "active" | "inactive" | "archived";
 
+// Interface principale Design (version étendue pour le frontend)
 export interface Design {
   _id: string;
+  id?: string; // Compatibilité
+  name?: string; // Compatibilité avec GalleryPage
   title: string;
   description?: string;
-  category: DesignCategory;
-  style: DesignStyle;
+  category: DesignCategory | string; // Accepte string pour compatibilité API
+  style?: DesignStyle;
   colors: string[]; // Codes hexadécimaux
-  sizes: string[]; // ['S', 'M', 'L', 'XL', 'XXL']
-  basePrice: number;
+  sizes?: string[];
+  basePrice?: number;
   price?: number; // Mapped from basePrice for compatibility
-  images: string[]; // URLs des images
+  image: string; // URL principale (compatibilité)
+  images?: string[]; // URLs des images (complet)
   thumbnail?: string; // URL de la miniature
   /** @deprecated Utiliser `status` à la place */
-  isActive: boolean; // Conservé pour compatibilité, sera dérivé de `status` si possible
-  status: DesignStatus; // ← AJOUTÉ : statut complet du design
+  isActive: boolean; // Conservé pour compatibilité
+  status: DesignStatus; // Statut complet du design
   tags: string[];
-  popularity: number;
+  popularity?: number;
   printType?: "screen_print" | "digital_print" | "embroidery" | "vinyl";
-  printArea?: string; // Zone d'impression
+  printArea?: string;
   minQuantity?: number;
   productionTime?: number; // En jours
   notes?: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
   createdBy?: string;
+  
+  // Champs spécifiques à l'application ByGagoos
+  collection?: string;
+  ethnicGroup?: string;
+  featured?: boolean;
+  new?: boolean;
+  likes: number;
+  artist: string;
+  
+  // Métadonnées supplémentaires
+  metadata?: {
+    category?: string;
+    basePrice?: number;
+    [key: string]: any;
+  };
+  
+  // Fichiers uploadés
+  files?: Array<{
+    url: string;
+    type?: string;
+    isThumbnail?: boolean;
+  }>;
+  
+  // Compatibilité avec anciennes versions
+  type?: string;
 }
 
 export interface CreateDesignDto {
   title: string;
   description?: string;
-  category: DesignCategory;
-  style: DesignStyle;
-  colors: string[];
-  sizes: string[];
-  basePrice: number;
-  images: File[];
+  category: DesignCategory | string;
+  style?: DesignStyle;
+  colors?: string[];
+  sizes?: string[];
+  basePrice?: number;
+  images?: File[] | string[]; // Accepte File ou URL string
+  image?: File | string; // Compatibilité
+  thumbnail?: File | string; // Compatibilité
   tags?: string[];
   printType?: "screen_print" | "digital_print" | "embroidery" | "vinyl";
   printArea?: string;
   minQuantity?: number;
   productionTime?: number;
   notes?: string;
-  status?: DesignStatus; // ← AJOUTÉ : optionnel, défaut 'draft' côté serveur
+  status?: DesignStatus; // Optionnel, défaut 'draft' côté serveur
+  
+  // Champs spécifiques ByGagoos
+  collection?: string;
+  ethnicGroup?: string;
+  featured?: boolean;
+  new?: boolean;
+  artist?: string;
 }
 
 export interface UpdateDesignDto extends Partial<
-  Omit<CreateDesignDto, "images">
+  Omit<CreateDesignDto, "images" | "image">
 > {
-  images?: File[];
+  images?: File[] | string[];
+  image?: File | string;
   /** @deprecated Utiliser `status` à la place */
   isActive?: boolean; // Conservé pour compatibilité
-  status?: DesignStatus; // ← AJOUTÉ
+  status?: DesignStatus;
   popularity?: number;
+  likes?: number;
 }
 
 // Interface pour la réponse de l'API (correspond au format renvoyé par le backend)
@@ -88,28 +128,45 @@ export interface ApiDesign {
   title: string;
   description?: string;
   category: string;
-  style: string;
-  colors: string[];
-  sizes: string[];
-  basePrice: number;
-  images: string[];
+  style?: string;
+  colors?: string[];
+  sizes?: string[];
+  basePrice?: number;
+  images?: string[];
+  image?: string;
   thumbnail?: string;
-  status: DesignStatus; // ← MODIFIÉ : remplace `isActive` pour coller au modèle backend
-  tags: string[];
-  popularity: number;
+  status?: DesignStatus;
+  isActive?: boolean; // Compatibilité
+  tags?: string[];
+  popularity?: number;
   printType?: string;
   printArea?: string;
   minQuantity?: number;
   productionTime?: number;
   notes?: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
   createdBy?: string;
-  // Optionnel : certains endpoints renvoient encore `isActive` pour compatibilité
-  isActive?: boolean;
+  
+  // Champs spécifiques ByGagoos
+  collection?: string;
+  ethnicGroup?: string;
+  featured?: boolean;
+  new?: boolean;
+  likes?: number;
+  artist?: string;
 }
 
-// Fonction utilitaire pour convertir ApiDesign en Design (avec gestion de la rétrocompatibilité)
+// Interface pour la réponse paginée
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+// Fonction utilitaire pour convertir ApiDesign en Design
 export const apiToDesign = (apiData: ApiDesign): Design => {
   // Déterminer le statut : priorité à `status`, sinon déduire de `isActive`
   let status: DesignStatus = apiData.status || "draft";
@@ -119,6 +176,8 @@ export const apiToDesign = (apiData: ApiDesign): Design => {
 
   return {
     _id: apiData._id,
+    id: apiData._id,
+    name: apiData.title,
     title: apiData.title,
     description: apiData.description,
     category: apiData.category as DesignCategory,
@@ -126,11 +185,12 @@ export const apiToDesign = (apiData: ApiDesign): Design => {
     colors: apiData.colors || [],
     sizes: apiData.sizes || [],
     basePrice: apiData.basePrice,
-    images: apiData.images || [],
+    price: apiData.basePrice,
+    image: apiData.image || apiData.thumbnail || (apiData.images?.[0] ?? ''),
+    images: apiData.images || (apiData.image ? [apiData.image] : []),
     thumbnail: apiData.thumbnail,
-    // isActive est dérivé du statut (actif = 'active')
     isActive: status === "active",
-    status, // ← AJOUTÉ
+    status,
     tags: apiData.tags || [],
     popularity: apiData.popularity || 0,
     printType: apiData.printType as
@@ -146,7 +206,14 @@ export const apiToDesign = (apiData: ApiDesign): Design => {
     createdAt: apiData.createdAt,
     updatedAt: apiData.updatedAt,
     createdBy: apiData.createdBy,
-    price: apiData.basePrice,
+    
+    // Champs spécifiques ByGagoos
+    collection: apiData.collection,
+    ethnicGroup: apiData.ethnicGroup,
+    featured: apiData.featured || false,
+    new: apiData.new || false,
+    likes: apiData.likes || 0,
+    artist: apiData.artist || 'ByGagoos Ink',
   };
 };
 
@@ -162,15 +229,19 @@ export interface DesignStats {
 // Interface pour les filtres designs
 export interface DesignFilters {
   search?: string;
-  category?: DesignCategory;
+  category?: DesignCategory | string;
   style?: DesignStyle;
   tags?: string[];
   minPrice?: number;
   maxPrice?: number;
-  status?: DesignStatus; // ← AJOUTÉ
+  status?: DesignStatus;
   isActive?: boolean; // Conservé pour compatibilité
   createdAfter?: string;
   createdBefore?: string;
+  collection?: string;
+  ethnicGroup?: string;
+  featured?: boolean;
+  new?: boolean;
 }
 
 // Interface pour le téléchargement d'images
@@ -178,4 +249,18 @@ export interface DesignImageUpload {
   file: File;
   isThumbnail?: boolean;
   caption?: string;
+}
+
+// Type guard pour vérifier si un objet est un Design
+export const isDesign = (obj: any): obj is Design => {
+  return obj && typeof obj === 'object' && '_id' in obj && 'title' in obj;
+};
+
+// Type pour la réponse de l'API publique (format spécifique)
+export interface PublicDesignsResponse {
+  success: boolean;
+  data: {
+    designs: Design[];
+    total?: number;
+  };
 }
