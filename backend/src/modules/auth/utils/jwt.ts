@@ -31,7 +31,7 @@ export const generateAccessToken = (id: string, email: string, role: string) => 
     jti: randomUUID(),
   };
 
-  const expiresInValue: SignOptions['expiresIn'] = (process.env.JWT_ACCESS_EXPIRES_IN || '15m') as SignOptions['expiresIn'];
+  const expiresInValue: SignOptions['expiresIn'] = (process.env.JWT_ACCESS_EXPIRES_IN || '120m') as SignOptions['expiresIn'];
 
   const options: SignOptions = {
     expiresIn: expiresInValue,
@@ -47,7 +47,7 @@ export const generateRefreshToken = (id: string, tokenVersion: number) => {
     tokenVersion,
   };
 
-  const expiresInValue: SignOptions['expiresIn'] = (process.env.JWT_REFRESH_EXPIRES_IN || '7d') as SignOptions['expiresIn'];
+  const expiresInValue: SignOptions['expiresIn'] = (process.env.JWT_REFRESH_EXPIRES_IN || '30d') as SignOptions['expiresIn'];
 
   const options: SignOptions = {
     expiresIn: expiresInValue,

@@ -17,11 +17,10 @@ import {
 
 const router = Router();
 
-// ========== ROUTES PUBLIQUES (sans authentification) ==========
-// IMPORTANT : Aucun middleware d'authentification avant cette route
-router.get('/public', getPublicDesigns);  // Validation retirée temporairement pour éviter erreur 400
+// ========== ROUTES PUBLIQUES ==========
+router.get('/public', validate(queryDesignSchema, 'query'), getPublicDesigns);
 
-// ========== ROUTES PROTÉGÉES (authentification requise) ==========
+// ========== ROUTES PROTÉGÉES ==========
 router.use(protect);
 
 router.get('/stats', getDesignStats);
@@ -31,7 +30,14 @@ router.post('/', validate(createDesignSchema, 'body'), createDesign);
 router.put('/:id', validate(updateDesignSchema, 'body'), updateDesign);
 router.delete('/:id', deleteDesign);
 
-router.post('/:id/files', uploadMultiple, handleMulterError, addDesignFiles);
+// Routes pour les fichiers
+router.post(
+  '/:id/files',
+  uploadMultiple,
+  handleMulterError,
+  addDesignFiles
+);
+
 router.delete('/:id/files/:fileId', removeDesignFile);
 
 export default router;
