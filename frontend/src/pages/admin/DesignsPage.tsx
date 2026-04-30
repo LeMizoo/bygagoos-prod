@@ -109,34 +109,34 @@ export default function DesignsPage() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
 
-const loadDesigns = async () => {
-  try {
-    setLoading(true);
-    const response = await adminDesignsApi.getAllDesigns({ page: 1, limit: 100 });
-    
-    let designsData: BackendDesign[] = [];
-    const data: any = response;
-    
-    if (Array.isArray(data)) {
-      designsData = data;
-    } else if (data?.data && Array.isArray(data.data)) {
-      designsData = data.data;
-    } else if (data?.data?.data && Array.isArray(data.data.data)) {
-      designsData = data.data.data;
+  const loadDesigns = async () => {
+    try {
+      setLoading(true);
+      const response = await adminDesignsApi.getAllDesigns({ page: 1, limit: 100 });
+      
+      let designsData: BackendDesign[] = [];
+      const data: any = response;
+      
+      if (Array.isArray(data)) {
+        designsData = data;
+      } else if (data?.data && Array.isArray(data.data)) {
+        designsData = data.data;
+      } else if (data?.data?.data && Array.isArray(data.data.data)) {
+        designsData = data.data.data;
+      }
+      
+      setDesigns(
+        designsData
+          .map((design) => normalizeDesign(design))
+          .filter((design): design is DesignRow => design !== null)
+      );
+    } catch (error) {
+      dev.error("Erreur lors du chargement des designs:", error);
+      setDesigns([]);
+    } finally {
+      setLoading(false);
     }
-    
-    setDesigns(
-      designsData
-        .map((design) => normalizeDesign(design))
-        .filter((design): design is DesignRow => design !== null)
-    );
-  } catch (error) {
-    dev.error("Erreur lors du chargement des designs:", error);
-    setDesigns([]);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   useEffect(() => {
     loadDesigns();

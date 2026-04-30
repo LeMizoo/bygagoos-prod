@@ -3,6 +3,7 @@ import { Toaster } from "react-hot-toast";
 import { useEffect } from "react";
 import { useAuthStore } from "./stores/authStore";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { useIdleTimeout } from "./hooks/useIdleTimeout"; // Ajout
 
 // Layouts
 import MainLayout from "./layouts/MainLayout";
@@ -42,7 +43,7 @@ import EditStaffPage from "./pages/admin/EditStaffPage";
 import CreateStaffPage from "./pages/admin/CreateStaffPage";
 import DesignsPage from "./pages/admin/DesignsPage";
 import CreateDesignPage from "./pages/admin/CreateDesignPage";
-import EditDesignPage from "./pages/admin/EditDesignPage"; // ✅ Ajout
+import EditDesignPage from "./pages/admin/EditDesignPage";
 import SettingsPage from "./pages/admin/SettingsPage";
 import ClientsPage from "./pages/admin/ClientsPage";
 import CreateClientPage from "./pages/admin/CreateClientPage";
@@ -77,6 +78,9 @@ function App() {
     checkAuth();
   }, [checkAuth]);
 
+  // 🔁 Déconnexion automatique après 30 min d'inactivité
+  useIdleTimeout(30);
+
   return (
     <ThemeProvider>
       <Toaster
@@ -99,7 +103,7 @@ function App() {
         <Route path="/" element={<Navigate to="/home" replace />} />
         <Route path="/login" element={<Navigate to="/auth/login" replace />} />
 
-        {/* ===== ROUTES PUBLIQUES AVEC MAIN LAYOUT ===== */}
+        {/* ROUTES PUBLIQUES AVEC MAIN LAYOUT */}
         <Route element={<MainLayout />}>
           <Route path="/home" element={<HomePage />} />
           <Route path="/about" element={<AboutPage />} />
@@ -117,7 +121,7 @@ function App() {
           <Route path="/press" element={<PressPage />} />
         </Route>
 
-        {/* ===== ROUTES D'AUTHENTIFICATION ===== */}
+        {/* ROUTES D'AUTHENTIFICATION */}
         <Route path="/auth" element={<AuthLayout />}>
           <Route index element={<Navigate to="login" replace />} />
           <Route path="login" element={<LoginPage />} />
@@ -126,7 +130,7 @@ function App() {
           <Route path="reset-password/:token" element={<ResetPasswordPage />} />
         </Route>
 
-        {/* ===== ROUTES ADMIN PROTÉGÉES ===== */}
+        {/* ROUTES ADMIN PROTÉGÉES */}
         <Route
           path="/admin"
           element={
@@ -146,7 +150,7 @@ function App() {
           <Route path="designs">
             <Route index element={<DesignsPage />} />
             <Route path="create" element={<CreateDesignPage />} />
-            <Route path=":id/edit" element={<EditDesignPage />} /> {/* ✅ Route d'édition */}
+            <Route path="edit/:id" element={<EditDesignPage />} />
           </Route>
           <Route path="orders">
             <Route index element={<OrdersPage />} />
@@ -163,7 +167,7 @@ function App() {
           <Route path="settings" element={<SettingsPage />} />
         </Route>
 
-        {/* ===== ROUTES UTILISATEUR PROTÉGÉES ===== */}
+        {/* ROUTES UTILISATEUR PROTÉGÉES */}
         <Route
           path="/user"
           element={
@@ -179,7 +183,7 @@ function App() {
           <Route path="orders/:id" element={<UserOrderTrackingPage />} />
         </Route>
 
-        {/* ===== ROUTES D'ERREUR ===== */}
+        {/* ROUTES D'ERREUR */}
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
         <Route path="/404" element={<NotFoundPage />} />
         <Route path="*" element={<NotFoundPage />} />

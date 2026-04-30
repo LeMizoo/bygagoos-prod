@@ -5,6 +5,16 @@ import { adminDesignsApi } from "../../api/adminDesigns.api";
 import dev from "../../utils/devLogger";
 import type { DesignStatus } from "../../types/design";
 
+interface DesignFile {
+  _id?: string;
+  url: string;
+  type?: string;
+  isThumbnail?: boolean;
+  filename?: string;
+  mimetype?: string;
+  size?: number;
+}
+
 export default function EditDesignPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -33,7 +43,7 @@ export default function EditDesignPage() {
       if (!design) throw new Error("Design non trouvé");
 
       const metadata = design.metadata || {};
-      const category = metadata.category || design.type || design.category || "";
+      const category = metadata.category || design.category || "";
       const price = metadata.basePrice || design.basePrice || 0;
 
       let status: DesignStatus = "draft";
@@ -54,10 +64,11 @@ export default function EditDesignPage() {
         status,
       });
 
-      // Gérer l'image et l'ID du fichier
-      const thumbnail = design.thumbnail || design.files?.[0]?.url || design.images?.[0] || null;
+      const files = design.files as DesignFile[] | undefined;
+      const firstFile = files?.[0];
+      const thumbnail = design.thumbnail || firstFile?.url || design.image || null;
       setPreview(thumbnail);
-      setCurrentFileId(design.files?.[0]?._id?.toString() || null);
+      setCurrentFileId(firstFile?._id || null);
       setNewImage(null);
     } catch (error) {
       dev.error("Erreur chargement:", error);
@@ -82,7 +93,8 @@ export default function EditDesignPage() {
       setCurrentFileId(null);
       setNewImage(null);
       alert("Image supprimée");
-    } catch (error: any) {
+      await loadDesign();
+    } catch (error) {
       console.error("Erreur suppression image:", error);
       alert("Erreur lors de la suppression de l'image");
     } finally {
@@ -101,7 +113,7 @@ export default function EditDesignPage() {
 
       if (formData.title.trim()) updatePayload.title = formData.title.trim();
       if (formData.description.trim()) updatePayload.description = formData.description.trim();
-      if (formData.category) updatePayload.type = formData.category;
+      if (formData.category) updatePayload.category = formData.category; // ✅ correction ici (category et non type)
       if (formData.price && !isNaN(Number(formData.price)) && Number(formData.price) > 0) {
         updatePayload.basePrice = Number(formData.price);
       }
@@ -118,9 +130,7 @@ export default function EditDesignPage() {
         await adminDesignsApi.updateDesign(id, updatePayload);
       }
 
-      // Gestion de l'image : si nouvelle image, on supprime l'ancienne (s'il y en a une) puis on upload
       if (newImage) {
-        // 1. Supprimer l'ancienne image si elle existe
         if (currentFileId) {
           try {
             await adminDesignsApi.removeDesignImage(id, currentFileId);
@@ -128,17 +138,16 @@ export default function EditDesignPage() {
             console.warn("Erreur suppression ancienne image (ignorée)", err);
           }
         }
-        // 2. Uploader la nouvelle
         await adminDesignsApi.uploadDesignImages(id, [newImage]);
-        // 3. Recharger le design pour obtenir le nouvel ID du fichier
         await loadDesign();
       }
 
       alert("Design mis à jour avec succès !");
       navigate("/admin/designs", { state: { refresh: true } });
-    } catch (error: any) {
+    } catch (error) {
       console.error("❌ Erreur:", error);
-      const message = error?.response?.data?.message || error?.message || "Erreur lors de la mise à jour";
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
+      const message = err?.response?.data?.message || err?.message || "Erreur lors de la mise à jour";
       if (message.includes("fichiers")) setImageError(message);
       else alert(message);
     } finally {
@@ -193,10 +202,7 @@ export default function EditDesignPage() {
 
       <form onSubmit={handleSubmit} className="space-y-8">
         <div className="bg-white rounded-xl shadow-lg p-4 sm:p-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">
-            Informations du design
-          </h2>
-
+          <h2 className="text-xl font-bold text-gray-900 mb-6">Informations du design</h2>
           <div className="space-y-6">
             <div>
               <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
@@ -212,7 +218,6 @@ export default function EditDesignPage() {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-
             <div>
               <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
                 Description
@@ -226,7 +231,6 @@ export default function EditDesignPage() {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <div className="flex items-center mb-2">
@@ -255,9 +259,9 @@ export default function EditDesignPage() {
                   <option value="PRINT">Print</option>
                   <option value="DIGITAL">Digital</option>
                   <option value="ILLUSTRATION">Illustration</option>
+                  <option value="OTHER">Autre</option>
                 </select>
               </div>
-
               <div>
                 <div className="flex items-center mb-2">
                   <DollarSign className="h-4 w-4 text-gray-400 mr-2" />
@@ -276,7 +280,6 @@ export default function EditDesignPage() {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
-
               <div>
                 <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
                   Statut
@@ -295,7 +298,6 @@ export default function EditDesignPage() {
                 </select>
               </div>
             </div>
-
             <div>
               <label htmlFor="tags" className="block text-sm font-medium text-gray-700 mb-2">
                 Tags (séparés par des virgules)
@@ -336,7 +338,6 @@ export default function EditDesignPage() {
               </button>
             )}
           </div>
-
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -384,9 +385,7 @@ export default function EditDesignPage() {
                   )}
                 </div>
               </div>
-              {imageError && (
-                <p className="mt-2 text-sm text-red-600">{imageError}</p>
-              )}
+              {imageError && <p className="mt-2 text-sm text-red-600">{imageError}</p>}
             </div>
           </div>
         </div>
