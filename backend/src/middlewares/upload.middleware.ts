@@ -42,7 +42,7 @@ export const handleMulterError = (
   next: NextFunction
 ) => {
   if (err instanceof multer.MulterError) {
-    if (err.code === 'FILE_TOO_LARGE') {
+    if (err.code === 'LIMIT_FILE_SIZE') {
       return next(new AppError('Fichier trop volumineux. Maximum 10MB.', HTTP_STATUS.BAD_REQUEST));
     }
     if (err.code === 'LIMIT_FILE_COUNT') {

@@ -5,6 +5,7 @@ import { apiResponse } from '../../core/utils/apiResponse';
 import { HTTP_STATUS } from '../../core/constants/httpStatus';
 import { validateData } from '../../core/middlewares/validate';
 import { createDesignSchema, updateDesignSchema, queryDesignSchema, QueryDesignDto } from './dto';
+import logger from '../../core/utils/logger';
 
 const designService = new DesignService();
 
@@ -24,22 +25,27 @@ export const getDesigns = async (req: AuthRequest, res: Response): Promise<void>
 
     apiResponse.success(res, designs, 'Designs récupérés avec succès');
   } catch (error: any) {
-    console.error('Erreur getDesigns:', error);
+    logger.error('Erreur getDesigns:', error);
     apiResponse.error(res, error.message || 'Erreur lors de la récupération des designs', HTTP_STATUS.INTERNAL_SERVER_ERROR);
   }
 };
 
 /**
  * Récupère les designs publics (sans authentification)
+ * Version robuste avec gestion explicite des erreurs de base de données
  */
 export const getPublicDesigns = async (req: Request, res: Response): Promise<void> => {
   try {
     const query = validateData(queryDesignSchema, req.query) as any;
-    const designs = await designService.findAllPublic(query);
-    apiResponse.success(res, designs, 'Designs publics récupérés avec succès');
+    const result = await designService.findAllPublic(query);
+    
+    // result contient { data, total, page, limit, totalPages }
+    apiResponse.success(res, result, 'Designs publics récupérés avec succès');
   } catch (error: any) {
-    console.error('Erreur getPublicDesigns:', error);
-    apiResponse.error(res, error.message || 'Erreur lors de la récupération des designs publics', HTTP_STATUS.INTERNAL_SERVER_ERROR);
+    logger.error('❌ Erreur getPublicDesigns:', error);
+    // Ne pas exposer les détails techniques en production
+    const message = error.message || 'Erreur lors de la récupération des designs publics';
+    apiResponse.error(res, message, HTTP_STATUS.INTERNAL_SERVER_ERROR);
   }
 };
 
@@ -63,7 +69,7 @@ export const getDesignById = async (req: AuthRequest, res: Response): Promise<vo
 
     apiResponse.success(res, design, 'Design récupéré avec succès');
   } catch (error: any) {
-    console.error('Erreur getDesignById:', error);
+    logger.error('Erreur getDesignById:', error);
     
     if (error.message === 'Design non trouvé') {
       apiResponse.error(res, error.message, HTTP_STATUS.NOT_FOUND);
@@ -93,7 +99,7 @@ export const createDesign = async (req: AuthRequest, res: Response): Promise<voi
 
     apiResponse.success(res, design, 'Design créé avec succès', HTTP_STATUS.CREATED);
   } catch (error: any) {
-    console.error('Erreur createDesign:', error);
+    logger.error('Erreur createDesign:', error);
     
     if (error.message === 'Client non trouvé') {
       apiResponse.error(res, error.message, HTTP_STATUS.NOT_FOUND);
@@ -129,7 +135,7 @@ export const updateDesign = async (req: AuthRequest, res: Response): Promise<voi
     const design = await designService.update(id, userId, data);
     apiResponse.success(res, design, 'Design mis à jour avec succès');
   } catch (error: any) {
-    console.error('Erreur updateDesign:', error);
+    logger.error('Erreur updateDesign:', error);
     
     if (error.message === 'Design non trouvé') {
       apiResponse.error(res, error.message, HTTP_STATUS.NOT_FOUND);
@@ -167,13 +173,11 @@ export const addDesignFiles = async (req: AuthRequest, res: Response): Promise<v
       return;
     }
 
-    console.log(`📤 Upload de ${files.length} fichier(s) pour le design ${id}`);
-    console.log(`📁 Fichiers reçus:`, files.map(f => ({ name: f.originalname, size: f.size, mimetype: f.mimetype })));
-
+    logger.info(`📤 Upload de ${files.length} fichier(s) pour le design ${id}`);
     const design = await designService.addFiles(id, userId, files);
     apiResponse.success(res, design, `${files.length} fichier(s) ajouté(s) avec succès`);
   } catch (error: any) {
-    console.error('Erreur addDesignFiles:', error);
+    logger.error('Erreur addDesignFiles:', error);
     
     if (error.message === 'Design non trouvé') {
       apiResponse.error(res, error.message, HTTP_STATUS.NOT_FOUND);
@@ -205,7 +209,7 @@ export const removeDesignFile = async (req: AuthRequest, res: Response): Promise
 
     apiResponse.success(res, design, 'Fichier supprimé avec succès');
   } catch (error: any) {
-    console.error('Erreur removeDesignFile:', error);
+    logger.error('Erreur removeDesignFile:', error);
     
     if (error.message === 'Design non trouvé' || error.message === 'Fichier non trouvé') {
       apiResponse.error(res, error.message, HTTP_STATUS.NOT_FOUND);
@@ -237,7 +241,7 @@ export const deleteDesign = async (req: AuthRequest, res: Response): Promise<voi
 
     apiResponse.success(res, null, 'Design supprimé avec succès');
   } catch (error: any) {
-    console.error('Erreur deleteDesign:', error);
+    logger.error('Erreur deleteDesign:', error);
     
     if (error.message === 'Design non trouvé') {
       apiResponse.error(res, error.message, HTTP_STATUS.NOT_FOUND);
@@ -263,7 +267,7 @@ export const getDesignStats = async (req: AuthRequest, res: Response): Promise<v
     const stats = await designService.getStats(userId);
     apiResponse.success(res, stats, 'Statistiques récupérées');
   } catch (error: any) {
-    console.error('Erreur getDesignStats:', error);
+    logger.error('Erreur getDesignStats:', error);
     apiResponse.error(res, error.message || 'Erreur lors de la récupération des statistiques', HTTP_STATUS.INTERNAL_SERVER_ERROR);
   }
 };

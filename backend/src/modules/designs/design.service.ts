@@ -6,6 +6,7 @@ import { AppError } from '../../core/utils/errors/AppError';
 import { HTTP_STATUS } from '../../core/constants/httpStatus';
 import logger from '../../core/utils/logger';
 import { uploadToCloudinary, deleteFromCloudinary } from '../../utils/cloudinary';
+import mongoose from 'mongoose';
 
 type DesignFilter = {
   user?: Types.ObjectId;
@@ -70,8 +71,18 @@ export class DesignService {
     }
   }
 
+  /**
+   * Récupère les designs publics (sans authentification)
+   * Gère les erreurs de connexion et les problèmes de transformation
+   */
   async findAllPublic(query: QueryDesignDto) {
     try {
+      // Vérifier la connexion MongoDB
+      if (mongoose.connection.readyState !== 1) {
+        logger.error('❌ MongoDB non connecté dans findAllPublic');
+        throw new AppError('Base de données non disponible', HTTP_STATUS.INTERNAL_SERVER_ERROR);
+      }
+
       const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc', search, status, type, tags } = query;
       const skip = (page - 1) * limit;
 
@@ -90,6 +101,8 @@ export class DesignService {
       const sort: SortOptions = {};
       sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
 
+      logger.info(`🔍 Recherche designs publics avec filtres:`, finalFilter);
+
       const [designs, total] = await Promise.all([
         Design.find(finalFilter)
           .populate('client', 'firstName lastName email')
@@ -102,18 +115,38 @@ export class DesignService {
         Design.countDocuments(finalFilter)
       ]);
 
-      logger.info(`📦 [Public] ${designs.length} designs trouvés`);
+      logger.info(`📦 [Public] ${designs.length} designs trouvés sur ${total}`);
+
+      // Transformation sécurisée des designs en DTO
+      let dataDTO: any[] = [];
+      try {
+        dataDTO = designs.map(design => {
+          try {
+            return new DesignResponseDTO(design);
+          } catch (dtoError) {
+            logger.error(`❌ Erreur transformation DTO pour design ${design._id}:`, dtoError);
+            // Fallback : retourner l'objet brut sans DTO
+            return design;
+          }
+        });
+      } catch (mapError) {
+        logger.error('❌ Erreur lors du mapping des DTO publics:', mapError);
+        // Fallback : envoyer les designs bruts
+        dataDTO = designs;
+      }
 
       const totalPages = Math.ceil(total / limit);
       return {
-        data: designs.map(design => new DesignResponseDTO(design)),
+        data: dataDTO,
         total,
         page,
         limit,
         totalPages
       };
     } catch (error) {
-      logger.error('Erreur dans findAllPublic designs:', error);
+      logger.error('❌ Erreur dans findAllPublic designs:', error);
+      // Propager l'erreur avec un message clair
+      if (error instanceof AppError) throw error;
       throw new AppError('Erreur lors de la récupération des designs publics', HTTP_STATUS.INTERNAL_SERVER_ERROR);
     }
   }
@@ -214,22 +247,19 @@ export class DesignService {
         throw new AppError('Design non trouvé', HTTP_STATUS.NOT_FOUND);
       }
 
-      // 🔧 Si le design n'a pas d'utilisateur, on lui attribue celui qui fait la requête
       if (!design.user) {
         design.user = new Types.ObjectId(userId);
-        // Sauvegarde sans validation pour éviter l'erreur des fichiers (qui ne sont pas encore ajoutés)
         await design.save({ validateBeforeSave: false });
       }
 
-      console.log(`📁 Design trouvé: ${design.title}, ajout de ${files.length} fichier(s)`);
+      logger.info(`📁 Design trouvé: ${design.title}, ajout de ${files.length} fichier(s)`);
 
       const uploadedFiles = await Promise.all(
         files.map(async (file) => {
-          console.log(`📤 Upload de ${file.originalname} vers Cloudinary...`);
+          logger.info(`📤 Upload de ${file.originalname} vers Cloudinary...`);
           const result = await uploadToCloudinary(file.buffer, 'designs') as any;
-          console.log(`✅ Upload réussi: ${result.url}`);
+          logger.info(`✅ Upload réussi: ${result.url}`);
 
-          // ✅ Construction de l'objet fichier avec tous les champs requis par le schéma
           const fileEntry = {
             url: result.url,
             publicId: result.public_id,
@@ -238,12 +268,10 @@ export class DesignService {
             size: file.size,
             uploadedAt: new Date()
           };
-          console.log('📄 Objet fichier créé:', fileEntry);
           return fileEntry;
         })
       );
 
-      // ✅ Ajout des fichiers en utilisant .push() – Mongoose créera automatiquement les sous-documents
       for (const fileEntry of uploadedFiles) {
         design.files.push(fileEntry as any);
       }
@@ -252,7 +280,6 @@ export class DesignService {
         design.thumbnail = uploadedFiles[0].url;
       }
 
-      // ✅ Sauvegarde finale avec validation complète
       await design.save();
 
       logger.info(`${uploadedFiles.length} fichier(s) ajouté(s) au design ${design.title}`);

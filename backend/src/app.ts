@@ -17,15 +17,13 @@ import designRoutes from './modules/designs/design.routes';
 import orderRoutes from './modules/orders/order.routes';
 import dashboardRoutes from './modules/dashboard/dashboard.routes';
 import uploadRoutes from './modules/upload/upload.routes';
-// Nouvelle route pour les formulaires dynamiques
 import formRoutes from './modules/forms/form.routes';
-// Route pour les paramètres et templates
 import settingsRoutes from './modules/settings/settings.routes';
 
-// Import des listeners des designs
+// Import des listeners
 import { initializeDesignListeners, setupDesignMetrics } from './modules/designs/design.listener';
 
-// Import des utilitaires et types
+// Import des utilitaires
 import { HTTP_STATUS } from './core/constants/httpStatus';
 import morgan from 'morgan';
 
@@ -50,7 +48,7 @@ app.use(
 );
 
 // ==================== CONFIGURATION CORS AMÉLIORÉE ====================
-// Liste des origines autorisées
+// Liste des origines autorisées (ajout de 172.22.64.1)
 const allowedOrigins = [
   'https://bygagoos-prod.vercel.app',
   'https://bygagoos-prod.onrender.com',
@@ -60,30 +58,27 @@ const allowedOrigins = [
   'http://localhost:5000',
   'http://127.0.0.1:3000',
   'http://127.0.0.1:5173',
+  'http://172.22.64.1:3000',   // ← AJOUTÉ
+  'http://172.22.64.1:5173',   // ← AJOUTÉ
   ...(env.ALLOWED_ORIGINS || [])
 ];
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Permettre les requêtes sans origine (comme Postman, apps mobiles)
-      if (!origin) {
-        return callback(null, true);
-      }
+      if (!origin) return callback(null, true);
       
-      // En développement, autoriser toutes les origines localhost
+      // En développement, autoriser toutes les origines localhost/172.22.x.x
       if (env.NODE_ENV === 'development') {
-        if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+        if (origin.includes('localhost') || origin.includes('127.0.0.1') || origin.includes('172.22.')) {
           return callback(null, true);
         }
       }
       
-      // Vérifier si l'origine est autorisée ou si elle provient d'un domaine Vercel
       if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
         callback(null, true);
       } else {
         logger.warn(`❌ Origine CORS refusée: ${origin}`);
-        logger.info(`Origines autorisées: ${allowedOrigins.join(', ')}`);
         callback(new Error(`Non autorisé par CORS: ${origin}`));
       }
     },
@@ -101,15 +96,14 @@ app.use(
     exposedHeaders: ['Set-Cookie', 'Authorization'],
     optionsSuccessStatus: 200,
     preflightContinue: false,
-    maxAge: 86400 // 24 heures en cache pour les requêtes preflight
+    maxAge: 86400
   })
 );
 
-// Middleware supplémentaire pour s'assurer que les headers CORS sont présents
+// Middleware supplémentaire CORS
 app.use((req: Request, res: Response, next: NextFunction) => {
-  // Ajouter les headers CORS manuellement en complément
   const origin = req.headers.origin;
-  if (origin && allowedOrigins.includes(origin)) {
+  if (origin && (allowedOrigins.includes(origin) || (env.NODE_ENV === 'development' && (origin.includes('172.22.') || origin.includes('localhost'))))) {
     res.header('Access-Control-Allow-Origin', origin);
     res.header('Access-Control-Allow-Credentials', 'true');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD');
@@ -117,7 +111,6 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     res.header('Access-Control-Expose-Headers', 'Set-Cookie, Authorization');
   }
   
-  // Répondre immédiatement aux requêtes OPTIONS (preflight)
   if (req.method === 'OPTIONS') {
     return res.sendStatus(200);
   }
@@ -130,7 +123,7 @@ app.use(
   })
 );
 
-logger.info(`✅ CORS origins loaded: ${env.ALLOWED_ORIGINS.join(', ')}`);
+logger.info(`✅ CORS origins loaded: ${allowedOrigins.join(', ')}`);
 
 app.use(apiLimiter);
 app.use(express.json({ limit: '10mb' }));
@@ -138,11 +131,10 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 app.use(mongoSanitize());
 
-// ==================== DOSSIERS STATIQUES ====================
+// Dossiers statiques
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-// ==================== ROUTES API ====================
-
+// Routes API
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/staff', staffRoutes);
@@ -151,38 +143,28 @@ app.use('/api/designs', designRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/upload', uploadRoutes);
-// Enregistrement du nouveau module
 app.use('/api/forms', formRoutes);
-// Routes des paramètres et templates modifiables
 app.use('/api/settings', settingsRoutes);
 
-// ==================== INITIALISATION DES LISTENERS ====================
-// Initialiser les listeners des designs (après les routes)
+// Initialisation des listeners
 initializeDesignListeners();
 setupDesignMetrics();
 logger.info('🎯 Design event listeners initialized');
 
-// Route de santé améliorée avec infos CORS
+// Route de santé
 app.get('/health', (_req, res) => {
   res.json({ 
     success: true, 
     status: 'OK', 
     timestamp: new Date().toISOString(),
-    cors: {
-      enabled: true,
-      allowedOrigins: allowedOrigins
-    }
+    cors: { enabled: true, allowedOrigins }
   });
 });
 
-// Route pour tester CORS (utile pour le débogage)
+// Route test CORS
 app.options('/test-cors', cors());
 app.get('/test-cors', (_req, res) => {
-  res.json({ 
-    success: true, 
-    message: 'CORS fonctionne correctement',
-    timestamp: new Date().toISOString()
-  });
+  res.json({ success: true, message: 'CORS fonctionne correctement' });
 });
 
 app.use('*', (req: Request, res: Response) => {
@@ -192,23 +174,21 @@ app.use('*', (req: Request, res: Response) => {
   });
 });
 
-// Middleware global de gestion d'erreurs
+// Middleware global d'erreur
 app.use((err: AppError, _req: Request, res: Response, _next: NextFunction) => {
   const statusCode = err.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
   
-  // Log l'erreur complète en développement
   if (env.NODE_ENV === 'development') {
     logger.error('❌ Erreur:', {
       message: err.message,
       stack: err.stack,
       code: err.code,
-      statusCode: statusCode
+      statusCode
     });
   } else {
     logger.error(`❌ Erreur: ${err.message} - Status: ${statusCode}`);
   }
   
-  // Ne pas exposer les erreurs CORS en production
   const isCorsError = err.message && err.message.includes('CORS');
   const errorMessage = isCorsError && env.NODE_ENV === 'production'
     ? 'Erreur de configuration CORS'
