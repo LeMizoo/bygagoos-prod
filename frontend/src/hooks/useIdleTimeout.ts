@@ -1,10 +1,9 @@
-// hooks/useIdleTimeout.ts
 import { useEffect, useRef } from 'react';
 import { useAuthStore } from '../stores/authStore';
 
 export function useIdleTimeout(timeoutMinutes: number = 30) {
   const logout = useAuthStore((state) => state.logout);
-  // Correction : utiliser ReturnType<typeof setTimeout> au lieu de NodeJS.Timeout
+  // ✅ Correction : utiliser ReturnType<typeof setTimeout>
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
 
   const resetTimer = () => {
