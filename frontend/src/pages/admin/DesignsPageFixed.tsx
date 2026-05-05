@@ -185,7 +185,6 @@ export default function DesignsPage() {
     if (!window.confirm("Êtes-vous sûr de vouloir supprimer ce design ?")) {
       return;
     }
-
     try {
       await adminDesignsApi.deleteDesign(id);
       await loadDesigns();
@@ -221,6 +220,7 @@ export default function DesignsPage() {
         </Link>
       </div>
 
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <div className="bg-white rounded-lg shadow p-4 sm:p-6">
           <p className="text-sm text-gray-600">Designs totaux</p>
@@ -240,6 +240,7 @@ export default function DesignsPage() {
         </div>
       </div>
 
+      {/* Filters */}
       <div className="bg-white rounded-lg shadow p-4 sm:p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
@@ -251,8 +252,6 @@ export default function DesignsPage() {
               value={category}
               onChange={(e) => setCategory(e.target.value)}
               className="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              aria-label="Filtrer par catégorie"
-              title="Filtrer par catégorie"
             >
               {categories.map((cat) => (
                 <option key={cat || "all"} value={cat}>
@@ -261,7 +260,6 @@ export default function DesignsPage() {
               ))}
             </select>
           </div>
-
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <div className="relative w-full sm:w-72">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -284,6 +282,7 @@ export default function DesignsPage() {
         </div>
       </div>
 
+      {/* Designs Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="p-4 sm:p-6 border-b border-gray-200 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
@@ -376,37 +375,41 @@ export default function DesignsPage() {
                         }`}>
                           {uiStatusLabels[design.status]}
                         </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex items-center gap-2">
+                        {/* BOUTON MODIFIER - Version visible */}
+                        <Link
+                          to={`/admin/designs/edit/${design.id}`}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                          title="Modifier"
+                        >
+                          <Edit className="h-3.5 w-3.5" />
+                          Modifier
+                        </Link>
+                        
+                        {/* Sélecteur de statut */}
                         <select
                           value={design.status}
                           onChange={(e) => handleUpdateStatus(design.id, e.target.value as "active" | "inactive" | "archived")}
-                          className="text-xs border border-gray-300 rounded p-1"
+                          className="text-xs border border-gray-300 rounded p-1.5 bg-white"
                           aria-label="Changer le statut"
-                          title="Changer le statut"
                         >
                           <option value="draft">Brouillon</option>
                           <option value="active">Actif</option>
                           <option value="inactive">Inactif</option>
                           <option value="archived">Archivé</option>
                         </select>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex items-center gap-3">
-                        <Link
-                          to={`/admin/designs/edit/${design.id}`}
-                          className="text-blue-600 hover:text-blue-900 inline-flex items-center gap-1"
-                          title="Modifier"
-                        >
-                          <Edit className="h-4 w-4" />
-                          Modifier
-                        </Link>
+                        
+                        {/* Bouton Supprimer */}
                         <button
                           type="button"
                           onClick={() => handleDeleteDesign(design.id)}
-                          className="text-red-600 hover:text-red-900 inline-flex items-center gap-1"
+                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors"
                           title="Supprimer"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3.5 w-3.5" />
                           Supprimer
                         </button>
                       </div>
