@@ -50,6 +50,12 @@ const extractClientsList = (payload: unknown): Client[] => {
   return [];
 };
 
+const unwrapApiData = <T,>(response: any): T => {
+  if (!response) return response as T;
+  const payload = response.data ?? response;
+  return (payload?.data ?? payload) as T;
+};
+
 const extractPaginationTotalPages = (responseData: unknown): number => {
   if (!responseData || typeof responseData !== 'object') {
     return 1;
@@ -73,7 +79,7 @@ export const useClientStore = create<ClientStore>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await api.get("/clients", { params: { page, limit, ...filters } });
-      const payload = response.data?.data ?? response.data;
+      const payload = unwrapApiData<any>(response);
       set({
         clients: extractClientsList(payload),
         totalPages: extractPaginationTotalPages(response.data),
@@ -92,7 +98,7 @@ export const useClientStore = create<ClientStore>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await api.get(`/clients/${id}`);
-      set({ currentClient: response.data.data || response.data, isLoading: false });
+      set({ currentClient: unwrapApiData<Client>(response), isLoading: false });
     } catch (error: any) {
       set({
         error: error.response?.data?.message || "Erreur lors du chargement du client",
@@ -106,7 +112,7 @@ export const useClientStore = create<ClientStore>((set, get) => ({
     try {
       const response = await api.post("/clients", data);
       set({ isLoading: false });
-      return response.data.data || response.data;
+      return unwrapApiData<Client>(response);
     } catch (error: any) {
       set({
         error: error.response?.data?.message || "Erreur lors de la création du client",

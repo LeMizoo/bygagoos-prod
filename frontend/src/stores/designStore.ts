@@ -18,6 +18,26 @@ export interface Design {
   updatedAt: string;
 }
 
+const unwrapApiData = <T,>(response: any): T => {
+  if (!response) return response as T;
+  const payload = response.data ?? response;
+  return (payload?.data ?? payload) as T;
+};
+
+const extractDesignsList = (response: any): Design[] => {
+  const data = unwrapApiData<any>(response);
+  if (Array.isArray(data)) return data as Design[];
+  if (Array.isArray(data?.designs)) return data.designs as Design[];
+  if (Array.isArray(data?.data?.designs)) return data.data.designs as Design[];
+  return [];
+};
+
+const extractPaginationPages = (response: any): number => {
+  const data = unwrapApiData<any>(response);
+  const candidate = data?.pagination?.pages ?? data?.data?.pagination?.pages ?? data?.totalPages;
+  return typeof candidate === "number" && candidate > 0 ? candidate : 1;
+};
+
 interface DesignStore {
   designs: Design[];
   currentDesign: Design | null;
@@ -46,8 +66,8 @@ export const useDesignStore = create<DesignStore>((set, get) => ({
     try {
       const response = await api.get("/designs", { params: { page, limit, ...filters } });
       set({
-        designs: response.data.data || response.data,
-        totalPages: response.data.pagination?.pages || 1,
+        designs: extractDesignsList(response),
+        totalPages: extractPaginationPages(response),
         currentPage: page,
         isLoading: false,
       });
@@ -63,7 +83,7 @@ export const useDesignStore = create<DesignStore>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await api.get(`/designs/${id}`);
-      set({ currentDesign: response.data.data || response.data, isLoading: false });
+      set({ currentDesign: unwrapApiData<Design>(response), isLoading: false });
     } catch (error: any) {
       set({
         error: error.response?.data?.message || "Erreur lors du chargement du design",
@@ -77,7 +97,7 @@ export const useDesignStore = create<DesignStore>((set, get) => ({
     try {
       const response = await api.post("/designs", data);
       set({ isLoading: false });
-      return response.data.data || response.data;
+      return unwrapApiData<Design>(response);
     } catch (error: any) {
       set({
         error: error.response?.data?.message || "Erreur lors de la création du design",
