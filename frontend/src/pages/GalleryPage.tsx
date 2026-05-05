@@ -23,8 +23,9 @@ import {
 } from "lucide-react";
 import VaguesEmeraudeLogo from "../components/VaguesEmeraudeLogo";
 import { useGallery } from "../hooks/useDesigns";
+import type { Design as GallerySourceDesign } from "../hooks/useDesigns";
 import { useAutoInvalidateQueries } from "../hooks/useAutoInvalidate";
-import type { Design as ApiDesign } from "../api/designApi";
+import { normalizeImageUrl } from "../utils/imageUrl";
 
 // Interface locale pour un design (plus permissive que celle de l'API)
 interface Design {
@@ -146,17 +147,17 @@ export default function GalleryPage() {
 
   // Extraction robuste des designs avec useMemo pour éviter les recréations
   const designs = useMemo<Design[]>(() => {
-    const apiDesigns = galleryData?.data?.designs ?? [];
+    const apiDesigns = galleryData ?? [];
 
-    return apiDesigns.map((design: ApiDesign, index: number) => ({
-      _id: design._id,
+    return apiDesigns.map((design: GallerySourceDesign, index: number) => ({
+      _id: design._id || String(index + 1),
       id: index + 1,
       title: design.title,
       name: design.title,
       description: design.description,
       category: design.category || "T-Shirts",
       collection: undefined,
-      image: design.thumbnail || design.image || "/images/placeholder-tshirt.jpg",
+        image: normalizeImageUrl(design.thumbnail || design.image),
       thumbnail: design.thumbnail,
       tags: design.tags || [],
       price: design.price,
@@ -683,7 +684,7 @@ function DesignCard({ design }: { design: Design }) {
 
         <div className="aspect-square overflow-hidden">
           <img
-            src={design.image}
+            src={normalizeImageUrl(design.image)}
             alt={design.title}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
             loading="lazy"
@@ -785,7 +786,7 @@ function DesignListItem({ design }: { design: Design }) {
       <div className="flex flex-col md:flex-row">
         <div className="md:w-48 h-48 overflow-hidden relative">
           <img
-            src={design.image}
+            src={normalizeImageUrl(design.image)}
             alt={design.title}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
             loading="lazy"

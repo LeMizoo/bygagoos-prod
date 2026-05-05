@@ -1,105 +1,64 @@
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { designApi, DesignQuery, Design } from '../api/designApi';
-import { useInvalidateQueries } from './useAutoInvalidate';
+// frontend/src/hooks/useDesigns.ts
+import { useQuery } from '@tanstack/react-query';
+import { axiosInstance } from '../api/axiosInstance';
+import dev from '../utils/devLogger';
 
-/**
- * Hook pour récupérer tous les designs
- */
-export const useDesigns = (query?: DesignQuery) => {
+export interface Design {
+  _id?: string;
+  id?: string;
+  title: string;
+  description?: string;
+  category?: string;
+  type?: string;
+  image?: string;
+  thumbnail?: string;
+  files?: Array<{ url: string }>;
+  tags?: string[];
+  price?: number;
+  basePrice?: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt?: string;
+  status?: string;
+  metadata?: {
+    category?: string;
+    basePrice?: number;
+  };
+}
+
+interface GalleryParams {
+  page?: number;
+  limit?: number;
+}
+
+export const useGallery = (params?: GalleryParams) => {
   return useQuery({
-    queryKey: ['designs', query],
-    queryFn: () => designApi.getAll(query),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
-  });
-};
+    queryKey: ['gallery', params],
+    queryFn: async (): Promise<Design[]> => {
+      try {
+        const response = await axiosInstance.get('/designs/public', {
+          params: {
+            page: params?.page || 1,
+            limit: params?.limit || 12,
+            sortBy: 'createdAt',
+            sortOrder: 'desc',
+          },
+        });
 
-/**
- * Hook pour récupérer un design par ID
- */
-export const useDesign = (id: string) => {
-  return useQuery({
-    queryKey: ['design', id],
-    queryFn: () => designApi.getById(id),
-    staleTime: 5 * 60 * 1000,
-    enabled: !!id,
-  });
-};
+        // Le backend renvoie { success, data: { designs, total, ... } }
+        // On accepte aussi un tableau direct pour rester compatible avec d'anciens payloads.
+        const payload = response.data?.data;
+        const designsArray = Array.isArray(payload)
+          ? payload
+          : payload?.designs || [];
 
-/**
- * Hook pour récupérer les designs pour la galerie publique
- */
-export const useGallery = (query?: DesignQuery) => {
-  return useQuery({
-    queryKey: ['gallery', query],
-    queryFn: () => designApi.getPublicGallery(query),
-    staleTime: 10 * 60 * 1000, // 10 minutes (peut être plus long pour la galerie)
-    gcTime: 15 * 60 * 1000,
-  });
-};
-
-/**
- * Hook pour récupérer les designs par catégorie
- */
-export const useDesignsByCategory = (category: string) => {
-  return useQuery({
-    queryKey: ['designs', 'category', category],
-    queryFn: () => designApi.getByCategory(category),
-    staleTime: 5 * 60 * 1000,
-    enabled: !!category,
-  });
-};
-
-/**
- * Hook pour créer un design
- */
-export const useCreateDesign = () => {
-  const { invalidateDesigns } = useInvalidateQueries();
-
-  return useMutation({
-    mutationFn: (data: Partial<Design>) => designApi.create(data),
-    onSuccess: () => {
-      invalidateDesigns();
+        console.log('📦 useGallery - designs extraits:', designsArray.length);
+        return designsArray;
+      } catch (error) {
+        dev.error('Erreur useGallery:', error);
+        throw error;
+      }
     },
-  });
-};
-
-/**
- * Hook pour mettre à jour un design
- */
-export const useUpdateDesign = () => {
-  const { invalidateDesigns } = useInvalidateQueries();
-
-  return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Design> }) =>
-      designApi.update(id, data),
-    onSuccess: () => {
-      invalidateDesigns();
-    },
-  });
-};
-
-/**
- * Hook pour supprimer un design
- */
-export const useDeleteDesign = () => {
-  const { invalidateDesigns } = useInvalidateQueries();
-
-  return useMutation({
-    mutationFn: (id: string) => designApi.delete(id),
-    onSuccess: () => {
-      invalidateDesigns();
-    },
-  });
-};
-
-/**
- * Hook pour récupérer les stats des designs
- */
-export const useDesignStats = () => {
-  return useQuery({
-    queryKey: ['design', 'stats'],
-    queryFn: () => designApi.getStats(),
     staleTime: 5 * 60 * 1000,
   });
 };

@@ -31,6 +31,7 @@ import { Select } from '../../components/ui/Select';
 import { Tabs } from '../../components/ui/Tabs';
 import { Timeline } from '../../components/ui/Timeline';
 import { formatPrice } from '../../utils/formatters';
+import { normalizeImageUrl } from '../../utils/imageUrl';
 
 const statusConfig: Record<string, { color: string; label: string; icon: any }> = {
   PENDING: { color: 'warning', label: 'En attente', icon: Clock },
@@ -253,7 +254,7 @@ export const OrderDetails: React.FC = () => {
                 <div key={index} className="flex items-start space-x-4 p-4 bg-antique-white rounded-lg">
                   {item.design.thumbnail && (
                     <img 
-                      src={item.design.thumbnail} 
+                      src={normalizeImageUrl(item.design.thumbnail)}
                       alt={item.design.title}
                       className="w-20 h-20 object-cover rounded"
                     />

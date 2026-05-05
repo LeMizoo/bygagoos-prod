@@ -22,6 +22,7 @@ import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { formatPrice } from '../../utils/formatters';
+import { normalizeImageUrl } from '../../utils/imageUrl';
 
 // Configuration des statuts
 const statusConfig: Record<string, { color: string; label: string; icon: React.ElementType }> = {
@@ -193,7 +194,7 @@ export const UserOrderTrackingPage: React.FC = () => {
               <div key={index} className="flex flex-col md:flex-row items-start space-y-4 md:space-y-0 md:space-x-4 p-4 bg-gray-50 rounded-lg">
                 {item.design?.thumbnail && (
                   <img 
-                    src={item.design.thumbnail} 
+                    src={normalizeImageUrl(item.design.thumbnail)}
                     alt={item.design.title}
                     className="w-24 h-24 object-cover rounded"
                   />

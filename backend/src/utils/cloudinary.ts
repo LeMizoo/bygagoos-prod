@@ -55,7 +55,7 @@ export const uploadToCloudinary = async (
     
     return {
       public_id: result.public_id,
-      url: result.url,
+      url: result.secure_url,
       secure_url: result.secure_url,
       format: result.format,
       width: result.width || 0,

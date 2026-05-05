@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { adminDesignsApi } from "../../api/adminDesigns.api";
 import dev from "../../utils/devLogger";
+import { normalizeImageUrl } from "../../utils/imageUrl";
 
 type BackendDesignStatus = "DRAFT" | "PENDING" | "APPROVED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED" | "ARCHIVED";
 type UiDesignStatus = "draft" | "active" | "inactive" | "archived";
@@ -90,7 +91,7 @@ const normalizeDesign = (design: BackendDesign): DesignRow | null => {
       backendTypeLabels[String(categoryValue).toUpperCase()] ||
       String(categoryValue).replace(/_/g, " "),
     price: Number(priceValue) || 0,
-    thumbnail: design.thumbnail || design.files?.[0]?.url,
+    thumbnail: normalizeImageUrl(design.thumbnail || design.files?.[0]?.url),
     tags: design.tags || [],
     status: resolvedStatus,
     isActive: design.isActive ?? resolvedStatus === "active",
@@ -317,7 +318,7 @@ export default function DesignsPage() {
                   <div className="flex items-center gap-3">
                     <div className="h-12 w-12 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
                       {design.thumbnail ? (
-                        <img src={design.thumbnail} alt={design.title} className="h-full w-full object-cover" />
+                        <img src={normalizeImageUrl(design.thumbnail)} alt={design.title} className="h-full w-full object-cover" />
                       ) : (
                         <div className="h-full w-full flex items-center justify-center">
                           <Image className="h-5 w-5 text-gray-400" />
@@ -387,7 +388,7 @@ export default function DesignsPage() {
                         <div className="flex items-center">
                           <div className="h-10 w-10 flex-shrink-0">
                             {design.thumbnail ? (
-                              <img className="h-10 w-10 rounded-lg object-cover" src={design.thumbnail} alt={design.title} />
+                              <img className="h-10 w-10 rounded-lg object-cover" src={normalizeImageUrl(design.thumbnail)} alt={design.title} />
                             ) : (
                               <div className="h-10 w-10 rounded-lg bg-gray-200 flex items-center justify-center">
                                 <Image className="h-5 w-5 text-gray-400" />

@@ -11,6 +11,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { Design } from "../../api/adminDesigns.api";
+import { normalizeImageUrl } from "../../utils/imageUrl";
 
 interface DesignsTableProps {
   designs: Design[];
@@ -183,7 +184,7 @@ const DesignsTable: React.FC<DesignsTableProps> = ({
                     <div className="flex-shrink-0 h-12 w-12 mr-4">
                       {design.images?.[0] ? (
                         <img
-                          src={design.images[0]}
+                          src={normalizeImageUrl(design.images[0])}
                           alt={design.title}
                           className="h-12 w-12 object-cover rounded-lg border border-gray-200"
                           onError={(e) => {

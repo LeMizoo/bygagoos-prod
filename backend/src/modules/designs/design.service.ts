@@ -48,6 +48,7 @@ interface UploadedFile {
 
 interface CloudinaryResult {
   url: string;
+  secure_url: string;
   public_id: string;
 }
 
@@ -438,7 +439,7 @@ export class DesignService {
         files.map(async (file) => {
           const result = await uploadToCloudinary(file.buffer, 'designs') as CloudinaryResult;
           return {
-            url: result.url,
+            url: result.secure_url || result.url,
             publicId: result.public_id,
             filename: file.originalname,
             mimetype: file.mimetype,
