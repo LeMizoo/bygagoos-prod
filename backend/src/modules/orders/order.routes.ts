@@ -61,6 +61,7 @@ router.route('/')
     validate(orderFiltersSchema, 'query'),
     authorize([ // ✅ Tableau de rôles
       UserRole.ADMIN, 
+      UserRole.SUPER_ADMIN,
       UserRole.MANAGER, 
       UserRole.DESIGNER, 
       UserRole.STAFF
@@ -72,6 +73,7 @@ router.route('/')
     validate(createOrderSchema),
     authorize([ // ✅ Tableau de rôles
       UserRole.ADMIN, 
+      UserRole.SUPER_ADMIN,
       UserRole.MANAGER, 
       UserRole.CLIENT
     ]),
@@ -81,7 +83,7 @@ router.route('/')
 // Statistiques
 router.get('/stats',
   apiLimiter,
-  authorize([UserRole.ADMIN, UserRole.MANAGER]), // ✅ Tableau
+  authorize([UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER]), // ✅ Tableau
   getOrderStats
 );
 
@@ -90,6 +92,7 @@ router.get('/client/:clientId',
   apiLimiter,
   authorize([ // ✅ Tableau
     UserRole.ADMIN, 
+    UserRole.SUPER_ADMIN,
     UserRole.MANAGER, 
     UserRole.DESIGNER, 
     UserRole.CLIENT
@@ -100,7 +103,7 @@ router.get('/client/:clientId',
 // Restaurer commande archivée
 router.post('/:id/restore',
   apiLimiter,
-  authorize([UserRole.ADMIN]), // ✅ Tableau avec un seul élément
+  authorize([UserRole.ADMIN, UserRole.SUPER_ADMIN]), // ✅ Tableau avec un seul élément
   restoreOrder
 );
 
@@ -110,6 +113,7 @@ router.route('/:id')
     apiLimiter,
     authorize([ // ✅ Tableau
       UserRole.ADMIN, 
+      UserRole.SUPER_ADMIN,
       UserRole.MANAGER, 
       UserRole.DESIGNER, 
       UserRole.CLIENT
@@ -121,6 +125,7 @@ router.route('/:id')
     validate(updateOrderSchema),
     authorize([ // ✅ Tableau
       UserRole.ADMIN, 
+      UserRole.SUPER_ADMIN,
       UserRole.MANAGER, 
       UserRole.DESIGNER
     ]),
@@ -148,7 +153,7 @@ router.patch('/:id/status',
 router.patch('/:id/assign',
   apiLimiter,
   validate(assignOrderSchema),
-  authorize([UserRole.ADMIN, UserRole.MANAGER]), // ✅ Tableau
+    authorize([UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER]), // ✅ Tableau
   assignOrder
 );
 
@@ -156,22 +161,24 @@ router.patch('/:id/assign',
 router.post('/:id/messages',
   apiLimiter,
   validate(addMessageSchema),
-  authorize([ // ✅ Tableau
-    UserRole.ADMIN, 
-    UserRole.MANAGER, 
-    UserRole.DESIGNER, 
-    UserRole.CLIENT
+    authorize([ // ✅ Tableau
+      UserRole.ADMIN, 
+      UserRole.SUPER_ADMIN,
+      UserRole.MANAGER, 
+      UserRole.DESIGNER, 
+      UserRole.CLIENT
   ]),
   addMessage
 );
 
 router.patch('/:id/messages/read',
   apiLimiter,
-  authorize([ // ✅ Tableau
-    UserRole.ADMIN, 
-    UserRole.MANAGER, 
-    UserRole.DESIGNER, 
-    UserRole.CLIENT
+    authorize([ // ✅ Tableau
+      UserRole.ADMIN, 
+      UserRole.SUPER_ADMIN,
+      UserRole.MANAGER, 
+      UserRole.DESIGNER, 
+      UserRole.CLIENT
   ]),
   markMessagesAsRead
 );
@@ -179,7 +186,7 @@ router.patch('/:id/messages/read',
 // Facture PDF
 router.get('/:id/invoice',
   apiLimiter,
-  authorize([UserRole.ADMIN, UserRole.MANAGER, UserRole.CLIENT]), // ✅ Tableau
+  authorize([UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER, UserRole.CLIENT]), // ✅ Tableau
   downloadInvoice
 );
 
