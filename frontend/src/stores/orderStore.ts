@@ -46,6 +46,25 @@ export interface Order {
   completedAt?: string;
 }
 
+const unwrapApiData = <T,>(response: any): T => {
+  if (!response) return response as T;
+  const payload = response.data ?? response;
+  return (payload?.data ?? payload) as T;
+};
+
+const extractOrdersList = (response: any): Order[] => {
+  const data = unwrapApiData<any>(response);
+  if (Array.isArray(data)) return data as Order[];
+  if (Array.isArray(data?.orders)) return data.orders as Order[];
+  if (Array.isArray(data?.data?.orders)) return data.data.orders as Order[];
+  return [];
+};
+
+const extractPagination = (response: any) => {
+  const data = unwrapApiData<any>(response);
+  return data?.pagination ?? data?.data?.pagination ?? null;
+};
+
 interface OrderStore {
   orders: Order[];
   currentOrder: Order | null;
@@ -91,15 +110,17 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await orderApi.getOrders({ page, limit, ...filters });
+      const orders = extractOrdersList(response);
+      const pagination = extractPagination(response);
       set({
-        orders: response.data || response,
-        totalPages: response.pagination?.pages || 1,
+        orders,
+        totalPages: pagination?.pages || 1,
         currentPage: page,
         pagination: {
           page,
           limit: limit || 10,
-          total: response.pagination?.total || 0,
-          pages: response.pagination?.pages || 1,
+          total: pagination?.total || orders.length || 0,
+          pages: pagination?.pages || 1,
         },
         isLoading: false,
       });
@@ -115,7 +136,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await orderApi.getOrderById(id);
-      set({ currentOrder: response.data || response, isLoading: false });
+      set({ currentOrder: unwrapApiData<Order>(response), isLoading: false });
     } catch (error: any) {
       set({
         error: error.response?.data?.message || "Erreur lors du chargement de la commande",
@@ -130,7 +151,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     try {
       const response = await orderApi.getOrdersByClient(clientId);
       set({ 
-        orders: response.data || response, 
+        orders: extractOrdersList(response), 
         isLoading: false 
       });
     } catch (error: any) {
@@ -146,7 +167,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     try {
       const response = await orderApi.createOrder(data);
       set({ isLoading: false });
-      return response.data || response;
+      return unwrapApiData<Order>(response);
     } catch (error: any) {
       set({
         error: error.response?.data?.message || "Erreur lors de la création de la commande",
@@ -234,7 +255,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await orderApi.getOrderStats();
-      set({ stats: response.data || response, isLoading: false });
+      set({ stats: unwrapApiData(response), isLoading: false });
     } catch (error: any) {
       set({
         error: error.response?.data?.message || "Erreur lors du chargement des statistiques",
@@ -247,7 +268,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await orderApi.getOrderStats();
-      set({ stats: response.data || response, isLoading: false });
+      set({ stats: unwrapApiData(response), isLoading: false });
     } catch (error: any) {
       set({
         error: error.response?.data?.message || "Erreur lors du chargement des statistiques",

@@ -22,6 +22,20 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
   onView
 }) => {
   const { orders, isLoading } = useOrderStore();
+  const getClientName = (order: any) => {
+    const client = order.client;
+    if (client && typeof client === 'object') {
+      return `${client.firstName || ''} ${client.lastName || ''}`.trim() || client.company || 'Client inconnu';
+    }
+    return order.clientName || order.client || 'Client inconnu';
+  };
+
+  const getOrderTotal = (order: any) => {
+    if (typeof order?.price?.total === 'number') return order.price.total;
+    if (typeof order?.total === 'number') return order.total;
+    if (typeof order?.totalPrice === 'number') return order.totalPrice;
+    return 0;
+  };
 
   return (
     <div className="overflow-x-auto">
@@ -48,11 +62,11 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
             orders.map((order: any) => (
               <tr key={order._id} className="border-b hover:bg-gray-50">
                 <td className="px-4 py-3 font-medium">#{order.orderNumber}</td>
-                <td className="px-4 py-3">{order.clientName}</td>
+                <td className="px-4 py-3">{getClientName(order)}</td>
                 <td className="px-4 py-3">
                   <Badge variant="default">{order.status}</Badge>
                 </td>
-                <td className="px-4 py-3 font-medium">{formatPrice(order.total)}</td>
+                <td className="px-4 py-3 font-medium">{formatPrice(getOrderTotal(order))}</td>
                 <td className="px-4 py-3">
                   <div className="flex gap-2">
                     {onView && (
