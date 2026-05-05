@@ -20,7 +20,7 @@ export const getDesigns = async (req: AuthRequest, res: Response): Promise<void>
     }
 
     const query = validateData(queryDesignSchema, req.query) as any;
-    const designs = await designService.findAll(userId, query);
+    const designs = await designService.findAll(userId, query, req.user?.role);
 
     apiResponse.success(res, designs, 'Designs récupérés avec succès');
   } catch (error: any) {
@@ -61,7 +61,7 @@ export const getDesignById = async (req: AuthRequest, res: Response): Promise<vo
       apiResponse.error(res, 'ID design requis', HTTP_STATUS.BAD_REQUEST);
       return;
     }
-    const design = await designService.findById(id, userId);
+    const design = await designService.findById(id, userId, req.user?.role);
 
     apiResponse.success(res, design, 'Design récupéré avec succès');
   } catch (error: any) {
@@ -91,7 +91,7 @@ export const createDesign = async (req: AuthRequest, res: Response): Promise<voi
     }
 
     const data = validateData(createDesignSchema, req.body) as any;
-    const design = await designService.create(userId, data, createdBy);
+    const design = await designService.create(userId, data, createdBy, req.user?.role);
 
     apiResponse.success(res, design, 'Design créé avec succès', HTTP_STATUS.CREATED);
   } catch (error: any) {
@@ -128,7 +128,7 @@ export const updateDesign = async (req: AuthRequest, res: Response): Promise<voi
       return;
     }
 
-    const design = await designService.update(id, userId, data);
+    const design = await designService.update(id, userId, data, req.user?.role);
     apiResponse.success(res, design, 'Design mis à jour avec succès');
   } catch (error: any) {
     console.error('Erreur updateDesign:', error);
@@ -168,7 +168,7 @@ export const addDesignFiles = async (req: AuthRequest, res: Response): Promise<v
       return;
     }
 
-    const design = await designService.addFiles(id, userId, files);
+    const design = await designService.addFiles(id, userId, files, req.user?.role);
     apiResponse.success(res, design, `${files.length} fichier(s) ajouté(s) avec succès`);
   } catch (error: any) {
     console.error('Erreur addDesignFiles:', error);
@@ -199,7 +199,7 @@ export const removeDesignFile = async (req: AuthRequest, res: Response): Promise
       apiResponse.error(res, 'ID design et ID fichier requis', HTTP_STATUS.BAD_REQUEST);
       return;
     }
-    const design = await designService.removeFile(id, userId, fileId);
+    const design = await designService.removeFile(id, userId, fileId, req.user?.role);
 
     apiResponse.success(res, design, 'Fichier supprimé avec succès');
   } catch (error: any) {
@@ -231,7 +231,7 @@ export const deleteDesign = async (req: AuthRequest, res: Response): Promise<voi
       apiResponse.error(res, 'ID design requis', HTTP_STATUS.BAD_REQUEST);
       return;
     }
-    await designService.delete(id, userId);
+    await designService.delete(id, userId, req.user?.role);
 
     apiResponse.success(res, null, 'Design supprimé avec succès');
   } catch (error: any) {
@@ -258,7 +258,7 @@ export const getDesignStats = async (req: AuthRequest, res: Response): Promise<v
       return;
     }
 
-    const stats = await designService.getStats(userId);
+    const stats = await designService.getStats(userId, req.user?.role);
     apiResponse.success(res, stats, 'Statistiques récupérées');
   } catch (error: any) {
     console.error('Erreur getDesignStats:', error);

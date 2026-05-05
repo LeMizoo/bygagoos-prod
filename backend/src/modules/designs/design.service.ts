@@ -8,10 +8,11 @@ import { HTTP_STATUS } from '../../core/constants/httpStatus';
 import logger from '../../core/utils/logger';
 import { uploadToCloudinary, deleteFromCloudinary } from '../../utils/cloudinary';
 import eventEmitter, { AppEvent } from '../../core/utils/eventEmitter';
+import { UserRole } from '../../core/types/userRoles';
 
 // Définir des types pour éviter 'any'
 interface DesignFilter {
-  user: Types.ObjectId;
+  user?: Types.ObjectId;
   isActive?: boolean;
   status?: DesignStatus;
   type?: DesignType;
@@ -65,11 +66,21 @@ interface MongoUpdateData {
   [key: string]: unknown;
 }
 
+const canAccessAllDesigns = (role?: UserRole): boolean => role !== UserRole.CLIENT;
+
+const buildDesignScope = (userId: string, role?: UserRole): Pick<DesignFilter, 'user'> | Record<string, never> => {
+  if (canAccessAllDesigns(role)) {
+    return {};
+  }
+
+  return { user: new Types.ObjectId(userId) };
+};
+
 export class DesignService {
   /**
    * Récupère tous les designs (authentifié)
    */
-  async findAll(userId: string, query: QueryDesignDto): Promise<{
+  async findAll(userId: string, query: QueryDesignDto, role?: UserRole): Promise<{
     designs: DesignResponseDTO[];
     total: number;
     page: number;
@@ -81,7 +92,9 @@ export class DesignService {
       const skip = (page - 1) * limit;
 
       // Construction du filtre
-      const filter: DesignFilter = { user: new Types.ObjectId(userId) };
+      const filter: DesignFilter = {
+        ...buildDesignScope(userId, role)
+      };
       
       if (isActive !== undefined) {
         filter.isActive = isActive;
@@ -227,15 +240,15 @@ export class DesignService {
   /**
    * Récupère un design par son ID
    */
-  async findById(id: string, userId: string): Promise<DesignResponseDTO> {
+  async findById(id: string, userId: string, role?: UserRole): Promise<DesignResponseDTO> {
     try {
       if (!Types.ObjectId.isValid(id)) {
         throw new AppError('ID de design invalide', HTTP_STATUS.BAD_REQUEST);
       }
 
-      const design = await Design.findOne({ 
-        _id: id, 
-        user: new Types.ObjectId(userId) 
+      const design = await Design.findOne({
+        _id: id,
+        ...buildDesignScope(userId, role)
       })
         .populate('client', 'firstName lastName email')
         .populate('createdBy', 'firstName lastName email')
@@ -257,13 +270,14 @@ export class DesignService {
   /**
    * Crée un nouveau design
    */
-  async create(userId: string, data: CreateDesignDto, createdBy: string | Types.ObjectId): Promise<DesignResponseDTO> {
+  async create(userId: string, data: CreateDesignDto, createdBy: string | Types.ObjectId, role?: UserRole): Promise<DesignResponseDTO> {
     try {
       // Vérifier si le client existe (si fourni)
       if (data.clientId) {
+        const clientScope = canAccessAllDesigns(role) ? {} : { user: new Types.ObjectId(userId) };
         const client = await Client.findOne({
           _id: data.clientId,
-          user: new Types.ObjectId(userId)
+          ...clientScope
         });
 
         if (!client) {
@@ -314,23 +328,27 @@ export class DesignService {
   /**
    * Met à jour un design
    */
-  async update(id: string, userId: string, data: UpdateDesignDto): Promise<DesignResponseDTO> {
+  async update(id: string, userId: string, data: UpdateDesignDto, role?: UserRole): Promise<DesignResponseDTO> {
     try {
       if (!Types.ObjectId.isValid(id)) {
         throw new AppError('ID de design invalide', HTTP_STATUS.BAD_REQUEST);
       }
 
       // Récupérer l'état précédent pour les événements
-      const previousDesign = await Design.findOne({ _id: id, user: userId });
+      const previousDesign = await Design.findOne({
+        _id: id,
+        ...buildDesignScope(userId, role)
+      });
       if (!previousDesign) {
         throw new AppError('Design non trouvé', HTTP_STATUS.NOT_FOUND);
       }
 
       // Vérifier si le client existe (si fourni)
       if (data.clientId) {
+        const clientScope = canAccessAllDesigns(role) ? {} : { user: new Types.ObjectId(userId) };
         const client = await Client.findOne({
           _id: data.clientId,
-          user: new Types.ObjectId(userId)
+          ...clientScope
         });
 
         if (!client) {
@@ -383,7 +401,10 @@ export class DesignService {
 
       // Mettre à jour le design
       const design = await Design.findOneAndUpdate(
-        { _id: id, user: new Types.ObjectId(userId) },
+        {
+          _id: id,
+          ...buildDesignScope(userId, role)
+        },
         { $set: updateData },
         { new: true, runValidators: true }
       )
@@ -423,13 +444,16 @@ export class DesignService {
   /**
    * Ajoute des fichiers à un design
    */
-  async addFiles(id: string, userId: string, files: Express.Multer.File[]): Promise<DesignResponseDTO> {
+  async addFiles(id: string, userId: string, files: Express.Multer.File[], role?: UserRole): Promise<DesignResponseDTO> {
     try {
       if (!Types.ObjectId.isValid(id)) {
         throw new AppError('ID de design invalide', HTTP_STATUS.BAD_REQUEST);
       }
 
-      const design = await Design.findOne({ _id: id, user: userId });
+      const design = await Design.findOne({
+        _id: id,
+        ...buildDesignScope(userId, role)
+      });
       if (!design) {
         throw new AppError('Design non trouvé', HTTP_STATUS.NOT_FOUND);
       }
@@ -479,13 +503,16 @@ export class DesignService {
   /**
    * Supprime un fichier d'un design
    */
-  async removeFile(id: string, userId: string, fileId: string): Promise<DesignResponseDTO> {
+  async removeFile(id: string, userId: string, fileId: string, role?: UserRole): Promise<DesignResponseDTO> {
     try {
       if (!Types.ObjectId.isValid(id) || !Types.ObjectId.isValid(fileId)) {
         throw new AppError('ID invalide', HTTP_STATUS.BAD_REQUEST);
       }
 
-      const design = await Design.findOne({ _id: id, user: userId });
+      const design = await Design.findOne({
+        _id: id,
+        ...buildDesignScope(userId, role)
+      });
       if (!design) {
         throw new AppError('Design non trouvé', HTTP_STATUS.NOT_FOUND);
       }
@@ -529,13 +556,16 @@ export class DesignService {
   /**
    * Supprime un design (soft delete)
    */
-  async delete(id: string, userId: string): Promise<void> {
+  async delete(id: string, userId: string, role?: UserRole): Promise<void> {
     try {
       if (!Types.ObjectId.isValid(id)) {
         throw new AppError('ID de design invalide', HTTP_STATUS.BAD_REQUEST);
       }
 
-      const design = await Design.findOne({ _id: id, user: userId });
+      const design = await Design.findOne({
+        _id: id,
+        ...buildDesignScope(userId, role)
+      });
       
       if (!design) {
         throw new AppError('Design non trouvé', HTTP_STATUS.NOT_FOUND);
@@ -561,7 +591,7 @@ export class DesignService {
   /**
    * Récupère les statistiques des designs
    */
-  async getStats(userId: string): Promise<{
+  async getStats(userId: string, role?: UserRole): Promise<{
     total: number;
     byStatus: Record<string, number>;
     byType: Record<string, number>;
@@ -569,26 +599,26 @@ export class DesignService {
     overdue: number;
   }> {
     try {
-      const userObjectId = new Types.ObjectId(userId);
+      const scope = buildDesignScope(userId, role);
       const now = new Date();
 
       const [total, byStatus, byType, recent, overdue] = await Promise.all([
-        Design.countDocuments({ user: userObjectId, isActive: true }),
+        Design.countDocuments({ ...scope, isActive: true }),
         Design.aggregate([
-          { $match: { user: userObjectId, isActive: true } },
+          { $match: { ...scope, isActive: true } },
           { $group: { _id: '$status', count: { $sum: 1 } } }
         ]),
         Design.aggregate([
-          { $match: { user: userObjectId, isActive: true } },
+          { $match: { ...scope, isActive: true } },
           { $group: { _id: '$type', count: { $sum: 1 } } }
         ]),
         Design.countDocuments({
-          user: userObjectId,
+          ...scope,
           isActive: true,
           createdAt: { $gte: new Date(now.setDate(now.getDate() - 30)) }
         }),
         Design.countDocuments({
-          user: userObjectId,
+          ...scope,
           isActive: true,
           status: { $nin: [DesignStatus.COMPLETED, DesignStatus.ARCHIVED] },
           dueDate: { $lt: new Date() }
