@@ -2,12 +2,24 @@
 
 // Déterminer l'URL de l'API de manière robuste
 const getApiUrl = (): string => {
-  // 1. Priorité à la variable d'environnement
-  if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
+  const envUrl = import.meta.env.VITE_API_URL;
+
+  // 1. Priorité à la variable d'environnement, mais on corrige le cas
+  //    d'un /api relatif utilisé sur Vercel en production.
+  if (envUrl) {
+    if (envUrl === "/api" && window.location.hostname.endsWith("vercel.app")) {
+      return "https://bygagoos-prod.onrender.com/api";
+    }
+
+    return envUrl;
   }
 
-  // 2. Fallback : construction à partir de l'origine (port 5000)
+  // 2. Fallback prod connu
+  if (window.location.hostname.endsWith("vercel.app")) {
+    return "https://bygagoos-prod.onrender.com/api";
+  }
+
+  // 3. Fallback : construction à partir de l'origine (port 5000)
   const origin = window.location.origin; // http://localhost:3000
   const baseUrl = origin.replace(":3000", ":5000"); // http://localhost:5000
   return `${baseUrl}/api`;

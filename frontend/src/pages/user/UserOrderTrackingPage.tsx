@@ -23,6 +23,7 @@ import { Badge } from '../../components/ui/Badge';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { formatPrice } from '../../utils/formatters';
 import { normalizeImageUrl } from '../../utils/imageUrl';
+import { API_URL } from '../../api';
 
 // Configuration des statuts
 const statusConfig: Record<string, { color: string; label: string; icon: React.ElementType }> = {
@@ -129,7 +130,7 @@ export const UserOrderTrackingPage: React.FC = () => {
 
         <Button
           variant="outline"
-          onClick={() => window.open(`/api/orders/${id}/invoice`)}
+          onClick={() => window.open(`${API_URL}/orders/${id}/invoice`)}
         >
           <Download className="h-4 w-4 mr-2" />
           Télécharger facture

@@ -23,6 +23,7 @@ import {
   Send,
   Paperclip
 } from "lucide-react";
+import { API_URL } from "../../api";
 
 export const OrderDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -131,7 +132,7 @@ export const OrderDetailsPage: React.FC = () => {
               Modifier
             </Button>
           )}
-          <Button variant="outline" onClick={() => window.open(`/api/orders/${id}/invoice`)}>
+          <Button variant="outline" onClick={() => window.open(`${API_URL}/orders/${id}/invoice`)}>
             <Download className="h-4 w-4 mr-2" />
             Facture
           </Button>

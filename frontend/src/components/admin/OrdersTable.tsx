@@ -24,6 +24,7 @@ import { Avatar } from '../ui/Avatar';
 import { Dropdown } from '../ui/Dropdown';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { formatPrice } from '../../utils/formatters';
+import { API_URL } from '../../api';
 import dev from '../../utils/devLogger';
 
 interface OrdersTableProps {
@@ -296,7 +297,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
               {
                 label: 'Facture',
                 icon: <Download size={16} />,
-                onClick: () => window.open(`/api/orders/${order._id}/invoice`)
+                onClick: () => window.open(`${API_URL}/orders/${order._id}/invoice`)
               },
               {
                 label: 'Supprimer',

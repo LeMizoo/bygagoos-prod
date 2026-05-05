@@ -3,9 +3,8 @@
 import axios from "axios";
 import { useAuthStore } from "../stores/authStore";
 import authApi from "./auth.api";
+import { API_URL } from "./index";
 import dev from "../utils/devLogger";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const axiosInstance = axios.create({
   baseURL: API_URL,

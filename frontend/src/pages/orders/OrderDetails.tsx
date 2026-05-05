@@ -32,6 +32,7 @@ import { Tabs } from '../../components/ui/Tabs';
 import { Timeline } from '../../components/ui/Timeline';
 import { formatPrice } from '../../utils/formatters';
 import { normalizeImageUrl } from '../../utils/imageUrl';
+import { API_URL } from '../../api';
 
 const statusConfig: Record<string, { color: string; label: string; icon: any }> = {
   PENDING: { color: 'warning', label: 'En attente', icon: Clock },
@@ -454,7 +455,7 @@ export const OrderDetails: React.FC = () => {
               Modifier
             </Button>
             
-            <Button variant="outline" onClick={() => window.open(`/api/orders/${id}/invoice`)}>
+            <Button variant="outline" onClick={() => window.open(`${API_URL}/orders/${id}/invoice`)}>
               <Download size={18} className="mr-2" />
               Facture
             </Button>

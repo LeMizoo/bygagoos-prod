@@ -1,5 +1,6 @@
 import React from "react";
 import { useAuthStore } from "../stores/authStore";
+import { API_URL } from "../api";
 import dev from "../utils/devLogger";
 
 const DebugPanel: React.FC = () => {
@@ -10,7 +11,7 @@ const DebugPanel: React.FC = () => {
       dev.log("🧪 Testing API...");
 
       // Test /auth/me
-      const response = await fetch("/api/auth/me", {
+      const response = await fetch(`${API_URL}/auth/me`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",

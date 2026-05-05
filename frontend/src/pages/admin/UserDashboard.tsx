@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { dashboardApi, AdminStats } from "../../api/dashboard.api";
+import { API_URL } from "../../api";
 import dev from '../../utils/devLogger';
 import {
   StatCard,
@@ -104,7 +105,7 @@ export default function SuperAdminDashboard() {
         setLoading(true);
         // Appel à l'API pour les stats super admin
         // Note: Il faut que cette route existe dans le backend
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/dashboard/super-admin-stats`, {
+        const response = await fetch(`${API_URL}/dashboard/super-admin-stats`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
             'Content-Type': 'application/json',

@@ -16,7 +16,7 @@ export const debugApi = async () => {
     // 3. Tester l'endpoint /auth/me
     try {
       dev.log("🧪 Testing /auth/me...");
-      const meResponse = await fetch(`${API_URL}/api/auth/me`, {
+      const meResponse = await fetch(`${API_URL}/auth/me`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -34,7 +34,7 @@ export const debugApi = async () => {
     // 4. Tester l'endpoint /admin/staff
     try {
       dev.log("🧪 Testing /admin/staff...");
-      const staffResponse = await fetch(`${API_URL}/api/admin/staff`, {
+      const staffResponse = await fetch(`${API_URL}/admin/staff`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
