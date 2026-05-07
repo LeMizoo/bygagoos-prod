@@ -7,7 +7,7 @@ import dev from "../utils/devLogger";
 
 // ✅ La variable d'environnement doit être définie sur Vercel
 // VITE_API_URL = https://bygagoos-prod.onrender.com/api
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const API_URL = "https://bygagoos-prod.onrender.com/api";
 
 dev.log(`🌐 API Client configuré avec URL: ${API_URL}`);
 
