@@ -36,13 +36,14 @@ export default function CreateDesignPage() {
 
       dev.log("📝 Création du design...");
       const created = await adminDesignsApi.createDesign({
-        title: titleValue,
-        description: descriptionValue,
-        category: categoryValue,
-        basePrice: priceValue,
-        status: "draft",
-        tags: formData.tags,
-      });
+      title: titleValue,
+      description: descriptionValue,
+      type: "OTHER",               // champ obligatoire
+      category: categoryValue,
+      basePrice: priceValue,
+      status: "draft",
+      tags: formData.tags,
+    });
 
       const createdId = created?.data?._id;
       if (!createdId) {
