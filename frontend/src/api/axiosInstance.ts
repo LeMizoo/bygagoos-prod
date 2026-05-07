@@ -5,9 +5,11 @@ import { useAuthStore } from "../stores/authStore";
 import authApi from "./auth.api";
 import dev from "../utils/devLogger";
 
-// ✅ La variable d'environnement doit être définie sur Vercel
-// VITE_API_URL = https://bygagoos-prod.onrender.com/api
+// 🔧 FORCER l'URL de Render (solution temporaire)
 const API_URL = "https://bygagoos-prod.onrender.com/api";
+
+// À terme, utilisez la variable d'environnement :
+// const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 dev.log(`🌐 API Client configuré avec URL: ${API_URL}`);
 
