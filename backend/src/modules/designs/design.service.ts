@@ -71,13 +71,8 @@ export class DesignService {
     }
   }
 
-  /**
-   * Récupère les designs publics (sans authentification)
-   * Gère les erreurs de connexion et les problèmes de transformation
-   */
   async findAllPublic(query: QueryDesignDto) {
     try {
-      // Vérifier la connexion MongoDB
       if (mongoose.connection.readyState !== 1) {
         logger.error('❌ MongoDB non connecté dans findAllPublic');
         throw new AppError('Base de données non disponible', HTTP_STATUS.INTERNAL_SERVER_ERROR);
@@ -117,7 +112,6 @@ export class DesignService {
 
       logger.info(`📦 [Public] ${designs.length} designs trouvés sur ${total}`);
 
-      // Transformation sécurisée des designs en DTO
       let dataDTO: any[] = [];
       try {
         dataDTO = designs.map(design => {
@@ -125,13 +119,11 @@ export class DesignService {
             return new DesignResponseDTO(design);
           } catch (dtoError) {
             logger.error(`❌ Erreur transformation DTO pour design ${design._id}:`, dtoError);
-            // Fallback : retourner l'objet brut sans DTO
             return design;
           }
         });
       } catch (mapError) {
         logger.error('❌ Erreur lors du mapping des DTO publics:', mapError);
-        // Fallback : envoyer les designs bruts
         dataDTO = designs;
       }
 
@@ -145,7 +137,6 @@ export class DesignService {
       };
     } catch (error) {
       logger.error('❌ Erreur dans findAllPublic designs:', error);
-      // Propager l'erreur avec un message clair
       if (error instanceof AppError) throw error;
       throw new AppError('Erreur lors de la récupération des designs publics', HTTP_STATUS.INTERNAL_SERVER_ERROR);
     }
@@ -242,6 +233,11 @@ export class DesignService {
         throw new AppError('ID de design invalide', HTTP_STATUS.BAD_REQUEST);
       }
 
+      // Vérifier que des fichiers sont fournis
+      if (!files || files.length === 0) {
+        throw new AppError('Aucun fichier fourni', HTTP_STATUS.BAD_REQUEST);
+      }
+
       const design = await Design.findOne({ _id: id });
       if (!design) {
         throw new AppError('Design non trouvé', HTTP_STATUS.NOT_FOUND);
@@ -254,10 +250,16 @@ export class DesignService {
 
       logger.info(`📁 Design trouvé: ${design.title}, ajout de ${files.length} fichier(s)`);
 
-      const uploadedFiles = await Promise.all(
-        files.map(async (file) => {
+      const uploadedFiles = [];
+      for (const file of files) {
+        try {
           logger.info(`📤 Upload de ${file.originalname} vers Cloudinary...`);
-          const result = await uploadToCloudinary(file.buffer, 'designs') as any;
+          // 🔧 Correction: s'assurer que le buffer existe
+          if (!file.buffer && !file.path) {
+            logger.error(`❌ Fichier sans buffer: ${file.originalname}`);
+            continue;
+          }
+          const result = await uploadToCloudinary(file.buffer || file.path, 'designs') as any;
           logger.info(`✅ Upload réussi: ${result.url}`);
 
           const fileEntry = {
@@ -268,9 +270,16 @@ export class DesignService {
             size: file.size,
             uploadedAt: new Date()
           };
-          return fileEntry;
-        })
-      );
+          uploadedFiles.push(fileEntry);
+        } catch (uploadError) {
+          logger.error(`❌ Erreur upload pour ${file.originalname}:`, uploadError);
+          // Continuer avec les autres fichiers
+        }
+      }
+
+      if (uploadedFiles.length === 0) {
+        throw new AppError('Aucun fichier n\'a pu être téléchargé', HTTP_STATUS.BAD_REQUEST);
+      }
 
       for (const fileEntry of uploadedFiles) {
         design.files.push(fileEntry as any);
@@ -294,32 +303,57 @@ export class DesignService {
     } catch (error) {
       if (error instanceof AppError) throw error;
       logger.error('Erreur dans addFiles design:', error);
-      throw new AppError('Erreur lors de l’ajout des fichiers', HTTP_STATUS.INTERNAL_SERVER_ERROR);
+      throw new AppError('Erreur lors de l’ajout des fichiers: ' + (error as Error).message, HTTP_STATUS.INTERNAL_SERVER_ERROR);
     }
   }
 
   async removeFile(id: string, userId: string, fileId: string) {
     try {
-      if (!Types.ObjectId.isValid(id) || !Types.ObjectId.isValid(fileId)) throw new AppError('ID invalide', HTTP_STATUS.BAD_REQUEST);
+      if (!Types.ObjectId.isValid(id) || !Types.ObjectId.isValid(fileId)) {
+        throw new AppError('ID invalide', HTTP_STATUS.BAD_REQUEST);
+      }
+      
       const design = await Design.findOne({ _id: id });
-      if (!design) throw new AppError('Design non trouvé', HTTP_STATUS.NOT_FOUND);
+      if (!design) {
+        throw new AppError('Design non trouvé', HTTP_STATUS.NOT_FOUND);
+      }
+      
       const file = design.files.find((f: any) => (f as any)._id?.toString() === fileId);
-      if (!file) throw new AppError('Fichier non trouvé', HTTP_STATUS.NOT_FOUND);
-      await deleteFromCloudinary(file.publicId);
+      if (!file) {
+        throw new AppError('Fichier non trouvé', HTTP_STATUS.NOT_FOUND);
+      }
+      
+      // 🔧 Essayer de supprimer de Cloudinary, mais ne pas échouer si le fichier n'existe pas
+      try {
+        if (file.publicId) {
+          await deleteFromCloudinary(file.publicId);
+          logger.info(`🗑️ Fichier Cloudinary supprimé: ${file.publicId}`);
+        }
+      } catch (cloudinaryError) {
+        logger.warn(`⚠️ Erreur suppression Cloudinary (ignorée): ${cloudinaryError}`);
+        // Continuer la suppression locale même si Cloudinary échoue
+      }
+      
       design.files = design.files.filter((f: any) => (f as any)._id?.toString() !== fileId);
-      if (design.thumbnail === file.url) design.thumbnail = design.files.length > 0 ? design.files[0]?.url : undefined;
+      
+      if (design.thumbnail === file.url) {
+        design.thumbnail = design.files.length > 0 ? design.files[0]?.url : undefined;
+      }
+      
       await design.save();
-      logger.info(`Fichier supprimé du design ${design.title}`);
+      logger.info(`✅ Fichier supprimé du design ${design.title}`);
+      
       const populatedDesign = await Design.findById(design._id)
         .populate('client', 'firstName lastName email')
         .populate('createdBy', 'firstName lastName email')
         .populate('assignedTo', 'firstName lastName email')
         .lean();
+      
       return new DesignResponseDTO(populatedDesign);
     } catch (error) {
       if (error instanceof AppError) throw error;
       logger.error('Erreur dans removeFile design:', error);
-      throw new AppError('Erreur lors de la suppression du fichier', HTTP_STATUS.INTERNAL_SERVER_ERROR);
+      throw new AppError('Erreur lors de la suppression du fichier: ' + (error as Error).message, HTTP_STATUS.INTERNAL_SERVER_ERROR);
     }
   }
 
