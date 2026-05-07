@@ -32,11 +32,15 @@ export const upload = multer({
   },
 });
 
-export const uploadMultiple = upload.array('images', 10);
+// ✅ CORRIGÉ : Accepter 'files' ET 'images' comme nom de champ
+export const uploadMultiple = upload.fields([
+  { name: 'files', maxCount: 10 },
+  { name: 'images', maxCount: 10 }
+]);
 
 // Gestion erreurs
 export const handleMulterError = (
-  err: any,
+  err: unknown,
   req: Request,
   res: Response,
   next: NextFunction
@@ -53,16 +57,20 @@ export const handleMulterError = (
   next(err);
 };
 
-// Middleware pour l'upload de plusieurs fichiers (compatible avec l'ancienne signature)
+// Middleware pour l'upload de plusieurs fichiers
 export const uploadMultipleFiles = (req: Request, res: Response, next: NextFunction) => {
-  uploadMultiple(req, res, (err: any) => {
+  uploadMultiple(req, res, (err: unknown) => {
     if (err) {
       return handleMulterError(err, req, res, next);
     }
-    // Assure que req.files est un tableau
-    if (req.files && !Array.isArray(req.files)) {
-      req.files = Object.values(req.files).flat();
+    // Fusionner les fichiers des deux champs en un seul tableau
+    const files: Express.Multer.File[] = [];
+    if (req.files) {
+      const filesObj = req.files as { [fieldname: string]: Express.Multer.File[] };
+      if (filesObj.files) files.push(...filesObj.files);
+      if (filesObj.images) files.push(...filesObj.images);
     }
+    req.files = files;
     next();
   });
 };
