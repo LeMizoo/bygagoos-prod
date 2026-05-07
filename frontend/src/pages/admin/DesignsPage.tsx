@@ -78,6 +78,12 @@ const normalizeStatus = (status?: string, isActive?: boolean): UiDesignStatus =>
   return isActive === false ? "inactive" : "active";
 };
 
+// 🔧 Correction : forcer HTTPS pour les images Cloudinary
+const fixImageUrl = (url?: string): string | undefined => {
+  if (!url) return undefined;
+  return url.replace(/^http:/, 'https:');
+};
+
 const normalizeDesign = (design: BackendDesign): DesignRow | null => {
   const id = design.id || design._id;
   if (!id) return null;
@@ -87,12 +93,16 @@ const normalizeDesign = (design: BackendDesign): DesignRow | null => {
   const priceValue = metadata.basePrice ?? design.basePrice ?? 0;
   const resolvedStatus = normalizeStatus(design.status, design.isActive);
 
+  // Récupérer l'URL de l'image et la convertir en HTTPS
+  const imageUrl = design.thumbnail || design.images?.[0] || design.files?.[0]?.url;
+  const thumbnail = fixImageUrl(imageUrl);
+
   return {
     id,
     title: design.title,
     category: backendTypeLabels[String(categoryValue).toUpperCase()] || String(categoryValue).replace(/_/g, " "),
     price: Number(priceValue) || 0,
-    thumbnail: design.thumbnail || design.images?.[0] || design.files?.[0]?.url,
+    thumbnail,
     tags: design.tags || [],
     status: resolvedStatus,
     isActive: design.isActive ?? resolvedStatus === "active",
@@ -117,8 +127,7 @@ export default function DesignsPage() {
       let designsData: BackendDesign[] = [];
       const data: any = response;
       
-      // ✅ CORRECTION : Structure réelle de l'API privée
-      // L'API retourne : { success: true, data: { designs: [...], total, page, limit, totalPages } }
+      // ✅ Structure correcte de l'API : response.data.designs
       if (data?.data?.designs && Array.isArray(data.data.designs)) {
         designsData = data.data.designs;
         dev.log(`📦 Designs chargés (data.data.designs): ${designsData.length}`);
