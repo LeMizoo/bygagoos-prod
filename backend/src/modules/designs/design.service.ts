@@ -21,6 +21,21 @@ type DesignFilter = {
 
 type SortOptions = { [key: string]: 1 | -1 };
 
+// Type pour le résultat d'upload Cloudinary
+interface CloudinaryUploadResult {
+  url: string;
+  public_id: string;
+}
+
+// Type pour les fichiers Multer
+interface MulterFile {
+  buffer?: Buffer;
+  path?: string;
+  originalname: string;
+  mimetype: string;
+  size: number;
+}
+
 export class DesignService {
   async findAll(userId: string, query: QueryDesignDto) {
     try {
@@ -81,7 +96,7 @@ export class DesignService {
       const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc', search, status, type, tags } = query;
       const skip = (page - 1) * limit;
 
-      const finalFilter: any = {};
+      const finalFilter: Record<string, unknown> = {};
       if (status) finalFilter.status = status as DesignStatus;
       if (type) finalFilter.type = type as DesignType;
       if (tags?.length) finalFilter.tags = { $in: tags };
@@ -112,20 +127,14 @@ export class DesignService {
 
       logger.info(`📦 [Public] ${designs.length} designs trouvés sur ${total}`);
 
-      let dataDTO: any[] = [];
-      try {
-        dataDTO = designs.map(design => {
-          try {
-            return new DesignResponseDTO(design);
-          } catch (dtoError) {
-            logger.error(`❌ Erreur transformation DTO pour design ${design._id}:`, dtoError);
-            return design;
-          }
-        });
-      } catch (mapError) {
-        logger.error('❌ Erreur lors du mapping des DTO publics:', mapError);
-        dataDTO = designs;
-      }
+      const dataDTO = designs.map(design => {
+        try {
+          return new DesignResponseDTO(design);
+        } catch (dtoError) {
+          logger.error(`❌ Erreur transformation DTO pour design ${design._id}:`, dtoError);
+          return design;
+        }
+      });
 
       const totalPages = Math.ceil(total / limit);
       return {
@@ -142,7 +151,7 @@ export class DesignService {
     }
   }
 
-  async findById(id: string, userId: string) {
+  async findById(id: string, _userId: string) {
     try {
       if (!Types.ObjectId.isValid(id)) {
         throw new AppError('ID de design invalide', HTTP_STATUS.BAD_REQUEST);
@@ -196,7 +205,7 @@ export class DesignService {
         const client = await Client.findOne({ _id: data.clientId, user: new Types.ObjectId(userId) });
         if (!client) throw new AppError('Client non trouvé', HTTP_STATUS.NOT_FOUND);
       }
-      const updateData: any = { ...data };
+      const updateData: Record<string, unknown> = { ...data };
       if (data.addTags || data.removeTags) {
         const design = await Design.findOne({ _id: id });
         if (!design) throw new AppError('Design non trouvé', HTTP_STATUS.NOT_FOUND);
@@ -227,13 +236,12 @@ export class DesignService {
     }
   }
 
-  async addFiles(id: string, userId: string, files: Express.Multer.File[]) {
+  async addFiles(id: string, userId: string, files: MulterFile[]) {
     try {
       if (!Types.ObjectId.isValid(id)) {
         throw new AppError('ID de design invalide', HTTP_STATUS.BAD_REQUEST);
       }
 
-      // Vérifier que des fichiers sont fournis
       if (!files || files.length === 0) {
         throw new AppError('Aucun fichier fourni', HTTP_STATUS.BAD_REQUEST);
       }
@@ -250,16 +258,33 @@ export class DesignService {
 
       logger.info(`📁 Design trouvé: ${design.title}, ajout de ${files.length} fichier(s)`);
 
-      const uploadedFiles = [];
+      const uploadedFiles: Array<{
+        url: string;
+        publicId: string;
+        filename: string;
+        mimetype: string;
+        size: number;
+        uploadedAt: Date;
+      }> = [];
+
       for (const file of files) {
         try {
           logger.info(`📤 Upload de ${file.originalname} vers Cloudinary...`);
-          // 🔧 Correction: s'assurer que le buffer existe
-          if (!file.buffer && !file.path) {
-            logger.error(`❌ Fichier sans buffer: ${file.originalname}`);
+          
+          // 🔧 Gestion du buffer ou du path
+          let uploadData: Buffer;
+          if (file.buffer) {
+            uploadData = file.buffer;
+          } else if (file.path) {
+            // Convertir le chemin en Buffer
+            const fs = await import('fs');
+            uploadData = fs.readFileSync(file.path);
+          } else {
+            logger.error(`❌ Fichier sans buffer ni path: ${file.originalname}`);
             continue;
           }
-          const result = await uploadToCloudinary(file.buffer || file.path, 'designs') as any;
+          
+          const result = await uploadToCloudinary(uploadData, 'designs') as unknown as CloudinaryUploadResult;
           logger.info(`✅ Upload réussi: ${result.url}`);
 
           const fileEntry = {
@@ -273,7 +298,6 @@ export class DesignService {
           uploadedFiles.push(fileEntry);
         } catch (uploadError) {
           logger.error(`❌ Erreur upload pour ${file.originalname}:`, uploadError);
-          // Continuer avec les autres fichiers
         }
       }
 
@@ -282,7 +306,7 @@ export class DesignService {
       }
 
       for (const fileEntry of uploadedFiles) {
-        design.files.push(fileEntry as any);
+        design.files.push(fileEntry as never);
       }
 
       if (!design.thumbnail && uploadedFiles.length > 0) {
@@ -307,7 +331,7 @@ export class DesignService {
     }
   }
 
-  async removeFile(id: string, userId: string, fileId: string) {
+  async removeFile(id: string, _userId: string, fileId: string) {
     try {
       if (!Types.ObjectId.isValid(id) || !Types.ObjectId.isValid(fileId)) {
         throw new AppError('ID invalide', HTTP_STATUS.BAD_REQUEST);
@@ -318,12 +342,11 @@ export class DesignService {
         throw new AppError('Design non trouvé', HTTP_STATUS.NOT_FOUND);
       }
       
-      const file = design.files.find((f: any) => (f as any)._id?.toString() === fileId);
+      const file = design.files.find((f: { _id?: { toString(): string } }) => f._id?.toString() === fileId);
       if (!file) {
         throw new AppError('Fichier non trouvé', HTTP_STATUS.NOT_FOUND);
       }
       
-      // 🔧 Essayer de supprimer de Cloudinary, mais ne pas échouer si le fichier n'existe pas
       try {
         if (file.publicId) {
           await deleteFromCloudinary(file.publicId);
@@ -331,13 +354,12 @@ export class DesignService {
         }
       } catch (cloudinaryError) {
         logger.warn(`⚠️ Erreur suppression Cloudinary (ignorée): ${cloudinaryError}`);
-        // Continuer la suppression locale même si Cloudinary échoue
       }
       
-      design.files = design.files.filter((f: any) => (f as any)._id?.toString() !== fileId);
+      design.files = design.files.filter((f: { _id?: { toString(): string } }) => f._id?.toString() !== fileId);
       
       if (design.thumbnail === file.url) {
-        design.thumbnail = design.files.length > 0 ? design.files[0]?.url : undefined;
+        design.thumbnail = design.files.length > 0 ? (design.files[0] as { url: string }).url : undefined;
       }
       
       await design.save();
@@ -357,7 +379,7 @@ export class DesignService {
     }
   }
 
-  async delete(id: string, userId: string) {
+  async delete(id: string, _userId: string) {
     try {
       if (!Types.ObjectId.isValid(id)) throw new AppError('ID de design invalide', HTTP_STATUS.BAD_REQUEST);
       const design = await Design.findOne({ _id: id });
@@ -372,7 +394,7 @@ export class DesignService {
     }
   }
 
-  async getStats(userId: string) {
+  async getStats(_userId: string) {
     try {
       const now = new Date();
       const [total, byStatus, byType, recent, overdue] = await Promise.all([
@@ -383,9 +405,9 @@ export class DesignService {
         Design.countDocuments({ isActive: true, status: { $nin: [DesignStatus.COMPLETED, DesignStatus.ARCHIVED] }, dueDate: { $lt: new Date() } })
       ]);
       const statusStats: Record<string, number> = {};
-      byStatus.forEach((item: any) => { statusStats[item._id] = item.count; });
+      byStatus.forEach((item: { _id: string; count: number }) => { statusStats[item._id] = item.count; });
       const typeStats: Record<string, number> = {};
-      byType.forEach((item: any) => { typeStats[item._id] = item.count; });
+      byType.forEach((item: { _id: string; count: number }) => { typeStats[item._id] = item.count; });
       return { total, byStatus: statusStats, byType: typeStats, recent, overdue };
     } catch (error) {
       logger.error('Erreur dans getStats designs:', error);
