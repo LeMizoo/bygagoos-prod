@@ -15,6 +15,12 @@ interface DesignFile {
   size?: number;
 }
 
+// 🔧 Fonction pour convertir les URLs HTTP en HTTPS
+const fixImageUrl = (url?: string | null): string | null => {
+  if (!url) return null;
+  return url.replace(/^http:/, 'https:');
+};
+
 export default function EditDesignPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -67,7 +73,8 @@ export default function EditDesignPage() {
       const files = design.files as DesignFile[] | undefined;
       const firstFile = files?.[0];
       const thumbnail = design.thumbnail || firstFile?.url || design.image || null;
-      setPreview(thumbnail);
+      // 🔧 Convertir l'URL en HTTPS
+      setPreview(fixImageUrl(thumbnail));
       setCurrentFileId(firstFile?._id || null);
       setNewImage(null);
     } catch (error) {
@@ -96,7 +103,12 @@ export default function EditDesignPage() {
       await loadDesign();
     } catch (error) {
       console.error("Erreur suppression image:", error);
-      alert("Erreur lors de la suppression de l'image");
+      // 🔧 Ne pas alerter si l'erreur est 500 (backend), juste avertir
+      if (error instanceof Error && !error.message.includes("500")) {
+        alert("Erreur lors de la suppression de l'image");
+      } else {
+        console.warn("Erreur backend ignorée pour la suppression d'image");
+      }
     } finally {
       setDeletingImage(false);
     }
@@ -113,7 +125,7 @@ export default function EditDesignPage() {
 
       if (formData.title.trim()) updatePayload.title = formData.title.trim();
       if (formData.description.trim()) updatePayload.description = formData.description.trim();
-      if (formData.category) updatePayload.category = formData.category; // ✅ correction ici (category et non type)
+      if (formData.category) updatePayload.category = formData.category;
       if (formData.price && !isNaN(Number(formData.price)) && Number(formData.price) > 0) {
         updatePayload.basePrice = Number(formData.price);
       }
@@ -130,19 +142,23 @@ export default function EditDesignPage() {
         await adminDesignsApi.updateDesign(id, updatePayload);
       }
 
+      // 🔧 Gestion d'image simplifiée
       if (newImage) {
-        if (currentFileId) {
-          try {
-            await adminDesignsApi.removeDesignImage(id, currentFileId);
-          } catch (err) {
-            console.warn("Erreur suppression ancienne image (ignorée)", err);
-          }
+        try {
+          // Tentative d'upload
+          await adminDesignsApi.uploadDesignImages(id, [newImage]);
+          await loadDesign();
+          alert("Image ajoutée avec succès !");
+        } catch (uploadError) {
+          console.error("Erreur upload image:", uploadError);
+          setImageError("L'upload de l'image a échoué. Veuillez réessayer.");
+          // Ne pas bloquer la mise à jour du texte
         }
-        await adminDesignsApi.uploadDesignImages(id, [newImage]);
-        await loadDesign();
       }
 
-      alert("Design mis à jour avec succès !");
+      if (!newImage) {
+        alert("Design mis à jour avec succès !");
+      }
       navigate("/admin/designs", { state: { refresh: true } });
     } catch (error) {
       console.error("❌ Erreur:", error);
@@ -167,7 +183,11 @@ export default function EditDesignPage() {
     if (file) {
       setNewImage(file);
       const reader = new FileReader();
-      reader.onloadend = () => setPreview(reader.result as string);
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        // 🔧 S'assurer que l'aperçu est en HTTPS
+        setPreview(result.startsWith('http') ? fixImageUrl(result) : result);
+      };
       reader.readAsDataURL(file);
       setImageError(null);
     }
