@@ -122,20 +122,21 @@ export const adminDesignsApi = {
     return response.data;
   },
 
+  // ✅ CORRIGÉ : utiliser 'files' au lieu de 'images' pour correspondre au backend
   uploadDesignImages: async (
     id: string,
     images: File[],
   ): Promise<apiResponse<Design>> => {
     dev.log(`🌐 Designs API: POST /api/designs/${id}/files`);
     const formData = new FormData();
-    images.forEach((file) => formData.append("images", file));
+    // 🔧 Correction : le backend utilise 'files' (uploadMultiple de multer)
+    images.forEach((file) => formData.append("files", file));
     const response = await axiosInstance.post(`/designs/${id}/files`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
     return response.data;
   },
 
-  // ✅ Nouvelle méthode : supprimer une image d'un design
   removeDesignImage: async (designId: string, fileId: string): Promise<apiResponse<Design>> => {
     dev.log(`🌐 Designs API: DELETE /api/designs/${designId}/files/${fileId}`);
     const response = await axiosInstance.delete(`/designs/${designId}/files/${fileId}`);
