@@ -86,6 +86,7 @@ export interface Design {
 export interface CreateDesignDto {
   title: string;
   description?: string;
+  type?: string;                     // ✅ AJOUT : champ obligatoire pour le backend
   category: DesignCategory | string;
   style?: DesignStyle;
   colors?: string[];
