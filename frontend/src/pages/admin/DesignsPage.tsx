@@ -117,12 +117,24 @@ export default function DesignsPage() {
       let designsData: BackendDesign[] = [];
       const data: any = response;
       
-      if (Array.isArray(data)) {
+      // ✅ CORRECTION : Structure réelle de l'API privée
+      // L'API retourne : { success: true, data: { designs: [...], total, page, limit, totalPages } }
+      if (data?.data?.designs && Array.isArray(data.data.designs)) {
+        designsData = data.data.designs;
+        dev.log(`📦 Designs chargés (data.data.designs): ${designsData.length}`);
+      } 
+      // Fallback pour d'autres structures possibles
+      else if (Array.isArray(data)) {
         designsData = data;
-      } else if (data?.data && Array.isArray(data.data)) {
+        dev.log(`📦 Designs chargés (Array): ${designsData.length}`);
+      } 
+      else if (data?.data && Array.isArray(data.data)) {
         designsData = data.data;
-      } else if (data?.data?.data && Array.isArray(data.data.data)) {
-        designsData = data.data.data;
+        dev.log(`📦 Designs chargés (data.data): ${designsData.length}`);
+      } 
+      else if (data?.designs && Array.isArray(data.designs)) {
+        designsData = data.designs;
+        dev.log(`📦 Designs chargés (data.designs): ${designsData.length}`);
       }
       
       setDesigns(
