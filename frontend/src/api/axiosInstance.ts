@@ -5,7 +5,11 @@ import { useAuthStore } from "../stores/authStore";
 import authApi from "./auth.api";
 import dev from "../utils/devLogger";
 
+// ✅ La variable d'environnement doit être définie sur Vercel
+// VITE_API_URL = https://bygagoos-prod.onrender.com/api
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
+dev.log(`🌐 API Client configuré avec URL: ${API_URL}`);
 
 const axiosInstance = axios.create({
   baseURL: API_URL,
@@ -36,7 +40,7 @@ axiosInstance.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    // ✅ CORRIGÉ: Éviter les doubles /api
+    // ✅ Supprimer le /api en trop si présent (quand on utilise l'URL complète)
     if (config.url?.startsWith('/api/')) {
       config.url = config.url.substring(4);
     }
