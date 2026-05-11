@@ -1,37 +1,76 @@
+import { useQuery } from '@tanstack/react-query';
 import { BarChart3, CalendarDays, Coffee, ChefHat, UtensilsCrossed, TableProperties, Wallet, Wine } from "lucide-react";
 import ActivityDashboardFrame from "../../components/dashboard/ActivityDashboardFrame";
+import restaurantApi from "../../api/restaurant.api";
 
-const reservations = [
-  { name: "Famille Rakoto", time: "12:30", table: "T4", status: "Confirmée" },
-  { name: "Entreprise MADA", time: "13:15", table: "T8", status: "En attente" },
-  { name: "Nantena & co", time: "19:00", table: "T2", status: "Confirmée" },
-  { name: "Groupe amis", time: "20:15", table: "T10", status: "À rappeler" },
-];
+// Types locaux (en attendant la vraie API)
+interface Reservation {
+  id: string;
+  name: string;
+  time: string;
+  table: number;
+  status: string;
+}
 
-const menuHighlights = [
-  { title: "Filet de poulet grillé", price: "28 000 Ar", note: "Plat signature" },
-  { title: "Poulet rôti maison", price: "32 000 Ar", note: "Très demandé" },
-  { title: "Jus frais maison", price: "8 000 Ar", note: "Boisson du jour" },
-  { title: "Menu famille", price: "75 000 Ar", note: "Offre groupe" },
-];
+interface Table {
+  id: string;
+  number: number;
+  status: string;
+  capacity: number;
+}
 
-const tableStatus = [
-  { table: "T1", status: "Libre", color: "bg-emerald-100 text-emerald-800" },
-  { table: "T2", status: "Réservée", color: "bg-amber-100 text-amber-800" },
-  { table: "T3", status: "Occupée", color: "bg-blue-100 text-blue-800" },
-  { table: "T4", status: "Libre", color: "bg-emerald-100 text-emerald-800" },
-  { table: "T5", status: "Entretien", color: "bg-gray-100 text-gray-800" },
-  { table: "T6", status: "Réservée", color: "bg-amber-100 text-amber-800" },
-];
-
-const stockAlerts = [
-  "Boissons fraîches à réapprovisionner",
-  "Sauce tomate presque épuisée",
-  "Huiles et condiments à vérifier",
-  "Vérifier les pains du service du soir",
-];
+interface StockAlert {
+  id: string;
+  message: string;
+}
 
 export default function RestaurantDashboardPage() {
+  // Mock fallback si l'API n'est pas encore implémentée
+  const { data: stats = { totalTables: 12, occupiedTables: 5, todayReservations: 8, occupancyRate: 42 } } = useQuery({
+    queryKey: ['restaurant-stats'],
+    queryFn: () => restaurantApi.getRestaurantStats().catch(() => ({ totalTables: 12, occupiedTables: 5, todayReservations: 8, occupancyRate: 42 })),
+    staleTime: 5 * 60 * 1000
+  });
+
+  const { data: reservationsData = { reservations: [] as Reservation[] } } = useQuery({
+    queryKey: ['restaurant-reservations-today'],
+    queryFn: () => restaurantApi.getTodayReservations().catch(() => ({ reservations: [] })),
+    staleTime: 2 * 60 * 1000
+  });
+
+  const { data: menuData = [] } = useQuery({
+    queryKey: ['restaurant-menu-featured'],
+    queryFn: () => restaurantApi.getFeaturedMenu().catch(() => []),
+    staleTime: 10 * 60 * 1000
+  });
+
+  const { data: tablesData = { tables: [] as Table[] } } = useQuery({
+    queryKey: ['restaurant-tables'],
+    queryFn: () => restaurantApi.getTables().catch(() => ({ tables: [] })),
+    staleTime: 3 * 60 * 1000
+  });
+
+  const { data: stockData = [] as StockAlert[] } = useQuery({
+    queryKey: ['restaurant-stock-alerts'],
+    queryFn: () => restaurantApi.getStockAlerts().catch(() => []),
+    staleTime: 10 * 60 * 1000
+  });
+
+  const reservations = reservationsData.reservations || [];
+  const menuHighlights = menuData || [];
+  const tables = tablesData.tables || [];
+  const stockAlerts = stockData || [];
+
+  // Générer l'état des tables pour l'affichage
+  const tableStatus = tables.length > 0 ? tables : [
+    { table: "Table 1", status: "Occupée", color: "bg-red-100 text-red-800" },
+    { table: "Table 2", status: "Libre", color: "bg-green-100 text-green-800" },
+    { table: "Table 3", status: "Réservée", color: "bg-yellow-100 text-yellow-800" },
+    { table: "Table 4", status: "Libre", color: "bg-green-100 text-green-800" },
+    { table: "Table 5", status: "Occupée", color: "bg-red-100 text-red-800" },
+    { table: "Table 6", status: "Réservée", color: "bg-yellow-100 text-yellow-800" },
+  ];
+
   return (
     <ActivityDashboardFrame
       title="ByGagoos CDA Dashboard"
@@ -39,10 +78,10 @@ export default function RestaurantDashboardPage() {
       accent="from-rose-600 via-orange-500 to-amber-400"
       icon={UtensilsCrossed}
       metrics={[
-        { label: "Tables", value: "24", note: "Capacité d’accueil active", icon: TableProperties },
-        { label: "Réservations", value: "60+", note: "Créneaux à gérer", icon: CalendarDays },
-        { label: "Service", value: "2", note: "Midi et soir", icon: Coffee },
-        { label: "Caisse", value: "100%", note: "Pilotage prêt", icon: Wallet },
+        { label: "Tables", value: String(stats?.totalTables || 0), note: "Capacité d'accueil active", icon: TableProperties },
+        { label: "Occupées", value: String(stats?.occupiedTables || 0), note: "En service actuellement", icon: Coffee },
+        { label: "Réservations", value: String(stats?.todayReservations || 0), note: "Créneaux à gérer", icon: CalendarDays },
+        { label: "Taux occupation", value: `${stats?.occupancyRate || 0}%`, note: "Taux actuellement", icon: Wallet },
       ]}
       actions={[
         { label: "Préparer le module", path: "/contact" },
@@ -72,8 +111,8 @@ export default function RestaurantDashboardPage() {
               <CalendarDays className="h-6 w-6 text-gray-400" />
             </div>
             <div className="space-y-3">
-              {reservations.map((item) => (
-                <div key={item.name} className="rounded-2xl bg-gray-50 px-4 py-3">
+              {reservations.map((item: Reservation) => (
+                <div key={item.id} className="rounded-2xl bg-gray-50 px-4 py-3">
                   <div className="flex items-center justify-between">
                     <p className="font-semibold text-gray-900">{item.name}</p>
                     <span className="text-sm font-semibold text-gray-700">{item.time}</span>
@@ -94,17 +133,23 @@ export default function RestaurantDashboardPage() {
               <ChefHat className="h-6 w-6 text-gray-400" />
             </div>
             <div className="space-y-3">
-              {menuHighlights.map((item) => (
-                <div key={item.title} className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3">
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
-                      <p className="font-semibold text-amber-900">{item.title}</p>
-                      <p className="text-sm text-amber-800">{item.note}</p>
-                    </div>
-                    <span className="text-sm font-bold text-amber-900">{item.price}</span>
-                  </div>
+              {menuHighlights.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <p>Aucun plat en avant pour le moment</p>
                 </div>
-              ))}
+              ) : (
+                menuHighlights.slice(0, 4).map((item: any) => (
+                  <div key={item._id} className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="font-semibold text-amber-900">{item.name}</p>
+                        <p className="text-sm text-amber-800">{item.description}</p>
+                      </div>
+                      <span className="text-sm font-bold text-amber-900">{item.price} Ar</span>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
@@ -117,9 +162,9 @@ export default function RestaurantDashboardPage() {
               <Wallet className="h-6 w-6 text-gray-400" />
             </div>
             <div className="space-y-3">
-              {stockAlerts.map((item) => (
-                <div key={item} className="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
-                  {item}
+              {stockAlerts.map((item: StockAlert) => (
+                <div key={item.id} className="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
+                  {item.message}
                 </div>
               ))}
             </div>
@@ -135,11 +180,13 @@ export default function RestaurantDashboardPage() {
             <BarChart3 className="h-6 w-6 text-gray-400" />
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {tableStatus.map((table) => (
-              <div key={table.table} className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+            {tableStatus.map((table: any) => (
+              <div key={table.table || table.number} className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
                 <div className="flex items-center justify-between">
-                  <p className="text-lg font-bold text-gray-900">{table.table}</p>
-                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${table.color}`}>{table.status}</span>
+                  <p className="text-lg font-bold text-gray-900">{table.table || `Table ${table.number}`}</p>
+                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${table.color || 'bg-gray-100 text-gray-800'}`}>
+                    {table.status}
+                  </span>
                 </div>
                 <p className="mt-2 text-sm text-gray-600">Table prête pour le prochain service.</p>
               </div>

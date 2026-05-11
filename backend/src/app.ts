@@ -18,6 +18,7 @@ import orderRoutes from './modules/orders/order.routes';
 import dashboardRoutes from './modules/dashboard/dashboard.routes';
 import uploadRoutes from './modules/upload/upload.routes';
 import taxiRoutes from './modules/taxi/taxi.routes';
+import restaurantRoutes from './modules/restaurant/restaurant.routes';
 // Nouvelle route pour les formulaires dynamiques
 import formRoutes from './modules/forms/form.routes';
 // Route pour les paramètres et templates
@@ -153,6 +154,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/taxi', taxiRoutes);
+app.use('/api/restaurant', restaurantRoutes);
 // Enregistrement du nouveau module
 app.use('/api/forms', formRoutes);
 // Routes des paramètres et templates modifiables

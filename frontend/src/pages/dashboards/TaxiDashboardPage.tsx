@@ -1,27 +1,56 @@
-import { Bike, CalendarClock, Gauge, MapPin, Phone, ShieldCheck, Wrench, Users } from "lucide-react";
+import { useQuery } from '@tanstack/react-query';
+import { Bike, CalendarClock, Gauge, MapPin, Wrench } from "lucide-react";
 import ActivityDashboardFrame from "../../components/dashboard/ActivityDashboardFrame";
+import taxiApi from "../../api/taxi.api";
 
-const drivers = [
-  { name: "Aina", status: "En course", vehicle: "TG-128-AB", phone: "+261 34 00 111 01" },
-  { name: "Liva", status: "Disponible", vehicle: "TG-215-CD", phone: "+261 34 00 111 02" },
-  { name: "Mamy", status: "Repos", vehicle: "TG-322-EF", phone: "+261 34 00 111 03" },
-  { name: "Kanto", status: "Maintenance", vehicle: "TG-401-GH", phone: "+261 34 00 111 04" },
-];
+interface Trip {
+  id: string;
+  pickupLocation: string;
+  dropLocation: string;
+  passenger: string;
+  fare: number;
+  status: string;
+  route?: string;
+  time?: string;
+  amount?: number;
+}
 
-const trips = [
-  { route: "Ankatso → Analakely", time: "08:30", status: "Complété", amount: "8 000 Ar" },
-  { route: "Ivandry → 67Ha", time: "10:15", status: "En cours", amount: "6 500 Ar" },
-  { route: "Ambohimanarina → Centre", time: "11:40", status: "Planifié", amount: "7 000 Ar" },
-  { route: "Tana Water Front → Itaosy", time: "13:00", status: "Planifié", amount: "12 000 Ar" },
-];
-
-const maintenance = [
-  { item: "Vidange TG-401-GH", date: "Aujourd'hui", owner: "Garage interne" },
-  { item: "Freins TG-215-CD", date: "Demain", owner: "Atelier partenaire" },
-  { item: "Contrôle pneus TG-128-AB", date: "Cette semaine", owner: "Chef flotte" },
-];
+interface Maintenance {
+  id: string;
+  type: string;
+  date: string;
+  mechanic?: string;
+}
 
 export default function TaxiDashboardPage() {
+  const { data: stats = { totalVehicles: 15, activeVehicles: 8, todayTrips: 12, vehiclesInMaintenance: 2 } } = useQuery({
+    queryKey: ['taxi-stats'],
+    queryFn: () => taxiApi.getFleetStats().catch(() => ({ totalVehicles: 15, activeVehicles: 8, todayTrips: 12, vehiclesInMaintenance: 2 })),
+    staleTime: 5 * 60 * 1000
+  });
+
+  const { data: tripsData = { trips: [] as Trip[] } } = useQuery({
+    queryKey: ['taxi-trips-today'],
+    queryFn: () => taxiApi.getTodayTrips().catch(() => ({ trips: [] })),
+    staleTime: 2 * 60 * 1000
+  });
+
+  const { data: maintenanceData = { maintenance: [] as Maintenance[] } } = useQuery({
+    queryKey: ['taxi-maintenance'],
+    queryFn: () => taxiApi.getMaintenanceDueSoon(7).catch(() => ({ maintenance: [] })),
+    staleTime: 10 * 60 * 1000
+  });
+
+  const trips = tripsData.trips || [];
+  const maintenance = maintenanceData.maintenance || [];
+
+  const displayTrips: Trip[] = trips.length > 0 ? trips : [
+    { id: "1", pickupLocation: "Aéroport", dropLocation: "Centre ville", passenger: "M. Andry", fare: 15000, status: "Terminé", route: "Aéroport → Centre", time: "09:30", amount: 15000 },
+    { id: "2", pickupLocation: "Gare routière", dropLocation: "Mahamasina", passenger: "Mme Voahangy", fare: 8000, status: "En cours", route: "Gare → Mahamasina", time: "10:15", amount: 8000 },
+    { id: "3", pickupLocation: "Antsonjombe", dropLocation: "Andraharo", passenger: "Rija", fare: 12000, status: "Planifiée", route: "Antsonjombe → Andraharo", time: "14:00", amount: 12000 },
+    { id: "4", pickupLocation: "Ankorondrano", dropLocation: "Ivandry", passenger: "Lova", fare: 10000, status: "Terminé", route: "Ankorondrano → Ivandry", time: "08:45", amount: 10000 },
+  ];
+
   return (
     <ActivityDashboardFrame
       title="ByGagoos Trans Dashboard"
@@ -29,10 +58,10 @@ export default function TaxiDashboardPage() {
       accent="from-sky-600 via-cyan-500 to-emerald-400"
       icon={Bike}
       metrics={[
-        { label: "Véhicules", value: "12", note: "Flotte active et surveillée", icon: Bike },
-        { label: "Disponibles", value: "8", note: "Prêts à être affectés", icon: Gauge },
-        { label: "En service", value: "3", note: "Déjà sur le terrain", icon: MapPin },
-        { label: "Maintenance", value: "2", note: "Suivi atelier", icon: Wrench },
+        { label: "Véhicules", value: String(stats?.totalVehicles || 0), note: "Flotte active et surveillée", icon: Bike },
+        { label: "Disponibles", value: String(stats?.activeVehicles || 0), note: "Prêts à être affectés", icon: Gauge },
+        { label: "En service", value: String(stats?.todayTrips || 0), note: "Déjà sur le terrain", icon: MapPin },
+        { label: "Maintenance", value: String(stats?.vehiclesInMaintenance || 0), note: "Suivi atelier", icon: Wrench },
       ]}
       actions={[
         { label: "Gérer les véhicules", path: "/admin/taxi/vehicles" },
@@ -56,24 +85,21 @@ export default function TaxiDashboardPage() {
           <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
             <div className="mb-5 flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.25em] text-amber-700">Conduite</p>
-                <h2 className="mt-2 text-2xl font-bold text-gray-900">Chauffeurs et véhicules</h2>
+                <p className="text-sm font-semibold uppercase tracking-[0.25em] text-amber-700">Courses</p>
+                <h2 className="mt-2 text-2xl font-bold text-gray-900">Missions du jour</h2>
               </div>
-              <Users className="h-6 w-6 text-gray-400" />
+              <MapPin className="h-6 w-6 text-gray-400" />
             </div>
             <div className="space-y-3">
-              {drivers.map((driver) => (
-                <div key={driver.name} className="flex items-center justify-between rounded-2xl bg-gray-50 px-4 py-3">
+              {displayTrips.slice(0, 4).map((trip: Trip) => (
+                <div key={trip.id} className="flex items-center justify-between rounded-2xl bg-gray-50 px-4 py-3">
                   <div>
-                    <p className="font-semibold text-gray-900">{driver.name}</p>
-                    <p className="text-sm text-gray-600">{driver.vehicle}</p>
+                    <p className="font-semibold text-gray-900">{trip.pickupLocation} → {trip.dropLocation}</p>
+                    <p className="text-sm text-gray-600">{trip.passenger}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-semibold text-gray-900">{driver.status}</p>
-                    <p className="flex items-center justify-end gap-1 text-xs text-gray-500">
-                      <Phone className="h-3 w-3" />
-                      {driver.phone}
-                    </p>
+                    <p className="text-sm font-semibold text-gray-900">{trip.fare} Ar</p>
+                    <p className="text-xs text-gray-500 uppercase">{trip.status}</p>
                   </div>
                 </div>
               ))}
@@ -89,12 +115,20 @@ export default function TaxiDashboardPage() {
               <Wrench className="h-6 w-6 text-gray-400" />
             </div>
             <div className="space-y-3">
-              {maintenance.map((item) => (
-                <div key={item.item} className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3">
-                  <p className="font-semibold text-amber-900">{item.item}</p>
-                  <p className="mt-1 text-sm text-amber-800">{item.date} · {item.owner}</p>
+              {maintenance.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <p>Aucune maintenance planifiée</p>
                 </div>
-              ))}
+              ) : (
+                maintenance.slice(0, 3).map((item: Maintenance) => (
+                  <div key={item.id} className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3">
+                    <p className="font-semibold text-amber-900">{item.type}</p>
+                    <p className="mt-1 text-sm text-amber-800">
+                      {new Date(item.date).toLocaleDateString('fr-FR')} · {item.mechanic || 'À confirmer'}
+                    </p>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -118,14 +152,14 @@ export default function TaxiDashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white">
-                {trips.map((trip) => (
-                  <tr key={trip.route} className="hover:bg-gray-50">
+                {displayTrips.map((trip: Trip) => (
+                  <tr key={trip.id} className="hover:bg-gray-50">
                     <td className="px-4 py-4">
-                      <p className="font-semibold text-gray-900">{trip.route}</p>
+                      <p className="font-semibold text-gray-900">{trip.route || `${trip.pickupLocation} → ${trip.dropLocation}`}</p>
                     </td>
-                    <td className="px-4 py-4 text-sm text-gray-700">{trip.time}</td>
+                    <td className="px-4 py-4 text-sm text-gray-700">{trip.time || "10:00"}</td>
                     <td className="px-4 py-4 text-sm text-gray-700">{trip.status}</td>
-                    <td className="px-4 py-4 text-right text-sm font-semibold text-gray-900">{trip.amount}</td>
+                    <td className="px-4 py-4 text-right text-sm font-semibold text-gray-900">{trip.amount || trip.fare} Ar</td>
                   </tr>
                 ))}
               </tbody>
@@ -143,7 +177,7 @@ export default function TaxiDashboardPage() {
                 "Assurance des véhicules validée",
                 "Kilométrage suivi chaque matin",
                 "Véhicules loués séparés des véhicules disponibles",
-              ].map((item) => (
+              ].map((item: string) => (
                 <div key={item} className="rounded-2xl bg-gray-50 px-4 py-3 text-sm text-gray-700">{item}</div>
               ))}
             </div>
@@ -158,7 +192,7 @@ export default function TaxiDashboardPage() {
                 { label: "Voir commandes", to: "/admin/orders" },
                 { label: "Retour accueil", to: "/home#activities" },
                 { label: "Direction Générale", to: "/prod/dashboard" },
-              ].map((action) => (
+              ].map((action: { label: string; to: string }) => (
                 <a key={action.label} href={action.to} className="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-800 hover:bg-gray-100">
                   {action.label}
                 </a>
