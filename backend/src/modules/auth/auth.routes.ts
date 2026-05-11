@@ -4,6 +4,9 @@ import { Router } from 'express';
 import { 
   register, 
   login, 
+  googleStart,
+  googleCallback,
+  googleLogin,
   refreshToken, 
   logout, 
   getMe,
@@ -16,6 +19,7 @@ import { validate } from '../../middlewares/validate.middleware';
 import {
   registerSchema,
   loginSchema,
+  googleLoginSchema,
   refreshTokenSchema,
   updateProfileSchema,
   changePasswordSchemaBase,
@@ -26,6 +30,9 @@ const router = Router();
 // --- ROUTES PUBLIQUES ---
 router.post('/register', authLimiter, validate(registerSchema), register);
 router.post('/login', authLimiter, validate(loginSchema), login);
+router.get('/google', googleStart);
+router.get('/google/callback', googleCallback);
+router.post('/google', authLimiter, validate(googleLoginSchema), googleLogin);
 router.post('/refresh-token', validate(refreshTokenSchema), refreshToken);
 
 /** * On place le logout ICI (avant protect). 

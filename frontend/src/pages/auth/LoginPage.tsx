@@ -1,8 +1,9 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../stores/authStore";
 import { Mail, Lock, AlertCircle, Eye, EyeOff } from "lucide-react";
 import dev from '../../utils/devLogger';
+import { API_URL } from "../../api";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -16,6 +17,26 @@ export default function LoginPage() {
 
   const { login } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const googleError = params.get("google_error");
+
+    if (!googleError) return;
+
+    try {
+      const normalized = googleError.replace(/-/g, "+").replace(/_/g, "/");
+      const padded = normalized + "=".repeat((4 - (normalized.length % 4)) % 4);
+      const binary = atob(padded);
+      const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+      const json = new TextDecoder().decode(bytes);
+      const parsed = JSON.parse(json) as { error?: string };
+      setSubmitError(parsed.error || "Connexion Google impossible");
+    } catch {
+      setSubmitError("Connexion Google impossible");
+    }
+  }, [location.search]);
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {};
@@ -61,6 +82,10 @@ export default function LoginPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleGoogleSignIn = () => {
+    window.location.href = `${API_URL}/auth/google`;
   };
 
   return (
@@ -201,9 +226,11 @@ export default function LoginPage() {
 
             {/* Google */}
             <button
+              type="button"
               title="Se connecter avec Google"
               aria-label="Se connecter avec Google"
               className="p-3 rounded-full border border-gray-300 bg-white hover:bg-gray-50 transition-colors"
+              onClick={handleGoogleSignIn}
             >
               <svg width="24" height="24" viewBox="0 0 24 24">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>

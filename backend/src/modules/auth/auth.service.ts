@@ -7,13 +7,27 @@ import bcrypt from 'bcrypt';
 import { AppError } from '../../core/utils/errors/AppError';
 import { HTTP_STATUS } from '../../core/constants/httpStatus';
 import logger from '../../core/utils/logger';
-import { RegisterDto, LoginDto, UpdateProfileDto } from './dto';
+import { OAuth2Client } from 'google-auth-library';
+import { RegisterDto, LoginDto, GoogleLoginDto, UpdateProfileDto } from './dto';
 import { env } from '../../config/env';
 import { Document } from 'mongoose';
 
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
 
 const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const googleClientId = env.GOOGLE_CLIENT_ID || env.GMAIL_CLIENT_ID || '';
+const googleClientSecret = env.GMAIL_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET || '';
+const googleRedirectUri = env.GOOGLE_REDIRECT_URI || env.GMAIL_REDIRECT_URI || '';
+
+const createGoogleOAuthClient = () => {
+  if (!googleClientId) return null;
+
+  return new OAuth2Client(
+    googleClientId,
+    googleClientSecret || undefined,
+    googleRedirectUri || undefined
+  );
+};
 
 export class AuthService {
   /**
@@ -162,6 +176,110 @@ export class AuthService {
     console.log('🎫 Tokens générés avec succès');
     console.log('✅ Login réussi pour:', user.email);
     
+    return {
+      user: this.formatUserResponse(user),
+      accessToken,
+      refreshToken,
+    };
+  }
+
+  async googleLogin(payload: GoogleLoginDto) {
+    const googleOAuthClient = createGoogleOAuthClient();
+    if (!googleOAuthClient || !googleClientId) {
+      throw new AppError('Connexion Google non configurée côté serveur', HTTP_STATUS.SERVICE_UNAVAILABLE);
+    }
+
+    const ticket = await googleOAuthClient.verifyIdToken({
+      idToken: payload.credential,
+      audience: googleClientId,
+    });
+
+    const googleUser = ticket.getPayload();
+    const email = googleUser?.email?.trim().toLowerCase();
+    if (!email) {
+      throw new AppError('Compte Google invalide', HTTP_STATUS.UNAUTHORIZED);
+    }
+
+    if (!googleUser?.email_verified) {
+      throw new AppError('Email Google non vérifié', HTTP_STATUS.UNAUTHORIZED);
+    }
+
+    const user = await this.findUserByEmail(email);
+    if (!user) {
+      if (email === env.GOOGLE_SUPER_ADMIN_EMAIL.toLowerCase()) {
+        throw new AppError(
+          'Compte super admin introuvable. Veuillez vérifier le compte existant ou utiliser le login classique.',
+          HTTP_STATUS.NOT_FOUND
+        );
+      }
+
+      throw new AppError('Aucun compte ByGagoos associé à cet email Google', HTTP_STATUS.UNAUTHORIZED);
+    }
+
+    if (!user.isActive) {
+      throw new AppError('Compte désactivé. Contactez l\'administrateur.', HTTP_STATUS.FORBIDDEN);
+    }
+
+    user.lastLogin = new Date();
+    await user.save();
+
+    const accessToken = generateAccessToken(user.id, user.email, user.role);
+    const refreshToken = RefreshTokenService.generateToken();
+    await RefreshTokenService.storeToken(user.id, refreshToken);
+
+    logger.info(`✅ Connexion Google: ${user.email}`);
+
+    return {
+      user: this.formatUserResponse(user),
+      accessToken,
+      refreshToken,
+    };
+  }
+
+  async googleCallback(code: string) {
+    const googleOAuthClient = createGoogleOAuthClient();
+    if (!googleOAuthClient || !googleClientId) {
+      throw new AppError('Connexion Google non configurée côté serveur', HTTP_STATUS.SERVICE_UNAVAILABLE);
+    }
+
+    const { tokens } = await googleOAuthClient.getToken(code);
+    if (!tokens.id_token) {
+      throw new AppError('Jeton Google invalide', HTTP_STATUS.UNAUTHORIZED);
+    }
+
+    const ticket = await googleOAuthClient.verifyIdToken({
+      idToken: tokens.id_token,
+      audience: googleClientId,
+    });
+
+    const googleUser = ticket.getPayload();
+    const email = googleUser?.email?.trim().toLowerCase();
+    if (!email) {
+      throw new AppError('Compte Google invalide', HTTP_STATUS.UNAUTHORIZED);
+    }
+
+    if (!googleUser?.email_verified) {
+      throw new AppError('Email Google non vérifié', HTTP_STATUS.UNAUTHORIZED);
+    }
+
+    const user = await this.findUserByEmail(email);
+    if (!user) {
+      throw new AppError('Aucun compte ByGagoos associé à cet email Google', HTTP_STATUS.UNAUTHORIZED);
+    }
+
+    if (!user.isActive) {
+      throw new AppError('Compte désactivé. Contactez l\'administrateur.', HTTP_STATUS.FORBIDDEN);
+    }
+
+    user.lastLogin = new Date();
+    await user.save();
+
+    const accessToken = generateAccessToken(user.id, user.email, user.role);
+    const refreshToken = RefreshTokenService.generateToken();
+    await RefreshTokenService.storeToken(user.id, refreshToken);
+
+    logger.info(`✅ Connexion Google OAuth: ${user.email}`);
+
     return {
       user: this.formatUserResponse(user),
       accessToken,

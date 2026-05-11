@@ -18,6 +18,10 @@ export const loginSchema = z.object({
   password: z.string().min(1, 'Mot de passe requis'),
 });
 
+export const googleLoginSchema = z.object({
+  credential: z.string().min(1, 'Credential Google requis'),
+});
+
 // Schéma de validation pour le refresh token
 export const refreshTokenSchema = z.object({
   refreshToken: z.string().min(1, 'Refresh token requis'),
@@ -62,6 +66,7 @@ export const changePasswordSchema = changePasswordSchemaBase.refine(
 // Types inférés des schémas
 export type RegisterDto = z.infer<typeof registerSchema>;
 export type LoginDto = z.infer<typeof loginSchema>;
+export type GoogleLoginDto = z.infer<typeof googleLoginSchema>;
 export type RefreshTokenDto = z.infer<typeof refreshTokenSchema>;
 export type ForgotPasswordDto = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordDto = z.infer<typeof resetPasswordSchema>;
@@ -87,6 +92,12 @@ export interface AuthResponse {
 export interface TokenResponse {
   accessToken: string;
   refreshToken?: string;
+}
+
+export interface GoogleAuthConfigResponse {
+  clientId: string;
+  enabled: boolean;
+  superAdminEmail: string;
 }
 
 export interface UserProfileResponse {

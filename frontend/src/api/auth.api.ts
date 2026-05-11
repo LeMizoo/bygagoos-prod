@@ -57,6 +57,12 @@ export interface RefreshTokenResponse {
   refreshToken?: string;
 }
 
+export interface GoogleAuthConfig {
+  clientId: string;
+  enabled: boolean;
+  superAdminEmail: string;
+}
+
 // Gestionnaire de rafraîchissement de token pour éviter les appels concurrents
 let refreshPromise: Promise<RefreshTokenResponse> | null = null;
 
@@ -158,6 +164,48 @@ export const authApi = {
       return authResponse;
     }
     throw new Error(response.message || "Erreur de connexion");
+  },
+
+  googleConfig: async (): Promise<GoogleAuthConfig> => {
+    const response = await fetchApi<{ success: boolean; data?: GoogleAuthConfig; message?: string }>("/auth/google", {
+      method: "GET",
+    });
+
+    if (response.success && response.data) {
+      return response.data;
+    }
+
+    throw new Error(response.message || "Configuration Google indisponible");
+  },
+
+  googleLogin: async (credential: string): Promise<AuthResponse> => {
+    const response = await fetchApi<{ success: boolean; data?: { user: UserProfile; accessToken?: string; refreshToken?: string; token?: string }; message?: string }>("/auth/google", {
+      method: "POST",
+      body: JSON.stringify({ credential }),
+    });
+
+    if (response.success && response.data) {
+      const userData = response.data.user;
+      const authResponse: AuthResponse = {
+        user: {
+          ...userData,
+          id: userData.id || userData._id as string,
+          firstName: userData.firstName || userData.name?.split(' ')[0] || '',
+          lastName: userData.lastName || userData.name?.split(' ').slice(1).join(' ') || '',
+        },
+        accessToken: response.data.accessToken || response.data.token || '',
+        refreshToken: response.data.refreshToken || ''
+      };
+
+      localStorage.setItem('token', authResponse.accessToken);
+      localStorage.setItem('accessToken', authResponse.accessToken);
+      localStorage.setItem('refreshToken', authResponse.refreshToken);
+      localStorage.setItem('user', JSON.stringify(authResponse.user));
+
+      return authResponse;
+    }
+
+    throw new Error(response.message || "Erreur de connexion Google");
   },
 
   register: async (data: RegisterData): Promise<AuthResponse> => {

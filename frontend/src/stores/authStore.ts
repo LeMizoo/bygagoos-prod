@@ -17,6 +17,7 @@ interface AuthState {
 
   // Actions
   login: (email: string, password: string) => Promise<void>;
+  googleLogin: (credential: string) => Promise<void>;
   register: (userData: any) => Promise<void>;
   logout: () => Promise<void>;
   setAuthData: (user: User, token: string, refreshToken: string) => void;
@@ -58,6 +59,30 @@ export const useAuthStore = create<AuthState>()(
           set({ 
             isLoading: false, 
             error: error.message || "Erreur de connexion" 
+          });
+          throw error;
+        }
+      },
+
+      /**
+       * Connecter un utilisateur via Google
+       */
+      googleLogin: async (credential: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          const response: AuthResponse = await authApi.googleLogin(credential);
+
+          set({
+            user: response.user,
+            token: response.accessToken,
+            refreshToken: response.refreshToken,
+            isAuthenticated: true,
+            isLoading: false,
+          });
+        } catch (error: any) {
+          set({
+            isLoading: false,
+            error: error.message || "Erreur de connexion Google"
           });
           throw error;
         }

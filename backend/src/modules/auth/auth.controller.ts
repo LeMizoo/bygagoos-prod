@@ -6,7 +6,7 @@ import { apiResponse } from '../../core/utils/apiResponse';
 import { HTTP_STATUS } from '../../core/constants/httpStatus';
 import { env } from '../../config/env';
 import logger from '../../core/utils/logger';
-import { RegisterDto, LoginDto, UpdateProfileDto, ChangePasswordDto } from './dto';
+import { RegisterDto, LoginDto, GoogleLoginDto, UpdateProfileDto, ChangePasswordDto } from './dto';
 import { AppError } from '../../core/utils/errors/AppError';
 
 const authService = new AuthService();
@@ -17,6 +17,19 @@ const cookieOptions = {
   sameSite: env.NODE_ENV === 'production' ? 'strict' as const : 'lax' as const,
   maxAge: 7 * 24 * 60 * 60 * 1000 // 7 jours
 };
+
+const getFrontendUrl = () =>
+  env.FRONTEND_URL ||
+  (env.NODE_ENV === 'production'
+    ? 'https://bygagoos-prod.vercel.app'
+    : env.FRONTEND_URL_DEV);
+
+const getGoogleRedirectUri = () =>
+  env.GOOGLE_REDIRECT_URI ||
+  `${env.API_URL.replace(/\/$/, '')}/api/auth/google/callback`;
+
+const encodeGooglePayload = (payload: Record<string, unknown>) =>
+  Buffer.from(JSON.stringify(payload), 'utf8').toString('base64url');
 
 /**
  * @route   POST /api/auth/register
@@ -96,6 +109,124 @@ export const login = async (req: Request, res: Response) => {
     return apiResponse.error(
       res, 
       err.message || 'Erreur lors de la connexion', 
+      HTTP_STATUS.INTERNAL_SERVER_ERROR
+    );
+  }
+};
+
+/**
+ * @route   GET /api/auth/google
+ * @desc    Démarrer la connexion Google
+ * @access  Public
+ */
+export const googleStart = async (_req: Request, res: Response) => {
+  const clientId = env.GOOGLE_CLIENT_ID || env.GMAIL_CLIENT_ID;
+  const redirectUri = getGoogleRedirectUri();
+
+  if (!clientId) {
+    return apiResponse.error(
+      res,
+      'Connexion Google non configurée côté serveur',
+      HTTP_STATUS.SERVICE_UNAVAILABLE
+    );
+  }
+
+  const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+  authUrl.searchParams.set('client_id', clientId);
+  authUrl.searchParams.set('redirect_uri', redirectUri);
+  authUrl.searchParams.set('response_type', 'code');
+  authUrl.searchParams.set('scope', 'openid email profile');
+  authUrl.searchParams.set('access_type', 'offline');
+  authUrl.searchParams.set('prompt', 'select_account');
+  authUrl.searchParams.set('include_granted_scopes', 'true');
+
+  return res.redirect(authUrl.toString());
+};
+
+/**
+ * @route   GET /api/auth/google/callback
+ * @desc    Callback OAuth Google
+ * @access  Public
+ */
+export const googleCallback = async (req: Request, res: Response) => {
+  const code = typeof req.query.code === 'string' ? req.query.code : '';
+
+  if (!code) {
+    return apiResponse.error(
+      res,
+      'Code Google manquant',
+      HTTP_STATUS.BAD_REQUEST
+    );
+  }
+
+  try {
+    const result = await authService.googleCallback(code);
+
+    const frontendUrl = getFrontendUrl();
+    const payload = encodeGooglePayload({
+      user: result.user,
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
+    });
+
+    res.cookie('refreshToken', result.refreshToken, cookieOptions);
+    return res.redirect(`${frontendUrl}/auth/google/callback#payload=${payload}`);
+  } catch (error: unknown) {
+    logger.error('Erreur googleCallback:', error);
+
+    if (error instanceof AppError) {
+      const frontendUrl = getFrontendUrl();
+      const payload = encodeGooglePayload({
+        error: error.message,
+      });
+      return res.redirect(`${frontendUrl}/auth/login?google_error=${payload}`);
+    }
+
+    const err = error as Error;
+    return apiResponse.error(
+      res,
+      err.message || 'Erreur lors de la connexion Google',
+      HTTP_STATUS.INTERNAL_SERVER_ERROR
+    );
+  }
+};
+
+/**
+ * @route   POST /api/auth/google
+ * @desc    Connexion avec Google via credential ID token
+ * @access  Public
+ */
+export const googleLogin = async (req: Request, res: Response) => {
+  try {
+    const payload: GoogleLoginDto = req.body;
+    const result = await authService.googleLogin(payload);
+
+    res.cookie('refreshToken', result.refreshToken, cookieOptions);
+
+    return apiResponse.success(
+      res,
+      {
+        user: result.user,
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+      },
+      'Connexion Google réussie'
+    );
+  } catch (error: unknown) {
+    logger.error('Erreur googleLogin:', error);
+
+    if (error instanceof AppError) {
+      return apiResponse.error(
+        res,
+        error.message,
+        error.statusCode
+      );
+    }
+
+    const err = error as Error;
+    return apiResponse.error(
+      res,
+      err.message || 'Erreur lors de la connexion Google',
       HTTP_STATUS.INTERNAL_SERVER_ERROR
     );
   }

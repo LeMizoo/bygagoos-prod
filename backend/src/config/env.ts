@@ -48,7 +48,17 @@ export const env = {
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY || '',
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET || '',
 
+  // Google Auth
+  GMAIL_CLIENT_ID: process.env.GMAIL_CLIENT_ID || '',
+  GMAIL_CLIENT_SECRET: process.env.GMAIL_CLIENT_SECRET || '',
+  GMAIL_REDIRECT_URI: process.env.GMAIL_REDIRECT_URI || '',
+  GMAIL_REFRESH_TOKEN: process.env.GMAIL_REFRESH_TOKEN || '',
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || process.env.GMAIL_CLIENT_ID || '',
+  GOOGLE_REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI || process.env.GMAIL_REDIRECT_URI || '',
+  GOOGLE_SUPER_ADMIN_EMAIL: process.env.GOOGLE_SUPER_ADMIN_EMAIL || 'tovoniaina.rahendrison@gmail.com',
+
   // Frontend
+  FRONTEND_URL: process.env.FRONTEND_URL || '',
   FRONTEND_URL_DEV: process.env.FRONTEND_URL_DEV || 'http://localhost:3000',
   ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim()).filter(Boolean)
