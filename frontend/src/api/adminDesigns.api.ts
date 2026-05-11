@@ -113,10 +113,14 @@ export const adminDesignsApi = {
   uploadDesignImages: async (
     id: string,
     images: File[],
+    options?: { setAsThumbnail?: boolean },
   ): Promise<apiResponse<Design>> => {
     dev.log(`🌐 Designs API: POST /api/designs/${id}/files`);
     const formData = new FormData();
     images.forEach((file) => formData.append("files", file));
+    if (options?.setAsThumbnail !== undefined) {
+      formData.append("setAsThumbnail", String(options.setAsThumbnail));
+    }
 
     const response = await axiosInstance.post(`/designs/${id}/files`, formData, {
       headers: {

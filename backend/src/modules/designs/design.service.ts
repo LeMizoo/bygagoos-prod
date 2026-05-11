@@ -444,7 +444,13 @@ export class DesignService {
   /**
    * Ajoute des fichiers à un design
    */
-  async addFiles(id: string, userId: string, files: Express.Multer.File[], role?: UserRole): Promise<DesignResponseDTO> {
+  async addFiles(
+    id: string,
+    userId: string,
+    files: Express.Multer.File[],
+    role?: UserRole,
+    setAsThumbnail: boolean = false,
+  ): Promise<DesignResponseDTO> {
     try {
       if (!Types.ObjectId.isValid(id)) {
         throw new AppError('ID de design invalide', HTTP_STATUS.BAD_REQUEST);
@@ -476,8 +482,8 @@ export class DesignService {
       // Ajouter les fichiers au design
       design.files.push(...uploadedFiles);
       
-      // Définir la première image comme thumbnail si pas déjà défini
-      if (!design.thumbnail && uploadedFiles.length > 0) {
+      // Définir ou remplacer la miniature quand l'upload correspond à l'image principale
+      if (uploadedFiles.length > 0 && (setAsThumbnail || !design.thumbnail)) {
         design.thumbnail = uploadedFiles[0]?.url;
       }
 

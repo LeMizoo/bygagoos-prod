@@ -162,13 +162,14 @@ export const addDesignFiles = async (req: AuthRequest, res: Response): Promise<v
       return;
     }    
     const files = req.files as Express.Multer.File[];
+    const setAsThumbnail = String(req.body?.setAsThumbnail || '').toLowerCase() === 'true';
 
     if (!files || files.length === 0) {
       apiResponse.error(res, 'Aucun fichier fourni', HTTP_STATUS.BAD_REQUEST);
       return;
     }
 
-    const design = await designService.addFiles(id, userId, files, req.user?.role);
+    const design = await designService.addFiles(id, userId, files, req.user?.role, setAsThumbnail);
     apiResponse.success(res, design, `${files.length} fichier(s) ajouté(s) avec succès`);
   } catch (error: any) {
     console.error('Erreur addDesignFiles:', error);

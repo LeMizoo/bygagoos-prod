@@ -98,7 +98,7 @@ export default function EditDesignPage() {
 
       const updatedId = updated?.data?._id || id;
       if (updatedId && formData.image) {
-        await adminDesignsApi.uploadDesignImages(updatedId, [formData.image]);
+        await adminDesignsApi.uploadDesignImages(updatedId, [formData.image], { setAsThumbnail: true });
       }
 
       alert("Design modifié avec succès !");

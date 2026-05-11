@@ -39,7 +39,7 @@ export default function CreateDesignPage() {
 
       const createdId = created?.data?._id;
       if (createdId && formData.image) {
-        await adminDesignsApi.uploadDesignImages(createdId, [formData.image]);
+        await adminDesignsApi.uploadDesignImages(createdId, [formData.image], { setAsThumbnail: true });
       }
 
       alert("Design créé avec succès!");
