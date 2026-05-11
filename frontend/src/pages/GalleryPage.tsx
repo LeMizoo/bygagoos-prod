@@ -25,6 +25,7 @@ import VaguesEmeraudeLogo from "../components/VaguesEmeraudeLogo";
 import { useGallery } from "../hooks/useDesigns";
 import type { Design as GallerySourceDesign } from "../hooks/useDesigns";
 import { useAutoInvalidateQueries } from "../hooks/useAutoInvalidate";
+import DesignDetailsModal from "../components/gallery/DesignDetailsModal";
 import { normalizeImageUrl } from "../utils/imageUrl";
 
 // Interface locale pour un design (plus permissive que celle de l'API)
@@ -140,6 +141,7 @@ export default function GalleryPage() {
     new: false,
     priceRange: [0, 100] as [number, number],
   });
+  const [selectedDesign, setSelectedDesign] = useState<Design | null>(null);
 
   // Récupérer les données via React Query
   const { data: galleryData, isLoading } = useGallery();
@@ -616,7 +618,11 @@ export default function GalleryPage() {
                     className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-12"
                   >
                     {filteredDesigns.map((design) => (
-                      <DesignCard key={design._id || design.id} design={design} />
+                      <DesignCard
+                        key={design._id || design.id}
+                        design={design}
+                        onViewDetails={setSelectedDesign}
+                      />
                     ))}
                   </motion.div>
                 ) : (
@@ -627,7 +633,11 @@ export default function GalleryPage() {
                     className="space-y-6 mb-12"
                   >
                     {filteredDesigns.map((design) => (
-                      <DesignListItem key={design._id || design.id} design={design} />
+                      <DesignListItem
+                        key={design._id || design.id}
+                        design={design}
+                        onViewDetails={setSelectedDesign}
+                      />
                     ))}
                   </motion.div>
                 )}
@@ -636,6 +646,12 @@ export default function GalleryPage() {
               <EmptyState onReset={resetFilters} />
             )}
           </AnimatePresence>
+
+          <DesignDetailsModal
+            open={selectedDesign !== null}
+            design={selectedDesign}
+            onClose={() => setSelectedDesign(null)}
+          />
 
           <InspirationSection />
           <CategoriesSection categories={categories} />
@@ -648,7 +664,13 @@ export default function GalleryPage() {
 }
 
 // Composant DesignCard (identique, mais utilise design.likes et design.artist)
-function DesignCard({ design }: { design: Design }) {
+function DesignCard({
+  design,
+  onViewDetails,
+}: {
+  design: Design;
+  onViewDetails: (design: Design) => void;
+}) {
   return (
     <motion.div
       variants={{
@@ -761,7 +783,11 @@ function DesignCard({ design }: { design: Design }) {
                 </span>
               )}
             </div>
-            <button className="text-amber-600 hover:text-amber-700 text-sm font-medium transition-colors flex items-center gap-1 group/btn">
+            <button
+              type="button"
+              onClick={() => onViewDetails(design)}
+              className="text-amber-600 hover:text-amber-700 text-sm font-medium transition-colors flex items-center gap-1 group/btn"
+            >
               Voir détails
               <ArrowRight className="h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
             </button>
@@ -773,7 +799,13 @@ function DesignCard({ design }: { design: Design }) {
 }
 
 // Composant DesignListItem (identique, adapté)
-function DesignListItem({ design }: { design: Design }) {
+function DesignListItem({
+  design,
+  onViewDetails,
+}: {
+  design: Design;
+  onViewDetails: (design: Design) => void;
+}) {
   return (
     <motion.div
       variants={{
@@ -860,7 +892,11 @@ function DesignListItem({ design }: { design: Design }) {
                 </span>
               )}
             </div>
-            <button className="px-6 py-2 bg-gradient-to-r from-amber-600 to-amber-500 text-white rounded-lg hover:from-amber-700 hover:to-amber-600 transition-all shadow-md hover:shadow-lg flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => onViewDetails(design)}
+              className="px-6 py-2 bg-gradient-to-r from-amber-600 to-amber-500 text-white rounded-lg hover:from-amber-700 hover:to-amber-600 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+            >
               Voir les détails
               <ArrowRight className="h-4 w-4" />
             </button>
