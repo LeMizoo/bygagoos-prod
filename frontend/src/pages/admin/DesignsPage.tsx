@@ -8,6 +8,7 @@ import {
   Download,
   RefreshCw,
   Trash2,
+  Edit,
 } from "lucide-react";
 import { adminDesignsApi } from "../../api/adminDesigns.api";
 import dev from "../../utils/devLogger";
@@ -357,6 +358,14 @@ export default function DesignsPage() {
                       <option value="inactive">Inactif</option>
                       <option value="archived">Archivé</option>
                     </select>
+                    <Link
+                      to={`/admin/designs/edit/${design.id}`}
+                      className="inline-flex items-center justify-center rounded-lg border border-blue-200 px-3 py-2 text-blue-600 hover:bg-blue-50"
+                      aria-label={`Modifier ${design.title}`}
+                      title="Modifier"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Link>
                     <button
                       type="button"
                       onClick={() => handleDeleteDesign(design.id)}
@@ -424,6 +433,14 @@ export default function DesignsPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex items-center gap-3">
+                          <Link
+                            to={`/admin/designs/edit/${design.id}`}
+                            className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-900"
+                            title="Modifier"
+                          >
+                            <Edit className="h-4 w-4" />
+                            <span className="hidden xl:inline">Modifier</span>
+                          </Link>
                           <select
                             value={design.status}
                             onChange={(e) => handleUpdateStatus(design.id, e.target.value as "active" | "inactive" | "archived")}

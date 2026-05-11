@@ -44,6 +44,7 @@ import EditStaffPage from "./pages/admin/EditStaffPage";
 import CreateStaffPage from "./pages/admin/CreateStaffPage";
 import DesignsPage from "./pages/admin/DesignsPage";
 import CreateDesignPage from "./pages/admin/CreateDesignPage";
+import EditDesignPage from "./pages/admin/EditDesignPage";
 import SettingsPage from "./pages/admin/SettingsPage";
 import AdminClientsPage from "./pages/admin/AdminClientsPage";
 import CreateClientPage from "./pages/admin/CreateClientPage";
@@ -148,6 +149,7 @@ function App() {
           <Route path="designs">
             <Route index element={<DesignsPage />} />
             <Route path="create" element={<CreateDesignPage />} />
+            <Route path="edit/:id" element={<EditDesignPage />} />
           </Route>
           <Route path="orders">
             <Route index element={<OrdersPage />} />
