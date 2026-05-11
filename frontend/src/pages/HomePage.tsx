@@ -1,5 +1,6 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useEffect } from "react";
 import {
   ArrowRight,
   Sparkles,
@@ -12,9 +13,10 @@ import {
   Crown,
   CheckCircle2,
 } from "lucide-react";
+import FamilyMembersGrid from "../components/family/FamilyMembersGrid";
 import ActivityModuleCard from "../components/home/ActivityModuleCard";
 import { activityModules } from "../data/activities";
-import { businessUnits, directionGenerale, executivePillars, prodBrand } from "../data/prod";
+import { businessUnits, executivePillars, prodBrand } from "../data/prod";
 
 const heroStats = [
   { label: "Activités", value: "3", icon: Sparkles },
@@ -44,6 +46,15 @@ const activityHighlights = [
 ];
 
 export default function HomePage() {
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.hash === "#activities") {
+      const element = document.getElementById("activities");
+      element?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [location.hash]);
+
   return (
     <div className="min-h-screen bg-[#f6f2ea] text-gray-900">
       <section className="relative overflow-hidden bg-gradient-to-br from-amber-950 via-stone-900 to-slate-950 text-white">
@@ -158,7 +169,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="activities" className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
+      <section id="activities" className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8 scroll-mt-24">
         <div className="mb-10 flex items-end justify-between gap-6">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.25em] text-amber-700">
@@ -192,21 +203,9 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-            {directionGenerale.map((member) => (
-              <div key={member.title} className="rounded-3xl border border-gray-200 bg-gradient-to-b from-gray-50 to-white p-5">
-                <div className={`inline-flex rounded-2xl bg-gradient-to-r ${member.accent} px-4 py-3 text-lg font-black text-white`}>
-                  {member.initials}
-                </div>
-                <h3 className="mt-4 text-xl font-bold text-gray-900">{member.name}</h3>
-                <p className="mt-1 text-sm font-semibold text-amber-700">{member.role}</p>
-                <p className="mt-3 text-sm font-medium text-gray-900">{member.title}</p>
-                <p className="mt-2 text-sm leading-6 text-gray-600">{member.description}</p>
-              </div>
-            ))}
+            <FamilyMembersGrid />
           </div>
-        </div>
-      </section>
+        </section>
 
       <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
         <div className="grid gap-6 lg:grid-cols-3">

@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
+import FamilyMembersGrid from "../components/family/FamilyMembersGrid";
 import {
   Users,
   Heart,
@@ -136,6 +137,28 @@ export default function AboutPage() {
                     comme une offrande de gratitude.
                   </p>
                 </div>
+              </div>
+            </motion.div>
+
+            {/* Direction Générale - source de vérité familiale */}
+            <motion.div
+              variants={fadeInUp}
+              transition={{ duration: 0.6 }}
+              className="mb-12"
+            >
+              <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+                <div className="text-center mb-8">
+                  <p className="text-sm font-semibold uppercase tracking-[0.25em] text-blue-700">
+                    Direction Générale
+                  </p>
+                  <h2 className="mt-3 text-3xl font-bold text-gray-900">
+                    Les membres de la famille et leurs accès
+                  </h2>
+                  <p className="mt-3 text-gray-600 max-w-3xl mx-auto">
+                    Chaque membre dispose d’un email, d’une mission claire et d’un dashboard dédié dans ByGagoos Prod.
+                  </p>
+                </div>
+                <FamilyMembersGrid />
               </div>
             </motion.div>
 

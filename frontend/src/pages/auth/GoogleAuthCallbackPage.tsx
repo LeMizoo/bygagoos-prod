@@ -16,6 +16,7 @@ type GoogleCallbackPayload = {
     isActive: boolean;
     createdAt: string;
     updatedAt: string;
+    dashboardPath?: string;
   };
   accessToken: string;
   refreshToken: string;
@@ -69,7 +70,7 @@ export default function GoogleAuthCallbackPage() {
         setMessage("Connexion réussie, redirection...");
         const target =
           payload.user.role === "SUPER_ADMIN" || payload.user.role === "ADMIN"
-            ? "/prod/dashboard"
+            ? payload.user.dashboardPath || "/prod/dashboard"
             : "/user/profile";
 
         setTimeout(() => {

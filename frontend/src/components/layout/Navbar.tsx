@@ -28,24 +28,18 @@ export default function Navbar() {
             <Link to="/home" className="flex items-center space-x-2">
               <img
                 src="/images/logo.png"
-                alt="ByGagoos Ink"
+                alt="ByGagoos Prod"
                 className="h-10 w-auto"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = "/logo.png";
                 }}
               />
               <span className="font-bold text-gray-900 hidden sm:inline">
-                ByGagoos Ink
+                ByGagoos Prod
               </span>
             </Link>
 
             <div className="hidden md:flex space-x-6">
-              <Link
-                to="/home"
-                className="text-gray-700 hover:text-blue-600 transition-colors"
-              >
-                Accueil
-              </Link>
               <Link
                 to="/about"
                 className="text-gray-700 hover:text-blue-600 transition-colors"
@@ -53,10 +47,10 @@ export default function Navbar() {
                 À propos
               </Link>
               <Link
-                to="/gallery"
+                to="/home#activities"
                 className="text-gray-700 hover:text-blue-600 transition-colors"
               >
-                Galerie
+                Nos Activités
               </Link>
               <Link
                 to="/contact"
@@ -150,7 +144,7 @@ export default function Navbar() {
                               onClick={() => setUserMenuOpen(false)}
                             >
                               <Settings className="h-4 w-4 mr-3 text-gray-400" />
-                              Dashboard admin
+                              Direction Générale
                             </Link>
 
                             <Link

@@ -84,6 +84,10 @@ export interface AuthResponse {
     role: string;
     phone?: string;
     avatar?: string;
+    dashboardPath?: string;
+    department?: string | null;
+    position?: string | null;
+    familyAccess?: string[];
   };
   accessToken: string;
   refreshToken: string;
@@ -114,4 +118,8 @@ export interface UserProfileResponse {
   lastLogin?: Date;
   createdAt: Date;
   updatedAt: Date;
+  dashboardPath?: string;
+  department?: string | null;
+  position?: string | null;
+  familyAccess?: string[];
 }

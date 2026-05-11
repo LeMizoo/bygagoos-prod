@@ -28,6 +28,7 @@ interface ActivityDashboardFrameProps {
   actions: DashboardAction[];
   focusItems: DashboardItem[];
   processSteps: string[];
+  children?: React.ReactNode;
 }
 
 export default function ActivityDashboardFrame({
@@ -39,6 +40,7 @@ export default function ActivityDashboardFrame({
   actions,
   focusItems,
   processSteps,
+  children,
 }: ActivityDashboardFrameProps) {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50">
@@ -123,6 +125,8 @@ export default function ActivityDashboardFrame({
           </div>
         </div>
       </section>
+
+      {children}
     </div>
   );
 }

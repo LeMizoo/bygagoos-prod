@@ -44,6 +44,10 @@ export interface UserProfile {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  dashboardPath?: string;
+  department?: string | null;
+  position?: string | null;
+  familyAccess?: string[];
 }
 
 export interface AuthResponse {

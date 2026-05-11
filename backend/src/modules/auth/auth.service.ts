@@ -11,6 +11,7 @@ import { OAuth2Client } from 'google-auth-library';
 import { RegisterDto, LoginDto, GoogleLoginDto, UpdateProfileDto } from './dto';
 import { env } from '../../config/env';
 import { Document } from 'mongoose';
+import { familyMemberByEmail } from '../../config/family.config';
 
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
 
@@ -37,6 +38,8 @@ export class AuthService {
     const userObj = user.toObject() as Record<string, unknown>;
     const avatarPath = userObj.avatar as string | undefined;
     let fullAvatarUrl = avatarPath || null;
+    const email = String(userObj.email || '').trim().toLowerCase();
+    const familyMember = familyMemberByEmail.get(email);
 
     if (avatarPath && !avatarPath.startsWith('http')) {
       const baseUrl = env.API_URL;
@@ -57,7 +60,27 @@ export class AuthService {
       lastLogin: userObj.lastLogin,
       createdAt: userObj.createdAt,
       updatedAt: userObj.updatedAt,
+      dashboardPath: familyMember?.dashboardPath || (userObj.role === 'SUPER_ADMIN' || userObj.role === 'ADMIN' ? '/prod/dashboard' : '/user/profile'),
+      department: familyMember?.title || null,
+      position: familyMember?.task || null,
+      familyAccess: familyMember?.moduleAccess || [],
     };
+  }
+
+  private async enforceFamilyAccess(user: any) {
+    const email = normalizeEmail(user.email || '');
+    const familyMember = familyMemberByEmail.get(email);
+
+    if (!familyMember) {
+      return user;
+    }
+
+    if (user.role !== familyMember.role) {
+      user.role = familyMember.role;
+      await user.save();
+    }
+
+    return user;
   }
 
   /**
@@ -96,6 +119,8 @@ export class AuthService {
       phone,
       isActive: true,
     });
+
+    await this.enforceFamilyAccess(user);
 
     const accessToken = generateAccessToken(user.id, user.email, user.role);
     const refreshToken = RefreshTokenService.generateToken();
@@ -169,6 +194,8 @@ export class AuthService {
     console.log('📅 lastLogin mis à jour');
     
     // Générer les tokens
+    await this.enforceFamilyAccess(user);
+
     const accessToken = generateAccessToken(user.id, user.email, user.role);
     const refreshToken = RefreshTokenService.generateToken();
     await RefreshTokenService.storeToken(user.id, refreshToken);
@@ -222,6 +249,8 @@ export class AuthService {
 
     user.lastLogin = new Date();
     await user.save();
+
+    await this.enforceFamilyAccess(user);
 
     const accessToken = generateAccessToken(user.id, user.email, user.role);
     const refreshToken = RefreshTokenService.generateToken();

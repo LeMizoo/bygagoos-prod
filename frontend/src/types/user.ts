@@ -12,6 +12,8 @@ export interface User {
   updatedAt: string;
   department?: string;
   position?: string;
+  dashboardPath?: string;
+  familyAccess?: string[];
 }
 
 export interface LoginCredentials {
