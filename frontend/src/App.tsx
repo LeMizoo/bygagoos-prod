@@ -16,6 +16,7 @@ import HomePage from "./pages/HomePage";
 import AboutPage from "./pages/AboutPage";
 import GalleryPage from "./pages/GalleryPage";
 import ContactPage from "./pages/ContactPage";
+import ActivityModulePage from "./pages/modules/ActivityModulePage";
 
 // Pages Légales et Support (NOUVELLES)
 import { 
@@ -50,6 +51,7 @@ import AdminClientsPage from "./pages/admin/AdminClientsPage";
 import CreateClientPage from "./pages/admin/CreateClientPage";
 import ClientDetailPage from "./pages/admin/ClientDetailPage";
 import EditClientPage from "./pages/admin/EditClientPage";
+import TaxiVehiclesPage from "./pages/admin/TaxiVehiclesPage";
 
 // Pages commandes
 import OrdersPage from "./pages/admin/OrdersPage";
@@ -163,8 +165,27 @@ function App() {
             <Route path=":id" element={<ClientDetailPage />} />
             <Route path="edit/:id" element={<EditClientPage />} />
           </Route>
+          <Route path="taxi">
+            <Route path="vehicles" element={<TaxiVehiclesPage />} />
+          </Route>
           <Route path="settings" element={<SettingsPage />} />
         </Route>
+
+        <Route path="/ink/dashboard" element={
+          <ProtectedRoute requiredRoles={["ADMIN", "SUPER_ADMIN", "MANAGER"]}>
+            <ActivityModulePage moduleKey="ink" />
+          </ProtectedRoute>
+        } />
+        <Route path="/trans/dashboard" element={
+          <ProtectedRoute requiredRoles={["ADMIN", "SUPER_ADMIN", "MANAGER"]}>
+            <ActivityModulePage moduleKey="trans" />
+          </ProtectedRoute>
+        } />
+        <Route path="/cda/dashboard" element={
+          <ProtectedRoute requiredRoles={["ADMIN", "SUPER_ADMIN", "MANAGER"]}>
+            <ActivityModulePage moduleKey="cda" />
+          </ProtectedRoute>
+        } />
 
         {/* ===== ROUTES UTILISATEUR PROTÉGÉES ===== */}
         <Route

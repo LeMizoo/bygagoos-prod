@@ -7,6 +7,7 @@ import {
   Settings,
   Home,
   LogOut,
+  Bike,
 } from "lucide-react";
 import { useAuthStore } from "../../stores/authStore";
 
@@ -16,6 +17,7 @@ const navItems = [
   { icon: Users, label: "Clients", path: "/admin/clients" },
   { icon: Package, label: "Designs", path: "/admin/designs" },
   { icon: ShoppingCart, label: "Commandes", path: "/admin/orders" },
+  { icon: Bike, label: "Taxi-Moto", path: "/admin/taxi/vehicles" },
   { icon: Settings, label: "Paramètres", path: "/admin/settings" },
 ];
 

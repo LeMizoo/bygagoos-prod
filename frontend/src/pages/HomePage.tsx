@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import ActivityModuleCard from "../components/home/ActivityModuleCard";
+import { activityModules } from "../data/activities";
 import { 
   ArrowRight, 
   Sparkles, 
@@ -439,6 +441,37 @@ export default function HomePage() {
               );
             })}
           </motion.div>
+        </div>
+      </section>
+
+      {/* Activités */}
+      <section className="py-24 bg-gradient-to-b from-white to-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
+            className="mb-12 text-center"
+          >
+            <div className="inline-flex items-center gap-2 rounded-full bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-lg">
+              <Sparkles className="h-4 w-4" />
+              Un seul socle, plusieurs activités
+            </div>
+            <h2 className="mt-6 text-3xl md:text-4xl font-light text-gray-900">
+              Choisissez votre espace de travail
+            </h2>
+            <p className="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">
+              On garde la base technique commune, mais chaque activité vit dans son propre
+              module métier, ses écrans et ses routes.
+            </p>
+          </motion.div>
+
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            {activityModules.map((module) => (
+              <ActivityModuleCard key={module.key} module={module} />
+            ))}
+          </div>
         </div>
       </section>
 

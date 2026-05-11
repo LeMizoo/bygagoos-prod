@@ -250,3 +250,4 @@ export * from "./client";
 export * from "./design";
 export * from "./order";
 export * from "./settings";
+export * from "./taxi";
