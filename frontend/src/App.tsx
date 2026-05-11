@@ -16,7 +16,9 @@ import HomePage from "./pages/HomePage";
 import AboutPage from "./pages/AboutPage";
 import GalleryPage from "./pages/GalleryPage";
 import ContactPage from "./pages/ContactPage";
-import ActivityModulePage from "./pages/modules/ActivityModulePage";
+import InkDashboardPage from "./pages/dashboards/InkDashboardPage";
+import TaxiDashboardPage from "./pages/dashboards/TaxiDashboardPage";
+import RestaurantDashboardPage from "./pages/dashboards/RestaurantDashboardPage";
 
 // Pages Légales et Support (NOUVELLES)
 import { 
@@ -171,21 +173,30 @@ function App() {
           <Route path="settings" element={<SettingsPage />} />
         </Route>
 
-        <Route path="/ink/dashboard" element={
-          <ProtectedRoute requiredRoles={["ADMIN", "SUPER_ADMIN", "MANAGER"]}>
-            <ActivityModulePage moduleKey="ink" />
-          </ProtectedRoute>
-        } />
-        <Route path="/trans/dashboard" element={
-          <ProtectedRoute requiredRoles={["ADMIN", "SUPER_ADMIN", "MANAGER"]}>
-            <ActivityModulePage moduleKey="trans" />
-          </ProtectedRoute>
-        } />
-        <Route path="/cda/dashboard" element={
-          <ProtectedRoute requiredRoles={["ADMIN", "SUPER_ADMIN", "MANAGER"]}>
-            <ActivityModulePage moduleKey="cda" />
-          </ProtectedRoute>
-        } />
+        <Route
+          path="/ink/dashboard"
+          element={
+            <ProtectedRoute requiredRoles={["ADMIN", "SUPER_ADMIN", "MANAGER"]}>
+              <InkDashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/trans/dashboard"
+          element={
+            <ProtectedRoute requiredRoles={["ADMIN", "SUPER_ADMIN", "MANAGER"]}>
+              <TaxiDashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cda/dashboard"
+          element={
+            <ProtectedRoute requiredRoles={["ADMIN", "SUPER_ADMIN", "MANAGER"]}>
+              <RestaurantDashboardPage />
+            </ProtectedRoute>
+          }
+        />
 
         {/* ===== ROUTES UTILISATEUR PROTÉGÉES ===== */}
         <Route

@@ -47,8 +47,8 @@ export const activityModules: ActivityModule[] = [
     ],
     highlights: ["Catalogue créatif", "Workflow commandes", "Galerie publique"],
     primaryAction: {
-      label: "Ouvrir ByGagoos Ink",
-      path: "/admin/dashboard",
+      label: "Ouvrir le dashboard Ink",
+      path: "/ink/dashboard",
     },
     secondaryAction: {
       label: "Voir la galerie",
@@ -72,8 +72,8 @@ export const activityModules: ActivityModule[] = [
     ],
     highlights: ["Flotte", "Maintenance", "Suivi d'activité"],
     primaryAction: {
-      label: "Gérer la flotte",
-      path: "/admin/taxi/vehicles",
+      label: "Ouvrir le dashboard Trans",
+      path: "/trans/dashboard",
     },
     secondaryAction: {
       label: "Voir les commandes",
@@ -97,8 +97,8 @@ export const activityModules: ActivityModule[] = [
     ],
     highlights: ["Tables", "Réservations", "Stocks"],
     primaryAction: {
-      label: "Préparer le module",
-      path: "/contact",
+      label: "Ouvrir le dashboard CDA",
+      path: "/cda/dashboard",
     },
     secondaryAction: {
       label: "En savoir plus",

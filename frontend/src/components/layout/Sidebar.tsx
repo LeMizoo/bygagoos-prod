@@ -8,11 +8,16 @@ import {
   Home,
   LogOut,
   Bike,
+  Palette,
+  UtensilsCrossed,
 } from "lucide-react";
 import { useAuthStore } from "../../stores/authStore";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/admin/dashboard" },
+  { icon: Palette, label: "Ink Dashboard", path: "/ink/dashboard" },
+  { icon: Bike, label: "Trans Dashboard", path: "/trans/dashboard" },
+  { icon: UtensilsCrossed, label: "CDA Dashboard", path: "/cda/dashboard" },
   { icon: Users, label: "Équipe", path: "/admin/staff" },
   { icon: Users, label: "Clients", path: "/admin/clients" },
   { icon: Package, label: "Designs", path: "/admin/designs" },
