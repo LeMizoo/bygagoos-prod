@@ -26,7 +26,9 @@ const getFrontendUrl = () =>
 
 const getGoogleRedirectUri = () =>
   env.GOOGLE_REDIRECT_URI ||
-  `${env.API_URL.replace(/\/$/, '')}/api/auth/google/callback`;
+  (env.NODE_ENV === 'production'
+    ? `${env.API_URL.replace(/\/$/, '')}/api/auth/google/callback`
+    : env.GMAIL_REDIRECT_URI || `${env.API_URL.replace(/\/$/, '')}/api/auth/google/callback`);
 
 const encodeGooglePayload = (payload: Record<string, unknown>) =>
   Buffer.from(JSON.stringify(payload), 'utf8').toString('base64url');

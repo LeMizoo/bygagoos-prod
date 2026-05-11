@@ -17,7 +17,11 @@ const normalizeEmail = (email: string) => email.trim().toLowerCase();
 const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const googleClientId = env.GOOGLE_CLIENT_ID || env.GMAIL_CLIENT_ID || '';
 const googleClientSecret = env.GMAIL_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET || '';
-const googleRedirectUri = env.GOOGLE_REDIRECT_URI || env.GMAIL_REDIRECT_URI || '';
+const googleRedirectUri =
+  env.GOOGLE_REDIRECT_URI ||
+  (env.NODE_ENV === 'production'
+    ? `${env.API_URL.replace(/\/$/, '')}/api/auth/google/callback`
+    : env.GMAIL_REDIRECT_URI || `${env.API_URL.replace(/\/$/, '')}/api/auth/google/callback`);
 
 const createGoogleOAuthClient = () => {
   if (!googleClientId) return null;
