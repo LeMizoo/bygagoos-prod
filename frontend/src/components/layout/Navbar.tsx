@@ -145,7 +145,7 @@ export default function Navbar() {
                           user.role === "SUPER_ADMIN") && (
                           <>
                             <Link
-                              to="/admin/dashboard"
+                              to="/prod/dashboard"
                               className="flex items-center px-4 py-2.5 text-gray-700 hover:bg-gray-50 transition-colors"
                               onClick={() => setUserMenuOpen(false)}
                             >

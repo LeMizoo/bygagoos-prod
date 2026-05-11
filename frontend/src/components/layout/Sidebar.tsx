@@ -14,7 +14,7 @@ import {
 import { useAuthStore } from "../../stores/authStore";
 
 const navItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/admin/dashboard" },
+  { icon: LayoutDashboard, label: "Direction Générale", path: "/prod/dashboard" },
   { icon: Palette, label: "Ink Dashboard", path: "/ink/dashboard" },
   { icon: Bike, label: "Trans Dashboard", path: "/trans/dashboard" },
   { icon: UtensilsCrossed, label: "CDA Dashboard", path: "/cda/dashboard" },

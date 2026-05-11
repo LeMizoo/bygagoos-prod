@@ -71,7 +71,7 @@ export default function LoginPage() {
       dev.log('👤 Utilisateur connecté:', user);
       
       if (user?.role === "SUPER_ADMIN" || user?.role === "ADMIN") {
-        navigate("/admin/dashboard");
+        navigate("/prod/dashboard");
       } else {
         navigate("/user/profile");
       }

@@ -69,7 +69,7 @@ export default function GoogleAuthCallbackPage() {
         setMessage("Connexion réussie, redirection...");
         const target =
           payload.user.role === "SUPER_ADMIN" || payload.user.role === "ADMIN"
-            ? "/admin/dashboard"
+            ? "/prod/dashboard"
             : "/user/profile";
 
         setTimeout(() => {

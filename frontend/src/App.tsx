@@ -174,6 +174,15 @@ function App() {
         </Route>
 
         <Route
+          path="/prod/dashboard"
+          element={
+            <ProtectedRoute requiredRoles={["ADMIN", "SUPER_ADMIN", "MANAGER"]}>
+              <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/ink/dashboard"
           element={
             <ProtectedRoute requiredRoles={["ADMIN", "SUPER_ADMIN", "MANAGER"]}>
