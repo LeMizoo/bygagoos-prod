@@ -10,6 +10,7 @@ export interface FamilyMember {
   moduleAccess: FamilyModuleKey[];
   initials: string;
   accent: string;
+  role: "SUPER_ADMIN" | "ADMIN";
 }
 
 export const familyMembers: FamilyMember[] = [
@@ -23,6 +24,7 @@ export const familyMembers: FamilyMember[] = [
     moduleAccess: ["prod", "ink", "trans", "cda"],
     initials: "TR",
     accent: "from-amber-600 to-orange-500",
+    role: "SUPER_ADMIN",
   },
   {
     name: "Volatiana Randrianarisoa",
@@ -34,6 +36,7 @@ export const familyMembers: FamilyMember[] = [
     moduleAccess: ["prod", "ink"],
     initials: "VR",
     accent: "from-sky-600 to-cyan-500",
+    role: "ADMIN",
   },
   {
     name: "Miantsatiana Rahendrison",
@@ -45,6 +48,7 @@ export const familyMembers: FamilyMember[] = [
     moduleAccess: ["prod", "trans"],
     initials: "MR",
     accent: "from-emerald-600 to-teal-500",
+    role: "ADMIN",
   },
   {
     name: "Tia Faniry Rahendrison",
@@ -56,5 +60,6 @@ export const familyMembers: FamilyMember[] = [
     moduleAccess: ["prod", "cda"],
     initials: "TF",
     accent: "from-rose-600 to-fuchsia-500",
+    role: "ADMIN",
   },
 ];

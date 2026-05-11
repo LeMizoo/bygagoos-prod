@@ -54,6 +54,7 @@ import CreateClientPage from "./pages/admin/CreateClientPage";
 import ClientDetailPage from "./pages/admin/ClientDetailPage";
 import EditClientPage from "./pages/admin/EditClientPage";
 import TaxiVehiclesPage from "./pages/admin/TaxiVehiclesPage";
+import FamilyAdminPage from "./pages/admin/FamilyAdminPage";
 
 // Pages commandes
 import OrdersPage from "./pages/admin/OrdersPage";
@@ -170,6 +171,7 @@ function App() {
           <Route path="taxi">
             <Route path="vehicles" element={<TaxiVehiclesPage />} />
           </Route>
+          <Route path="family" element={<FamilyAdminPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
 
