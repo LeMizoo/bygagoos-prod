@@ -17,19 +17,15 @@ const normalizeEmail = (email: string) => email.trim().toLowerCase();
 const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const googleClientId = env.GOOGLE_CLIENT_ID || env.GMAIL_CLIENT_ID || '';
 const googleClientSecret = env.GMAIL_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET || '';
-const googleRedirectUri =
-  env.GOOGLE_REDIRECT_URI ||
-  (env.NODE_ENV === 'production'
-    ? `${env.API_URL.replace(/\/$/, '')}/api/auth/google/callback`
-    : env.GMAIL_REDIRECT_URI || `${env.API_URL.replace(/\/$/, '')}/api/auth/google/callback`);
+const normalizeBaseUrl = (value: string) => value.replace(/\/$/, '');
 
-const createGoogleOAuthClient = () => {
+const createGoogleOAuthClient = (redirectUri?: string) => {
   if (!googleClientId) return null;
 
   return new OAuth2Client(
     googleClientId,
     googleClientSecret || undefined,
-    googleRedirectUri || undefined
+    redirectUri || env.GOOGLE_REDIRECT_URI || env.GMAIL_REDIRECT_URI || undefined
   );
 };
 
@@ -240,8 +236,8 @@ export class AuthService {
     };
   }
 
-  async googleCallback(code: string) {
-    const googleOAuthClient = createGoogleOAuthClient();
+  async googleCallback(code: string, redirectUri: string) {
+    const googleOAuthClient = createGoogleOAuthClient(redirectUri);
     if (!googleOAuthClient || !googleClientId) {
       throw new AppError('Connexion Google non configurée côté serveur', HTTP_STATUS.SERVICE_UNAVAILABLE);
     }

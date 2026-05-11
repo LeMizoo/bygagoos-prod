@@ -24,11 +24,18 @@ const getFrontendUrl = () =>
     ? 'https://bygagoos-prod.vercel.app'
     : env.FRONTEND_URL_DEV);
 
-const getGoogleRedirectUri = () =>
+const getBackendUrl = (req: Request) => {
+  const forwardedProto = (req.headers['x-forwarded-proto'] as string | undefined)?.split(',')[0]?.trim();
+  const forwardedHost = (req.headers['x-forwarded-host'] as string | undefined)?.split(',')[0]?.trim();
+  const host = forwardedHost || req.get('host') || req.hostname;
+  const protocol = forwardedProto || req.protocol || (env.NODE_ENV === 'production' ? 'https' : 'http');
+  return `${protocol}://${host}`.replace(/\/$/, '');
+};
+
+const getGoogleRedirectUri = (req: Request) =>
   env.GOOGLE_REDIRECT_URI ||
-  (env.NODE_ENV === 'production'
-    ? `${env.API_URL.replace(/\/$/, '')}/api/auth/google/callback`
-    : env.GMAIL_REDIRECT_URI || `${env.API_URL.replace(/\/$/, '')}/api/auth/google/callback`);
+  env.GMAIL_REDIRECT_URI ||
+  `${getBackendUrl(req)}/api/auth/google/callback`;
 
 const encodeGooglePayload = (payload: Record<string, unknown>) =>
   Buffer.from(JSON.stringify(payload), 'utf8').toString('base64url');
@@ -121,9 +128,9 @@ export const login = async (req: Request, res: Response) => {
  * @desc    Démarrer la connexion Google
  * @access  Public
  */
-export const googleStart = async (_req: Request, res: Response) => {
+export const googleStart = async (req: Request, res: Response) => {
   const clientId = env.GOOGLE_CLIENT_ID || env.GMAIL_CLIENT_ID;
-  const redirectUri = getGoogleRedirectUri();
+  const redirectUri = getGoogleRedirectUri(req);
 
   if (!clientId) {
     return apiResponse.error(
@@ -162,7 +169,7 @@ export const googleCallback = async (req: Request, res: Response) => {
   }
 
   try {
-    const result = await authService.googleCallback(code);
+    const result = await authService.googleCallback(code, getGoogleRedirectUri(req));
 
     const frontendUrl = getFrontendUrl();
     const payload = encodeGooglePayload({
