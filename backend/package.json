@@ -14,58 +14,41 @@
     "node": ">=18",
     "npm": ">=9"
   },
-
   "scripts": {
     "dev": "nodemon --exec tsx -r tsconfig-paths/register src/index.ts",
     "dev:quiet": "set NODE_NO_WARNINGS=1 && nodemon --exec tsx -r tsconfig-paths/register src/index.ts",
     "dev:redis": "concurrently \"npm run redis:start\" \"npm run dev\"",
-
     "build": "tsc",
     "build:scripts": "tsc -p tsconfig.scripts.json",
-
-    "start": "node dist/index.js",
+    "start": "tsx src/index.ts",
     "start:prod": "NODE_ENV=production node dist/index.js",
-
     "clean": "rimraf dist",
     "clean:all": "rimraf dist node_modules package-lock.json",
-
     "reinstall": "npm run clean:all && npm install",
-
     "type-check": "tsc --noEmit",
-
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
-
     "format": "prettier --write \"src/**/*.ts\"",
-
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-
     "seed": "ts-node -r tsconfig-paths/register src/utils/seed/index.ts",
-
     "reset:password": "ts-node src/scripts/reset-password.ts",
     "create:staff": "ts-node src/scripts/create-staff.ts",
-
     "redis:start": "node scripts/start-redis.js",
     "redis:stop": "node scripts/stop-redis.js",
     "redis:status": "node scripts/redis-status.js",
     "redis:test": "node scripts/test-redis-connection.js",
-
     "cron:start": "node dist/jobs/emailReminders.js",
     "cron:dev": "ts-node src/jobs/emailReminders.ts",
-
     "upload:clean": "node scripts/clean-uploads.js",
     "upload:optimize": "node scripts/optimize-uploads.js",
-
     "email:test": "ts-node src/scripts/test-email.ts",
-
     "prebuild": "npm run clean",
     "postinstall": "npm run build",
     "precommit": "lint-staged",
     "prepush": "npm test"
   },
-
   "keywords": [
     "express",
     "mongodb",
@@ -88,7 +71,6 @@
     "file-upload",
     "image-optimization"
   ],
-
   "dependencies": {
     "axios": "^1.13.5",
     "bcrypt": "^5.1.1",
@@ -120,7 +102,6 @@
     "winston-daily-rotate-file": "^4.7.1",
     "zod": "^3.22.4"
   },
-
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
     "@types/compression": "^1.7.5",
@@ -155,7 +136,6 @@
     "tsx": "^4.21.0",
     "typescript": "^5.3.3"
   },
-
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "node",
@@ -178,7 +158,6 @@
       "!src/**/*.d.ts"
     ]
   },
-
   "lint-staged": {
     "*.ts": [
       "eslint --fix",
