@@ -1,40 +1,18 @@
 {
   "compilerOptions": {
-    /* Langue et Environnement */
     "target": "ES2022",
     "module": "CommonJS",
     "moduleResolution": "node",
     "lib": ["ES2022"],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "ignoreDeprecations": 6,
-
-    /* Sortie et Structure */
     "outDir": "./dist",
     "rootDir": "./src",
-    "baseUrl": "./src",                   // ← AJOUTÉ (crucial)
-
-    /* Résolution de modules */
-    "paths": {
-      "@/*": ["*"],
-      "@config/*": ["config/*"],
-      "@core/*": ["core/*"],
-      "@middlewares/*": ["middlewares/*"],
-      "@modules/*": ["modules/*"],
-      "@utils/*": ["utils/*"],
-      "@types/*": ["types/*"],
-      "@redis/*": ["core/config/*"]
-    },
     "resolveJsonModule": true,
-
-    /* Interop et compatibilité */
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "moduleDetection": "force",
     "typeRoots": ["./node_modules/@types", "./src/types"],
     "types": ["node", "express"],
-
-    /* Émission et Compilation */
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
@@ -42,8 +20,6 @@
     "noEmit": false,
     "noEmitOnError": false,
     "incremental": false,
-
-    /* Vérification stricte */
     "strict": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
@@ -58,7 +34,7 @@
     "strictNullChecks": false
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "coverage", "scripts"],
+  "exclude": ["node_modules", "dist", "coverage", "scripts", "**/__tests__", "**/*.test.ts", "**/*.spec.ts"],
   "ts-node": {
     "files": true,
     "require": ["tsconfig-paths/register"],
