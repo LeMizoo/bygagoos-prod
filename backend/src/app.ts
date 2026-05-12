@@ -227,3 +227,27 @@ app.use((err: AppError, _req: Request, res: Response, _next: NextFunction) => {
 });
 
 export default app;
+// Debug : lister toutes les routes API
+app.get('/api/debug/routes', (req, res) => {
+  const routes: string[] = [];
+  function print(stack: any, basePath = '') {
+    stack.forEach((layer: any) => {
+      if (layer.route) {
+        // routes explicites
+        const methods = Object.keys(layer.route.methods).join(',').toUpperCase();
+        routes.push(`${methods} ${basePath}${layer.route.path}`);
+      } else if (layer.name === 'router' && layer.handle.stack) {
+        // sous‑routes
+        const routerPath = layer.regexp.source
+          .replace('\\/?(?=\\/|$)', '')
+          .replace(/\\\//g, '/')
+          .replace(/\^/g, '')
+          .replace(/\?/g, '')
+          .replace(/\(\?:\(\[\^\\\/\]\+\?\)\)/g, ':param');
+        print(layer.handle.stack, basePath + routerPath);
+      }
+    });
+  }
+  print(app._router.stack);
+  res.json({ routes: routes.sort() });
+});
