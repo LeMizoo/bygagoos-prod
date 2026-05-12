@@ -2,40 +2,46 @@
   "compilerOptions": {
     /* Langue et Environnement */
     "target": "ES2022",
-    "module": "Node16",
-    "moduleResolution": "Node16",
+    "module": "CommonJS",
+    "moduleResolution": "node",
     "lib": ["ES2022"],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
+    "ignoreDeprecations": 6,
 
     /* Sortie et Structure */
     "outDir": "./dist",
     "rootDir": "./src",
+    "baseUrl": "./src",                   // ← AJOUTÉ (crucial)
 
-    /* Résolution de modules - baseUrl supprimé (déprécié) */
+    /* Résolution de modules */
     "paths": {
-      "@/*": ["./src/*"],
-      "@config/*": ["./src/config/*"],
-      "@core/*": ["./src/core/*"],
-      "@middlewares/*": ["./src/middlewares/*"],
-      "@modules/*": ["./src/modules/*"],
-      "@utils/*": ["./src/utils/*"],
-      "@types/*": ["./src/types/*"],
-      "@redis/*": ["./src/core/config/*"]
+      "@/*": ["*"],
+      "@config/*": ["config/*"],
+      "@core/*": ["core/*"],
+      "@middlewares/*": ["middlewares/*"],
+      "@modules/*": ["modules/*"],
+      "@utils/*": ["utils/*"],
+      "@types/*": ["types/*"],
+      "@redis/*": ["core/config/*"]
     },
     "resolveJsonModule": true,
 
     /* Interop et compatibilité */
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
+    "moduleDetection": "force",
     "typeRoots": ["./node_modules/@types", "./src/types"],
-    "types": ["node", "jest"],
+    "types": ["node", "express"],
 
-    /* Source Maps et Debug */
+    /* Émission et Compilation */
+    "declaration": true,
+    "declarationMap": true,
     "sourceMap": true,
     "removeComments": true,
+    "noEmit": false,
     "noEmitOnError": false,
-    "incremental": true,
+    "incremental": false,
 
     /* Vérification stricte */
     "strict": true,
@@ -48,22 +54,11 @@
     "noUncheckedIndexedAccess": false,
     "allowUnreachableCode": true,
     "allowUnusedLabels": true,
-
-    /* Redis Specific */
     "strictPropertyInitialization": false,
     "strictNullChecks": false
-
-    /* ignoreDeprecations SUPPRIMÉ - pas nécessaire avec Node16 */
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "coverage",
-    "scripts"
-  ],
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "coverage", "scripts"],
   "ts-node": {
     "files": true,
     "require": ["tsconfig-paths/register"],
