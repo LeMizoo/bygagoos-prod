@@ -251,3 +251,15 @@ app.get('/api/debug/routes', (req, res) => {
   print(app._router.stack);
   res.json({ routes: routes.sort() });
 });
+
+// Vers le début du fichier, après les imports
+console.log('🚀 Import des modules Taxi et Restaurant...');
+import taxiRoutes from './modules/taxi/taxi.routes';
+import restaurantRoutes from './modules/restaurant/restaurant.routes';
+console.log('✅ Modules importés');
+
+// Plus tard, dans la section des routes
+app.use('/api/taxi', taxiRoutes);
+console.log('✅ Taxi routes montées');
+app.use('/api/restaurant', restaurantRoutes);
+console.log('✅ Restaurant routes montées');
