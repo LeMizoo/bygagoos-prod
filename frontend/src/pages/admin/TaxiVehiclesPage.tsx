@@ -48,7 +48,11 @@ export default function TaxiVehiclesPage() {
         taxiVehiclesApi.getStats(),
       ]);
       setVehicles(list);
-      setStats(summary);
+      setStats({
+        total: summary.total ?? 0,
+        byStatus: summary.byStatus ?? {},
+        recent: summary.recent ?? 0,
+      });
     } catch (error) {
       dev.error("Erreur chargement véhicules taxi:", error);
       setVehicles([]);
@@ -65,7 +69,6 @@ export default function TaxiVehiclesPage() {
   const filteredVehicles = useMemo(() => {
     const term = search.trim().toLowerCase();
     if (!term) return vehicles;
-
     return vehicles.filter((vehicle) =>
       [vehicle.plateNumber, vehicle.brand, vehicle.model, vehicle.color, vehicle.notes]
         .filter(Boolean)
@@ -94,7 +97,6 @@ export default function TaxiVehiclesPage() {
 
   const handleDelete = async (id: string) => {
     if (!window.confirm("Désactiver ce véhicule ?")) return;
-
     try {
       await taxiVehiclesApi.delete(id);
       await loadVehicles();
@@ -140,8 +142,8 @@ export default function TaxiVehiclesPage() {
 
       <div className="grid gap-4 md:grid-cols-4">
         <StatCard label="Véhicules" value={stats.total} icon={<Bike className="h-5 w-5 text-amber-600" />} />
-        <StatCard label="Disponibles" value={stats.byStatus.AVAILABLE || 0} icon={<ShieldCheck className="h-5 w-5 text-emerald-600" />} />
-        <StatCard label="En service" value={stats.byStatus.IN_SERVICE || 0} icon={<Fuel className="h-5 w-5 text-blue-600" />} />
+        <StatCard label="Disponibles" value={stats.byStatus?.AVAILABLE ?? 0} icon={<ShieldCheck className="h-5 w-5 text-emerald-600" />} />
+        <StatCard label="En service" value={stats.byStatus?.IN_SERVICE ?? 0} icon={<Fuel className="h-5 w-5 text-blue-600" />} />
         <StatCard label="Ajouts récents" value={stats.recent} icon={<Wrench className="h-5 w-5 text-purple-600" />} />
       </div>
 
@@ -200,6 +202,7 @@ export default function TaxiVehiclesPage() {
                             value={vehicle.status}
                             onChange={(e) => handleStatusChange(vehicle, e.target.value as TaxiVehicleStatus)}
                             className={`rounded-full border-0 px-3 py-2 text-xs font-semibold ${statusClasses[vehicle.status]}`}
+                            title="État du véhicule"
                           >
                             {Object.entries(statusLabels).map(([value, label]) => (
                               <option key={value} value={value}>
@@ -286,8 +289,9 @@ export default function TaxiVehiclesPage() {
                 type="number"
               />
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">Statut</label>
+                <label htmlFor="status-select" className="mb-2 block text-sm font-medium text-gray-700">Statut</label>
                 <select
+                  id="status-select"
                   value={form.status}
                   onChange={(e) => setForm((prev) => ({ ...prev, status: e.target.value as TaxiVehicleStatus }))}
                   className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm outline-none focus:border-amber-500"
