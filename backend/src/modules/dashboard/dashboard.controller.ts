@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { AuthRequest } from '../../middlewares/auth.middleware';
 import { apiResponse } from '../../core/utils/apiResponse';
 import { HTTP_STATUS } from '../../core/constants/httpStatus';

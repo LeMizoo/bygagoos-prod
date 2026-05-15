@@ -1,6 +1,5 @@
 import { Router } from 'express';
-import { protect, authorize } from '../../middlewares/auth.middleware';
-import { UserRole } from '../../core/types/userRoles';
+import { protect } from '../../middlewares/auth.middleware';
 import { validate } from '../../core/middlewares/validate';
 import { queryClientSchema, createClientSchema, updateClientSchema } from './dto';
 import {

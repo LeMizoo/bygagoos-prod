@@ -45,7 +45,7 @@ export interface CreateClientData {
   };
 }
 
-export interface UpdateClientData extends Partial<CreateClientData> {}
+export type UpdateClientData = Partial<CreateClientData>;
 
 const transformClientData = (data: Record<string, unknown>): Client => {
   let isActive = true;

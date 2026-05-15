@@ -7,8 +7,6 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "lint:fix": "eslint . --ext ts,tsx --fix",
-    "type-check": "tsc --noEmit --skipLibCheck",
     "preview": "vite preview",
     "generate-icons": "node scripts/generate-icons-simple.js",
     "sync-content": "node scripts/sync-content.js",

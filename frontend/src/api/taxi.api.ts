@@ -1,6 +1,6 @@
 import axiosInstance from './axiosInstance';
 
-const API_BASE = '/api/taxi';
+const API_BASE = '/taxi';
 
 export const taxiApi = {
   // Vehicles

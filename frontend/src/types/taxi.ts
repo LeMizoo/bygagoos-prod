@@ -39,4 +39,4 @@ export interface CreateTaxiVehicleDto {
   notes?: string;
 }
 
-export interface UpdateTaxiVehicleDto extends Partial<CreateTaxiVehicleDto> {}
+export type UpdateTaxiVehicleDto = Partial<CreateTaxiVehicleDto>;

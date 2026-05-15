@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import authApi, { type UserProfile, type AuthResponse, type UpdateProfileData } from "../api/auth.api";
+import authApi, { type UserProfile, type AuthResponse, type UpdateProfileData, type RegisterData } from "../api/auth.api";
 import { dev } from "../utils/devLogger";
 
 export type User = UserProfile;
@@ -18,7 +18,7 @@ interface AuthState {
   // Actions
   login: (email: string, password: string) => Promise<void>;
   googleLogin: (credential: string) => Promise<void>;
-  register: (userData: any) => Promise<void>;
+  register: (userData: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
   setAuthData: (user: User, token: string, refreshToken: string) => void;
   checkAuth: () => Promise<void>;
@@ -55,10 +55,11 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: true,
             isLoading: false,
           });
-        } catch (error: any) {
+        } catch (error: unknown) {
+          const message = error instanceof Error ? error.message : "Erreur de connexion";
           set({ 
             isLoading: false, 
-            error: error.message || "Erreur de connexion" 
+            error: message
           });
           throw error;
         }
@@ -79,10 +80,11 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: true,
             isLoading: false,
           });
-        } catch (error: any) {
+        } catch (error: unknown) {
+          const message = error instanceof Error ? error.message : "Erreur de connexion Google";
           set({
             isLoading: false,
-            error: error.message || "Erreur de connexion Google"
+            error: message
           });
           throw error;
         }
@@ -91,7 +93,7 @@ export const useAuthStore = create<AuthState>()(
       /**
        * Inscrire un nouvel utilisateur
        */
-      register: async (userData) => {
+      register: async (userData: RegisterData) => {
         set({ isLoading: true, error: null });
         try {
           const response: AuthResponse = await authApi.register(userData);
@@ -102,10 +104,11 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: true,
             isLoading: false,
           });
-        } catch (error: any) {
+        } catch (error: unknown) {
+          const message = error instanceof Error ? error.message : "Erreur d'inscription";
           set({ 
             isLoading: false, 
-            error: error.message || "Erreur d'inscription" 
+            error: message
           });
           throw error;
         }
@@ -119,7 +122,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           // On tente d'avertir le backend (route maintenant publique)
           await authApi.logout();
-        } catch (error) {
+        } catch (error: unknown) {
           // Prefer development-only logger
           dev.warn("Déconnexion API notifiée avec erreur (ignorée):", error);
         } finally {
@@ -167,7 +170,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           const { user } = await authApi.getMe(currentToken);
           set({ user, isAuthenticated: true });
-        } catch (error: any) {
+        } catch (error: unknown) {
           // Si le token est expiré ici, on tente une dernière fois le refresh
           if (refreshToken) {
             try {
@@ -177,7 +180,7 @@ export const useAuthStore = create<AuthState>()(
                 set({ user, isAuthenticated: true });
                 return;
               }
-            } catch (e) {
+            } catch (e: unknown) {
               dev.error("Échec rafraîchissement profond:", e);
             }
           }
@@ -256,12 +259,13 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false 
           }));
           
-        } catch (error: any) {
-          if (error.status === 401) {
+        } catch (error: unknown) {
+          if (error && typeof error === 'object' && 'status' in error && error.status === 401) {
             const newToken = await get().refreshTokenAction();
             if (newToken) return get().updateProfile(data);
           }
-          set({ isLoading: false, error: error.message });
+          const message = error instanceof Error ? error.message : "Erreur lors de la mise à jour";
+          set({ isLoading: false, error: message });
           throw error;
         }
       },
@@ -279,13 +283,14 @@ export const useAuthStore = create<AuthState>()(
             confirmPassword: confirm
           });
           set({ isLoading: false });
-        } catch (error: any) {
-          if (error.status === 401) {
+        } catch (error: unknown) {
+          if (error && typeof error === 'object' && 'status' in error && error.status === 401) {
             const newToken = await get().refreshTokenAction();
             // L'appel interne à la méthode du store reste avec les 3 arguments
             if (newToken) return get().changePassword(current, newPass, confirm);
           }
-          set({ isLoading: false, error: error.message });
+          const message = error instanceof Error ? error.message : "Erreur lors du changement de mot de passe";
+          set({ isLoading: false, error: message });
           throw error;
         }
       },
