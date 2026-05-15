@@ -2,7 +2,8 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "CommonJS",
-    "moduleResolution": "node",
+    "moduleResolution": "node16",
+    "ignoreDeprecations": "6.0",
     "lib": ["ES2022"],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
@@ -32,8 +33,7 @@
     "allowUnreachableCode": true,
     "allowUnusedLabels": true,
     "strictPropertyInitialization": false,
-    "strictNullChecks": false,
-    "ignoreDeprecations": "6.0"
+    "strictNullChecks": false
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "coverage", "scripts", "**/__tests__", "**/*.test.ts", "**/*.spec.ts"],
