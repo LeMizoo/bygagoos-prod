@@ -85,16 +85,33 @@ export class TaxiController {
   }
 
   /**
-   * POST /api/taxi/vehicles
+   * POST /api/taxi/vehicles - Créer un véhicule
    */
   async createVehicle(req: Request, res: Response) {
     try {
-      const vehicle = await taxiService.createVehicle(req.body);
+      // Mapper les champs du frontend vers le modèle backend
+      const mappedData = {
+        registrationNumber: req.body.plateNumber || req.body.registrationNumber,
+        type: req.body.brand || req.body.type,
+        model: req.body.model,
+        color: req.body.color,
+        year: req.body.year,
+        currentStatus: req.body.status === 'AVAILABLE' ? 'ACTIVE' : 
+                       req.body.status === 'IN_SERVICE' ? 'ACTIVE' :
+                       req.body.status === 'MAINTENANCE' ? 'MAINTENANCE' : 'INACTIVE',
+        currentMileage: req.body.currentMileage,
+        notes: req.body.notes,
+        isActive: true
+      };
+      
+      logger.info('📝 Création véhicule avec données mappées:', mappedData);
+      const vehicle = await taxiService.createVehicle(mappedData);
       res.status(HTTP_STATUS.CREATED).json(vehicle);
     } catch (error) {
       logger.error('Error in createVehicle:', error);
       res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
-        error: 'Failed to create vehicle'
+        error: 'Failed to create vehicle',
+        details: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   }

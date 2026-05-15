@@ -147,8 +147,10 @@ export class TaxiService {
    */
   async createVehicle(data: any) {
     try {
+      logger.info('📝 Création véhicule avec données:', JSON.stringify(data, null, 2));
       const vehicle = new Vehicle(data);
       await vehicle.save();
+      logger.info(`✅ Véhicule créé avec ID: ${vehicle._id}`);
       return vehicle;
     } catch (error) {
       logger.error('Error creating vehicle:', error);
