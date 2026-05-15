@@ -1,10 +1,15 @@
 // frontend/src/api/axiosInstance.ts
 
-import axios from "axios";
+import axios, { AxiosRequestConfig, InternalAxiosRequestConfig } from "axios";
 import { useAuthStore } from "../stores/authStore";
 import authApi from "./auth.api";
 import { API_URL } from "./index";
 import dev from "../utils/devLogger";
+
+// Type pour les requêtes avec option _silent
+interface SilentRequestConfig extends AxiosRequestConfig {
+  _silent?: boolean;
+}
 
 const axiosInstance = axios.create({
   baseURL: API_URL,
@@ -28,7 +33,7 @@ const onRefreshed = (token: string) => {
 };
 
 // 🔑 Récupération fiable du token
-const getToken = () => {
+const getToken = (): string | null => {
   return localStorage.getItem("token") || localStorage.getItem("accessToken") || useAuthStore.getState().token;
 };
 
@@ -57,7 +62,8 @@ const startKeepAlive = (): void => {
     const token = getToken();
     if (token && !isTokenExpired(token)) {
       try {
-        await axiosInstance.get('/auth/me', { _silent: true } as { _silent: boolean });
+        // Requête silencieuse sans token en header
+        await axiosInstance.get('/auth/me', { _silent: true } as SilentRequestConfig);
         dev.log('💓 Session keep-alive réussi');
       } catch {
         dev.log('⚠️ Keep-alive échoué, token peut-être bientôt expiré');
@@ -83,9 +89,10 @@ export const initKeepAlive = (): void => {
 };
 
 axiosInstance.interceptors.request.use(
-  (config) => {
-    // Ne pas ajouter de token pour les requêtes silencieuses
-    if ((config as { _silent?: boolean })._silent) {
+  (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
+    // Vérifier si c'est une requête silencieuse
+    const silentConfig = config as SilentRequestConfig;
+    if (silentConfig._silent) {
       return config;
     }
 
@@ -101,7 +108,7 @@ axiosInstance.interceptors.request.use(
     dev.log(`📡 Requête API: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
     return config;
   },
-  (error) => Promise.reject(error)
+  (error: unknown) => Promise.reject(error)
 );
 
 axiosInstance.interceptors.response.use(
@@ -110,7 +117,7 @@ axiosInstance.interceptors.response.use(
     return response;
   },
   async (error) => {
-    const originalRequest = error.config;
+    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
     if (error.response) {
       dev.error(`❌ Erreur API ${error.response.status}:`, {
@@ -122,7 +129,7 @@ axiosInstance.interceptors.response.use(
     }
 
     // Ne pas tenter de refresh pour les requêtes silencieuses
-    if ((originalRequest as { _silent?: boolean })?._silent) {
+    if ((originalRequest as SilentRequestConfig)?._silent) {
       return Promise.reject(error);
     }
 
