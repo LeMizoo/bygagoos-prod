@@ -1,10 +1,9 @@
-// frontend/src/App.tsx
-
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { useEffect } from "react";
 import { useAuthStore } from "./stores/authStore";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { stopKeepAlive } from "./api/axiosInstance";
 
 // Layouts
 import MainLayout from "./layouts/MainLayout";
@@ -20,7 +19,7 @@ import InkDashboardPage from "./pages/dashboards/InkDashboardPage";
 import TaxiDashboardPage from "./pages/dashboards/TaxiDashboardPage";
 import RestaurantDashboardPage from "./pages/dashboards/RestaurantDashboardPage";
 
-// Pages Légales et Support (NOUVELLES)
+// Pages Légales et Support
 import { 
   PrivacyPage, 
   TermsPage, 
@@ -83,6 +82,13 @@ function App() {
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
+
+  // Nettoyer le keep-alive au démontage de l'application
+  useEffect(() => {
+    return () => {
+      stopKeepAlive();
+    };
+  }, []);
 
   return (
     <ThemeProvider>

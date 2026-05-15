@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuthStore } from "../../stores/authStore";
+import { stopKeepAlive } from "../../api/axiosInstance";
 import dev from '../../utils/devLogger';
 
 export default function AuthProvider({
@@ -7,7 +8,7 @@ export default function AuthProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const { checkAuth, isLoading, isAuthenticated } = useAuthStore();
+  const { checkAuth, isLoading } = useAuthStore();
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
@@ -23,6 +24,13 @@ export default function AuthProvider({
 
     initializeAuth();
   }, [checkAuth]);
+
+  // Nettoyer le keep-alive au démontage
+  useEffect(() => {
+    return () => {
+      stopKeepAlive();
+    };
+  }, []);
 
   if (isChecking || isLoading) {
     return (
