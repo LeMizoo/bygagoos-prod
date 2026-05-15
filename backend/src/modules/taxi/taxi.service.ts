@@ -157,6 +157,42 @@ export class TaxiService {
   }
 
   /**
+   * Update an existing vehicle
+   */
+  async updateVehicle(id: string, updateData: any) {
+    try {
+      const vehicle = await Vehicle.findByIdAndUpdate(id, updateData, { new: true });
+      if (!vehicle) {
+        throw new Error('Vehicle not found');
+      }
+      return vehicle;
+    } catch (error) {
+      logger.error('Error updating vehicle:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete a vehicle (soft delete - mark as inactive)
+   */
+  async deleteVehicle(id: string) {
+    try {
+      const vehicle = await Vehicle.findByIdAndUpdate(
+        id,
+        { isActive: false, currentStatus: 'INACTIVE' },
+        { new: true }
+      );
+      if (!vehicle) {
+        throw new Error('Vehicle not found');
+      }
+      return vehicle;
+    } catch (error) {
+      logger.error('Error deleting vehicle:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Create a trip
    */
   async createTrip(data: any) {

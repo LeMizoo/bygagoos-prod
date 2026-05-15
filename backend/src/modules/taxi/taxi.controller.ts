@@ -100,6 +100,50 @@ export class TaxiController {
   }
 
   /**
+   * PUT /api/taxi/vehicles/:id - Mettre à jour un véhicule
+   */
+  async updateVehicle(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const vehicle = await taxiService.updateVehicle(id, req.body);
+      res.json(vehicle);
+    } catch (error) {
+      logger.error('Error in updateVehicle:', error);
+      if ((error as Error).message === 'Vehicle not found') {
+        res.status(HTTP_STATUS.NOT_FOUND).json({
+          error: 'Vehicle not found'
+        });
+      } else {
+        res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+          error: 'Failed to update vehicle'
+        });
+      }
+    }
+  }
+
+  /**
+   * DELETE /api/taxi/vehicles/:id - Supprimer un véhicule (soft delete)
+   */
+  async deleteVehicle(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      await taxiService.deleteVehicle(id);
+      res.status(HTTP_STATUS.NO_CONTENT).send();
+    } catch (error) {
+      logger.error('Error in deleteVehicle:', error);
+      if ((error as Error).message === 'Vehicle not found') {
+        res.status(HTTP_STATUS.NOT_FOUND).json({
+          error: 'Vehicle not found'
+        });
+      } else {
+        res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+          error: 'Failed to delete vehicle'
+        });
+      }
+    }
+  }
+
+  /**
    * POST /api/taxi/trips
    */
   async createTrip(req: Request, res: Response) {
