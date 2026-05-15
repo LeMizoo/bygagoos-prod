@@ -1,7 +1,8 @@
 export type TaxiVehicleStatus = "AVAILABLE" | "IN_SERVICE" | "MAINTENANCE" | "RENTED" | "OFFLINE";
 
 export interface TaxiVehicle {
-  id: string;
+  id: string;           // Normalisé pour le frontend
+  _id?: string;         // ID MongoDB original
   plateNumber: string;
   brand: string;
   model: string;

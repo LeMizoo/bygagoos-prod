@@ -32,6 +32,12 @@ const emptyForm: CreateTaxiVehicleDto = {
   notes: "",
 };
 
+// Fonction pour obtenir l'ID du véhicule (supporte _id et id)
+const getVehicleId = (vehicle: TaxiVehicle | { _id?: string; id?: string }): string => {
+  const v = vehicle as { _id?: string; id?: string };
+  return v._id ?? v.id ?? "";
+};
+
 export default function TaxiVehiclesPage() {
   const [vehicles, setVehicles] = useState<TaxiVehicle[]>([]);
   const [stats, setStats] = useState<TaxiVehicleStats>({ total: 0, byStatus: {}, recent: 0 });
@@ -47,7 +53,17 @@ export default function TaxiVehiclesPage() {
         taxiVehiclesApi.getAll({ limit: 100, sortBy: "createdAt", sortOrder: "desc" }),
         taxiVehiclesApi.getStats(),
       ]);
-      setVehicles(list);
+      
+      // Normaliser les véhicules pour avoir un champ 'id' unifié
+      const normalizedVehicles = (list as unknown[]).map((vehicle) => {
+        const v = vehicle as { _id?: string; id?: string } & TaxiVehicle;
+        return {
+          ...(vehicle as TaxiVehicle),
+          id: v._id ?? v.id,
+        };
+      });
+      
+      setVehicles(normalizedVehicles);
       setStats({
         total: summary.total ?? 0,
         byStatus: summary.byStatus ?? {},
@@ -107,9 +123,18 @@ export default function TaxiVehiclesPage() {
   };
 
   const handleStatusChange = async (vehicle: TaxiVehicle, status: TaxiVehicleStatus) => {
+    const vehicleId = getVehicleId(vehicle);
+    if (!vehicleId) {
+      dev.error("ID du véhicule manquant:", vehicle);
+      alert("Impossible de mettre à jour le statut : ID manquant");
+      return;
+    }
+    
     try {
-      await taxiVehiclesApi.update(vehicle.id, { status });
+      dev.log(`🔄 Mise à jour statut véhicule ${vehicleId} vers ${status}`);
+      await taxiVehiclesApi.update(vehicleId, { status });
       await loadVehicles();
+      dev.log(`✅ Statut mis à jour avec succès`);
     } catch (error) {
       dev.error("Erreur mise à jour véhicule taxi:", error);
       alert("Impossible de mettre à jour le statut");
@@ -183,7 +208,7 @@ export default function TaxiVehiclesPage() {
                   </thead>
                   <tbody className="divide-y divide-gray-200 bg-white">
                     {filteredVehicles.map((vehicle) => (
-                      <tr key={vehicle.id} className="hover:bg-gray-50">
+                      <tr key={getVehicleId(vehicle)} className="hover:bg-gray-50">
                         <td className="px-4 py-4">
                           <div>
                             <p className="font-semibold text-gray-900">{vehicle.plateNumber}</p>
@@ -217,7 +242,7 @@ export default function TaxiVehiclesPage() {
                         <td className="px-4 py-4">
                           <button
                             type="button"
-                            onClick={() => handleDelete(vehicle.id)}
+                            onClick={() => handleDelete(getVehicleId(vehicle))}
                             className="inline-flex items-center gap-2 rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
                           >
                             <Trash2 className="h-4 w-4" />
