@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, type LucideIcon } from "lucide-react";
+import DashboardAccessPanel from "./DashboardAccessPanel";
+import { administrationQuickLinks, transversalDashboardLinks } from "../../data/dashboardNavigation";
 
 export interface DashboardMetric {
   label: string;
@@ -67,6 +69,25 @@ export default function ActivityDashboardFrame({
               ))}
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 lg:px-8">
+        <div className="grid gap-6 xl:grid-cols-2">
+          <DashboardAccessPanel
+            title="Navigation transversale"
+            subtitle="Basculer immédiatement entre les activités"
+            links={transversalDashboardLinks}
+            columns={2}
+            compact
+          />
+          <DashboardAccessPanel
+            title="Administration centrale"
+            subtitle="Rejoindre les pages de pilotage"
+            links={administrationQuickLinks}
+            columns={2}
+            compact
+          />
         </div>
       </section>
 

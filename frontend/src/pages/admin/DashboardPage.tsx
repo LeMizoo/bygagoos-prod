@@ -1,41 +1,18 @@
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
-  BarChart3,
-  Bike,
   Briefcase,
   Crown,
-  Palette,
   ShieldCheck,
   Sparkles,
-  UtensilsCrossed,
-  Users,
 } from "lucide-react";
-import { businessUnits, directionGenerale, executivePillars, prodBrand } from "../../data/prod";
-
-const activityCards = [
-  {
-    icon: Palette,
-    label: "ByGagoos Ink",
-    route: "/ink/dashboard",
-    summary: "Designs, commandes, production et galerie.",
-    accent: "from-amber-600 to-orange-500",
-  },
-  {
-    icon: Bike,
-    label: "ByGagoos Trans",
-    route: "/trans/dashboard",
-    summary: "Taxi-Moto, flotte, maintenance et exploitation.",
-    accent: "from-sky-600 to-cyan-500",
-  },
-  {
-    icon: UtensilsCrossed,
-    label: "ByGagoos CDA",
-    route: "/cda/dashboard",
-    summary: "Bar / restaurant, tables, réservations et service.",
-    accent: "from-rose-600 to-amber-500",
-  },
-];
+import DashboardAccessPanel from "../../components/dashboard/DashboardAccessPanel";
+import {
+  centralAdministrationLinks,
+  homeNavigationLinks,
+  transversalDashboardLinks,
+} from "../../data/dashboardNavigation";
+import { directionGenerale, executivePillars, prodBrand } from "../../data/prod";
 
 const governanceStats = [
   { label: "Membres direction", value: "4", icon: Crown },
@@ -68,11 +45,11 @@ export default function DashboardPage() {
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
-                to="/admin/clients"
+                to="/admin/family"
                 className="inline-flex items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur transition-colors hover:bg-white/20"
               >
-                Accéder aux données
-                <BarChart3 className="h-4 w-4" />
+                Gouvernance familiale
+                <ShieldCheck className="h-4 w-4" />
               </Link>
             </div>
           </div>
@@ -98,12 +75,29 @@ export default function DashboardPage() {
               </p>
               <p className="mt-3 text-lg font-bold">Aligner les trois dashboards sur le même socle</p>
               <p className="mt-2 text-sm text-gray-600">
-                Chaque activité garde son propre écran, ses propres fonctionnalités et son propre rythme.
+                Chaque activité garde son propre écran, mais l’accès et la lecture se font
+                désormais depuis un centre de commande unique.
               </p>
             </div>
           </div>
         </div>
       </section>
+
+      <div className="grid gap-6 xl:grid-cols-2">
+        <DashboardAccessPanel
+          title="Centre de commande"
+          subtitle="Tous les dashboards métiers à portée de main"
+          links={transversalDashboardLinks}
+          columns={4}
+        />
+
+        <DashboardAccessPanel
+          title="Administration centrale"
+          subtitle="Équipe, clients, commandes et réglages"
+          links={centralAdministrationLinks}
+          columns={4}
+        />
+      </div>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {directionGenerale.map((member) => (
@@ -119,42 +113,13 @@ export default function DashboardPage() {
         ))}
       </section>
 
-      <section className="rounded-[2rem] border border-gray-200 bg-white p-8 shadow-sm">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.25em] text-amber-700">
-              Les trois activités
-            </p>
-            <h2 className="mt-3 text-3xl font-bold text-gray-900">Un dashboard par activité</h2>
-          </div>
-          <Link to="/home#activities" className="text-sm font-semibold text-gray-700">
-            Voir la page d’accueil
-          </Link>
-        </div>
-
-        <div className="mt-8 grid gap-4 xl:grid-cols-3">
-          {activityCards.map((card) => {
-            const Icon = card.icon;
-            return (
-              <Link
-                key={card.label}
-                to={card.route}
-                className="group rounded-3xl border border-gray-200 bg-gradient-to-b from-gray-50 to-white p-6 transition-all hover:-translate-y-1 hover:shadow-xl"
-              >
-                <div className={`inline-flex rounded-2xl bg-gradient-to-r ${card.accent} p-3 text-white`}>
-                  <Icon className="h-5 w-5" />
-                </div>
-                <h3 className="mt-5 text-2xl font-bold text-gray-900">{card.label}</h3>
-                <p className="mt-3 text-sm leading-6 text-gray-600">{card.summary}</p>
-                <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-amber-700">
-                  Ouvrir le dashboard
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
+      <DashboardAccessPanel
+        title="Vitrine rapide"
+        subtitle="Retour vers l’accueil et le hub activités"
+        links={homeNavigationLinks}
+        columns={2}
+        compact
+      />
 
       <div className="grid gap-6 xl:grid-cols-3">
         {executivePillars.map((pillar) => {
@@ -179,15 +144,15 @@ export default function DashboardPage() {
             </p>
             <h2 className="mt-3 text-3xl font-bold">Le socle commun de ByGagoos Prod</h2>
             <p className="mt-3 max-w-3xl text-white/80">
-              Cette page remplace l’ancien dashboard unique par une vraie vue exécutive qui
-              pilote la maison mère et prépare les évolutions des trois activités.
+              Cette page sert désormais de porte d’entrée unique pour naviguer entre les
+              activités, l’administration centrale et la gouvernance familiale.
             </p>
           </div>
           <Link
-            to="/trans/dashboard"
+            to="/home#activities"
             className="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-gray-900 shadow-lg"
           >
-            Passer au dashboard Trans
+            Explorer les activités
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
