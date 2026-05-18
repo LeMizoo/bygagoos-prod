@@ -34,7 +34,7 @@ export function PreviewTable({
   viewAllLink,
   actions,
 }: PreviewTableProps) {
-  const displayedData = data.slice(0, 5); // Afficher max 5 éléments
+  const displayedData = Array.isArray(data) ? data.slice(0, 5) : []; // Afficher max 5 éléments
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
@@ -147,7 +147,7 @@ export function PreviewTable({
       </div>
 
       {/* Pied de page */}
-      {displayedData.length > 0 && data.length > 5 && (
+      {displayedData.length > 0 && Array.isArray(data) && data.length > 5 && (
         <div className="px-6 py-3 bg-gray-50 border-t border-gray-200 text-sm text-gray-600">
           Affichage de {displayedData.length} sur {data.length} éléments
         </div>

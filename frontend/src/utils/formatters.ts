@@ -121,7 +121,7 @@ export const truncateText = (text: string, length: number = 100, suffix: string 
  * @returns Le texte avec première lettre en majuscule
  */
 export const capitalizeFirst = (text: string): string => {
-  if (!text) return text;
+  if (typeof text !== 'string' || text.length === 0) return text || '';
   return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
 };
 

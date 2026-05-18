@@ -15,6 +15,7 @@ export class RestaurantService {
       const occupiedTables = tables.filter((t) => t.status === 'OCCUPIED').length;
       const availableTables = tables.filter((t) => t.status === 'AVAILABLE').length;
       const reservedTables = tables.filter((t) => t.status === 'RESERVED').length;
+      const occupancyRate = tables.length === 0 ? 0 : Math.round((occupiedTables / tables.length) * 100);
 
       return {
         tables,
@@ -23,7 +24,7 @@ export class RestaurantService {
           occupied: occupiedTables,
           available: availableTables,
           reserved: reservedTables,
-          occupancyRate: Math.round((occupiedTables / tables.length) * 100)
+          occupancyRate
         }
       };
     } catch (error) {
@@ -161,6 +162,7 @@ export class RestaurantService {
       const allTables = await RestaurantTable.find();
       const occupiedTables = allTables.filter((t) => t.status === 'OCCUPIED').length;
       const availableTables = allTables.filter((t) => t.status === 'AVAILABLE').length;
+      const occupancyRate = allTables.length === 0 ? 0 : Math.round((occupiedTables / allTables.length) * 100);
 
       const todayReservations = await Reservation.countDocuments({
         reservationDate: {
@@ -180,7 +182,7 @@ export class RestaurantService {
         totalTables: allTables.length,
         occupiedTables,
         availableTables,
-        occupancyRate: Math.round((occupiedTables / allTables.length) * 100),
+        occupancyRate,
         todayReservations,
         pendingReservations,
         stockAlerts

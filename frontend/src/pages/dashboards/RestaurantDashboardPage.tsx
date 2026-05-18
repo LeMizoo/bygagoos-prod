@@ -56,10 +56,10 @@ export default function RestaurantDashboardPage() {
     staleTime: 10 * 60 * 1000
   });
 
-  const reservations = reservationsData.reservations || [];
-  const menuHighlights = menuData || [];
-  const tables = tablesData.tables || [];
-  const stockAlerts = stockData || [];
+  const reservations = Array.isArray(reservationsData.reservations) ? reservationsData.reservations : [];
+  const menuHighlights = Array.isArray(menuData) ? menuData : [];
+  const tables = Array.isArray(tablesData.tables) ? tablesData.tables : [];
+  const stockAlerts = Array.isArray(stockData) ? stockData : [];
 
   // Générer l'état des tables pour l'affichage
   const tableStatus = tables.length > 0 ? tables : [
@@ -180,10 +180,10 @@ export default function RestaurantDashboardPage() {
             <BarChart3 className="h-6 w-6 text-gray-400" />
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {tableStatus.map((table: any) => (
-              <div key={table.table || table.number} className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+            {tableStatus.map((table: any, index: number) => (
+              <div key={table.table || table.number || table.tableNumber || index} className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
                 <div className="flex items-center justify-between">
-                  <p className="text-lg font-bold text-gray-900">{table.table || `Table ${table.number}`}</p>
+                  <p className="text-lg font-bold text-gray-900">{table.table || `Table ${table.number || table.tableNumber || index + 1}`}</p>
                   <span className={`rounded-full px-3 py-1 text-xs font-semibold ${table.color || 'bg-gray-100 text-gray-800'}`}>
                     {table.status}
                   </span>
