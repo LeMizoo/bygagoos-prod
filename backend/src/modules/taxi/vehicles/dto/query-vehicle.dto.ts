@@ -6,7 +6,7 @@ export const queryTaxiVehicleSchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).optional().default(10),
   search: z.string().optional(),
   status: z.enum(Object.values(TaxiVehicleStatus) as [string, ...string[]]).optional(),
-  sortBy: z.string().optional().default('createdAt'),
+  sortBy: z.enum(['createdAt', 'updatedAt', 'plateNumber', 'brand', 'vehicleModel', 'status', 'year', 'currentMileage']).optional().default('createdAt'),
   sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),
 });
 

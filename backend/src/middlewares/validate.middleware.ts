@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { AnyZodObject, ZodError } from 'zod';
+import { ZodError, ZodTypeAny } from 'zod';
 import { apiResponse } from '../core/utils/apiResponse';
 import { HTTP_STATUS } from '../core/constants/httpStatus';
 import logger from '../core/utils/logger';
@@ -24,7 +24,7 @@ interface JoiSchema {
  * Middleware de validation compatible Zod et Joi
  */
 export const validate = (
-  schema: AnyZodObject | JoiSchema,
+  schema: ZodTypeAny | JoiSchema,
   source: 'body' | 'query' | 'params' = 'body'
 ) => {
   return async (req: Request, res: Response, next: NextFunction) => {
@@ -87,9 +87,9 @@ export const validate = (
 /**
  * Validate and return parsed data (works with Zod and Joi)
  */
-export const validateData = <T = any>(schema: AnyZodObject | JoiSchema, data: unknown): T => {
+export const validateData = <T = any>(schema: ZodTypeAny | JoiSchema, data: unknown): T => {
   if ('parse' in schema || 'parseAsync' in schema) {
-    return (schema as AnyZodObject).parse(data) as T;
+    return (schema as ZodTypeAny).parse(data) as T;
   }
 
   const { error, value } = (schema as JoiSchema).validate(data, { abortEarly: false });
@@ -104,7 +104,7 @@ export const validateData = <T = any>(schema: AnyZodObject | JoiSchema, data: un
 /**
  * Validate an array of items against a schema and return parsed items
  */
-export const validateAll = <T = any>(schema: AnyZodObject | JoiSchema, data: unknown): T[] => {
+export const validateAll = <T = any>(schema: ZodTypeAny | JoiSchema, data: unknown): T[] => {
   if (!Array.isArray(data)) {
     throw new Error('Expected an array for validateAll');
   }

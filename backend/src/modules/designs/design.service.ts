@@ -28,6 +28,8 @@ interface SortOptions {
   [key: string]: 1 | -1;
 }
 
+const escapeRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 interface FileType {
   _id?: Types.ObjectId;
   url: string;
@@ -121,16 +123,19 @@ export class DesignService {
       }
       
       if (search) {
+        const escapedSearch = escapeRegExp(search.trim());
         filter.$or = [
-          { title: { $regex: search, $options: 'i' } },
-          { description: { $regex: search, $options: 'i' } },
-          { tags: { $regex: search, $options: 'i' } }
+          { title: { $regex: escapedSearch, $options: 'i' } },
+          { description: { $regex: escapedSearch, $options: 'i' } },
+          { tags: { $in: [new RegExp(escapedSearch, 'i')] } }
         ];
       }
 
       // Construction du tri
+      const allowedSortFields = new Set(['title', 'status', 'type', 'createdAt', 'dueDate']);
+      const safeSortBy = allowedSortFields.has(sortBy) ? sortBy : 'createdAt';
       const sort: SortOptions = {};
-      sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+      sort[safeSortBy] = sortOrder === 'desc' ? -1 : 1;
 
       // Exécution des requêtes avec population
       const [designs, total] = await Promise.all([
@@ -198,16 +203,19 @@ export class DesignService {
       }
 
       if (search) {
+        const escapedSearch = escapeRegExp(search.trim());
         filter.$or = [
-          { title: { $regex: search, $options: 'i' } },
-          { description: { $regex: search, $options: 'i' } },
-          { tags: { $in: [new RegExp(search, 'i')] } }
+          { title: { $regex: escapedSearch, $options: 'i' } },
+          { description: { $regex: escapedSearch, $options: 'i' } },
+          { tags: { $in: [new RegExp(escapedSearch, 'i')] } }
         ];
       }
 
       // Construction du tri
+      const allowedSortFields = new Set(['title', 'status', 'type', 'createdAt', 'dueDate']);
+      const safeSortBy = allowedSortFields.has(sortBy) ? sortBy : 'createdAt';
       const sort: SortOptions = {};
-      sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+      sort[safeSortBy] = sortOrder === 'desc' ? -1 : 1;
 
       // Exécution des requêtes avec population
       const [designs, total] = await Promise.all([

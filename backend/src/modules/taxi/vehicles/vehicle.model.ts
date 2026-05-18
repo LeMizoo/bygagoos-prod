@@ -104,8 +104,8 @@ const taxiVehicleSchema = new Schema<ITaxiVehicle>(
 
 taxiVehicleSchema.index({ user: 1, plateNumber: 1 }, { unique: true });
 taxiVehicleSchema.index({ user: 1, status: 1 });
-taxiVehicleSchema.index({ user: 1, brand: 1, model: 1 });
-taxiVehicleSchema.index({ plateNumber: 'text', brand: 'text', model: 'text', notes: 'text' });
+taxiVehicleSchema.index({ user: 1, brand: 1, vehicleModel: 1 });
+taxiVehicleSchema.index({ plateNumber: 'text', brand: 'text', vehicleModel: 'text', notes: 'text' });
 
 const TaxiVehicle = mongoose.model<ITaxiVehicle>('TaxiVehicle', taxiVehicleSchema);
 

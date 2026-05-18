@@ -17,6 +17,8 @@ interface SortOptions {
   [key: string]: 1 | -1;
 }
 
+const escapeRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 const canAccessAllVehicles = (role?: UserRole): boolean => role !== UserRole.CLIENT;
 
 const buildVehicleScope = (userId: string, role?: UserRole): Pick<VehicleFilter, 'user'> | Record<string, never> => {
@@ -49,16 +51,20 @@ export class TaxiVehicleService {
       }
 
       if (search) {
+        const escapedSearch = escapeRegExp(search.trim());
         filter.$or = [
-          { plateNumber: { $regex: search, $options: 'i' } },
-          { brand: { $regex: search, $options: 'i' } },
-          { model: { $regex: search, $options: 'i' } },
-          { notes: { $regex: search, $options: 'i' } },
+          { plateNumber: { $regex: escapedSearch, $options: 'i' } },
+          { brand: { $regex: escapedSearch, $options: 'i' } },
+          { vehicleModel: { $regex: escapedSearch, $options: 'i' } },
+          { notes: { $regex: escapedSearch, $options: 'i' } },
         ];
       }
 
+      const allowedSortFields = new Set(['createdAt', 'updatedAt', 'plateNumber', 'brand', 'vehicleModel', 'status', 'year', 'currentMileage']);
+      const safeSortBy = allowedSortFields.has(sortBy) ? sortBy : 'createdAt';
+
       const sort: SortOptions = {};
-      sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+      sort[safeSortBy] = sortOrder === 'desc' ? -1 : 1;
 
       const [vehicles, total] = await Promise.all([
         TaxiVehicle.find(filter)

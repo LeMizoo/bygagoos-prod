@@ -2,21 +2,19 @@ import { Router } from 'express';
 import { taxiController } from './taxi.controller';
 import { protect } from '../../middlewares/auth.middleware';
 import { authorize } from '../../middlewares/role.middleware';
+import vehicleRoutes from './vehicles/vehicle.routes';
 
 const router = Router();
 router.use(protect);
 router.use(authorize(['ADMIN', 'SUPER_ADMIN', 'MANAGER']));
 
 // ✅ Routes spécifiques (doivent être placées AVANT les routes avec paramètres)
-router.get('/vehicles/stats', (req, res) => taxiController.getFleetStats(req, res));
 router.get('/maintenance', (req, res) => taxiController.getMaintenanceDueSoon(req, res));
 
 // Routes CRUD pour les véhicules
-router.get('/vehicles', (req, res) => taxiController.getVehicles(req, res));
-router.get('/vehicles/:id', (req, res) => taxiController.getVehicleById(req, res));
-router.post('/vehicles', (req, res) => taxiController.createVehicle(req, res));
-router.put('/vehicles/:id', (req, res) => taxiController.updateVehicle(req, res));
-router.delete('/vehicles/:id', (req, res) => taxiController.deleteVehicle(req, res));
+// Le module `vehicles` expose le contrat réellement utilisé par le frontend
+// (plateNumber, brand, model, status) et remplace l'ancien mapping legacy.
+router.use('/vehicles', vehicleRoutes);
 
 // Routes pour les trajets
 router.get('/trips/today', (req, res) => taxiController.getTodayTrips(req, res));

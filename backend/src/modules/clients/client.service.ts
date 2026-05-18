@@ -7,6 +7,8 @@ import logger from '../../core/utils/logger';
 import { UserRole } from '../../core/types/userRoles';
 import eventEmitter, { AppEvent } from '../../core/utils/eventEmitter';
 
+const escapeRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 export class ClientService {
   private buildScopeFilter(userId: string, role?: UserRole): Record<string, unknown> {
     if (role === UserRole.SUPER_ADMIN || role === UserRole.ADMIN) {
@@ -42,17 +44,20 @@ export class ClientService {
       }
       
       if (search) {
+        const escapedSearch = escapeRegExp(search.trim());
         filter.$or = [
-          { firstName: { $regex: search, $options: 'i' } },
-          { lastName: { $regex: search, $options: 'i' } },
-          { email: { $regex: search, $options: 'i' } },
-          { company: { $regex: search, $options: 'i' } }
+          { firstName: { $regex: escapedSearch, $options: 'i' } },
+          { lastName: { $regex: escapedSearch, $options: 'i' } },
+          { email: { $regex: escapedSearch, $options: 'i' } },
+          { company: { $regex: escapedSearch, $options: 'i' } }
         ];
       }
 
       // Construction du tri
+      const allowedSortFields = new Set(['firstName', 'lastName', 'email', 'company', 'createdAt']);
+      const safeSortBy = allowedSortFields.has(sortBy) ? sortBy : 'createdAt';
       const sort: any = {};
-      sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+      sort[safeSortBy] = sortOrder === 'desc' ? -1 : 1;
 
       // Exécution des requêtes
       const [clients, total] = await Promise.all([
@@ -302,14 +307,15 @@ export class ClientService {
    */
   async search(userId: string, term: string, limit: number = 10, role?: UserRole): Promise<ClientResponseDTO[]> {
     try {
+      const escapedTerm = escapeRegExp(term.trim());
       const clients = await Client.find({
         ...this.buildScopeFilter(userId, role),
         isActive: true,
         $or: [
-          { firstName: { $regex: term, $options: 'i' } },
-          { lastName: { $regex: term, $options: 'i' } },
-          { email: { $regex: term, $options: 'i' } },
-          { company: { $regex: term, $options: 'i' } }
+          { firstName: { $regex: escapedTerm, $options: 'i' } },
+          { lastName: { $regex: escapedTerm, $options: 'i' } },
+          { email: { $regex: escapedTerm, $options: 'i' } },
+          { company: { $regex: escapedTerm, $options: 'i' } }
         ]
       })
       .limit(limit)

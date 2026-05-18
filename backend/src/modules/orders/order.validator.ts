@@ -1,95 +1,102 @@
-// backend/src/modules/orders/order.validator.ts
-
 import { z } from 'zod';
+import { OrderPriority, OrderStatus, PaymentStatus } from './order.model';
 
-// Schéma pour les items de commande
-const orderItemSchema = z.object({
-  designId: z.string().min(1, "L'ID du design est requis"),
-  quantity: z.number().min(1, "La quantité doit être au moins 1"),
-  unitPrice: z.number().min(0, "Le prix unitaire doit être positif"),
-  totalPrice: z.number().min(0, "Le prix total doit être positif").optional(),
-  notes: z.string().optional()
+const orderDesignSchema = z.object({
+  design: z.string().min(1, "L'ID du design est requis"),
+  quantity: z.coerce.number().int().min(1, 'La quantite doit etre au moins 1'),
+  modifications: z.string().trim().max(2000, 'Les modifications sont trop longues').optional().nullable(),
+  previewUrl: z.string().trim().optional().nullable(),
 });
 
-// Schéma pour les paiements
-const paymentSchema = z.object({
-  amount: z.number().min(0, "Le montant doit être positif"),
-  method: z.enum(['CASH', 'CARD', 'TRANSFER', 'PAYPAL', 'STRIPE']),
-  date: z.date().optional(),
-  transactionId: z.string().optional()
+const discountSchema = z.object({
+  type: z.enum(['percentage', 'fixed']),
+  value: z.coerce.number().min(0, 'La reduction doit etre positive'),
+  reason: z.string().trim().max(500, 'La raison est trop longue').optional().nullable(),
 });
 
-// Schéma pour les messages
-const messageSchema = z.object({
-  sender: z.string().min(1, "L'expéditeur est requis"),
-  content: z.string().min(1, "Le contenu du message est requis"),
-  isRead: z.boolean().optional().default(false),
-  attachments: z.array(z.string()).optional()
+const createOrderBaseSchema = z.object({
+  client: z.string().min(1, "L'ID du client est requis").optional(),
+  clientId: z.string().min(1, "L'ID du client est requis").optional(),
+  title: z.string().trim().min(3, 'Le titre doit contenir au moins 3 caracteres'),
+  description: z.string().trim().max(2000, 'La description est trop longue').optional().nullable(),
+  priority: z.nativeEnum(OrderPriority).default(OrderPriority.MEDIUM),
+  requestedDate: z.coerce.date(),
+  designs: z.array(orderDesignSchema).min(1, 'Au moins un design est requis'),
+  taxRate: z.coerce.number().min(0, 'La TVA doit etre positive').max(100, 'La TVA ne peut pas depasser 100').default(20),
+  discount: discountSchema.optional().nullable(),
+  tags: z.array(z.string().trim().min(1)).default([]),
+  metadata: z.record(z.unknown()).optional().default({}),
 });
 
-// Schéma pour la création de commande
-export const createOrderSchema = z.object({
-  orderNumber: z.string().optional(),
-  clientId: z.string().min(1, "L'ID du client est requis"),
-  items: z.array(orderItemSchema).min(1, "Au moins un article est requis"),
-  status: z.enum(['PENDING', 'IN_PROGRESS', 'DELIVERED', 'CANCELLED']).default('PENDING'),
-  paymentStatus: z.enum(['PENDING', 'PAID', 'PARTIALLY_PAID', 'REFUNDED', 'FAILED']).default('PENDING'),
-  subtotal: z.number().min(0, "Le sous-total doit être positif"),
-  tax: z.number().min(0, "La TVA doit être positive").default(0),
-  discount: z.number().min(0, "La réduction doit être positive").default(0),
-  total: z.number().min(0, "Le total doit être positif"),
-  notes: z.string().optional(),
-  internalNotes: z.string().optional(),
-  assignedTo: z.array(z.string()).optional(),
-  messages: z.array(messageSchema).optional(),
-  payment: paymentSchema.optional(),
-  dueDate: z.string().optional().transform(val => val ? new Date(val) : undefined),
-  completedAt: z.string().optional().transform(val => val ? new Date(val) : undefined)
+export const createOrderSchema = createOrderBaseSchema.superRefine((data, ctx) => {
+  if (!data.client && !data.clientId) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "L'ID du client est requis",
+      path: ['client'],
+    });
+  }
 });
 
-// Schéma pour la mise à jour de commande
 export const updateOrderSchema = z.object({
-  items: z.array(orderItemSchema).optional(),
-  status: z.enum(['PENDING', 'IN_PROGRESS', 'DELIVERED', 'CANCELLED']).optional(),
-  paymentStatus: z.enum(['PENDING', 'PAID', 'PARTIALLY_PAID', 'REFUNDED', 'FAILED']).optional(),
-  subtotal: z.number().min(0).optional(),
-  tax: z.number().min(0).optional(),
-  discount: z.number().min(0).optional(),
-  total: z.number().min(0).optional(),
-  notes: z.string().optional(),
-  internalNotes: z.string().optional(),
-  assignedTo: z.array(z.string()).optional(),
-  dueDate: z.string().optional().transform(val => val ? new Date(val) : undefined),
-  completedAt: z.string().optional().transform(val => val ? new Date(val) : undefined)
+  client: z.string().min(1, "L'ID du client est requis").optional(),
+  clientId: z.string().min(1, "L'ID du client est requis").optional(),
+  title: z.string().trim().min(3, 'Le titre doit contenir au moins 3 caracteres').optional(),
+  description: z.string().trim().max(2000, 'La description est trop longue').optional().nullable(),
+  priority: z.nativeEnum(OrderPriority).optional(),
+  requestedDate: z.coerce.date().optional(),
+  designs: z.array(orderDesignSchema).min(1, 'Au moins un design est requis').optional(),
+  taxRate: z.coerce.number().min(0, 'La TVA doit etre positive').max(100, 'La TVA ne peut pas depasser 100').optional(),
+  discount: discountSchema.optional().nullable(),
+  tags: z.array(z.string().trim().min(1)).optional(),
+  metadata: z.record(z.unknown()).optional(),
 });
 
-// Schéma pour la mise à jour du statut
 export const updateStatusSchema = z.object({
-  status: z.enum(['PENDING', 'IN_PROGRESS', 'DELIVERED', 'CANCELLED'])
+  status: z.nativeEnum(OrderStatus),
+  comment: z.string().trim().max(2000, 'Le commentaire est trop long').optional().nullable(),
 });
 
-// Schéma pour l'assignation
+const assignedTeamSchema = z.object({
+  designer: z.string().min(1).optional(),
+  validator: z.string().min(1).optional(),
+  producer: z.string().min(1).optional(),
+}).refine((value) => Boolean(value.designer || value.validator || value.producer), {
+  message: 'Au moins un assigne est requis',
+});
+
 export const assignOrderSchema = z.object({
-  assignedTo: z.array(z.string()).min(1, "Au moins un assigné est requis")
+  assignedTo: z.union([
+    z.array(z.string().min(1)).min(1),
+    assignedTeamSchema,
+  ]).transform((value) => {
+    if (Array.isArray(value)) {
+      return {
+        designer: value[0],
+        validator: value[1],
+        producer: value[2],
+      };
+    }
+
+    return value;
+  }),
 });
 
-// Schéma pour l'ajout de message
 export const addMessageSchema = z.object({
-  content: z.string().min(1, "Le contenu du message est requis"),
-  attachments: z.array(z.string()).optional()
+  content: z.string().trim().min(1, 'Le contenu du message est requis').max(5000, 'Le message est trop long'),
+  attachments: z.array(z.string().min(1)).optional(),
 });
 
-// Schéma pour les filtres de commandes
 export const orderFiltersSchema = z.object({
-  page: z.string().optional().transform(val => val ? parseInt(val) : 1),
-  limit: z.string().optional().transform(val => val ? parseInt(val) : 10),
-  status: z.enum(['PENDING', 'IN_PROGRESS', 'DELIVERED', 'CANCELLED']).optional(),
-  paymentStatus: z.enum(['PENDING', 'PAID', 'PARTIALLY_PAID', 'REFUNDED', 'FAILED']).optional(),
+  page: z.coerce.number().int().min(1).optional().default(1),
+  limit: z.coerce.number().int().min(1).max(100).optional().default(20),
+  search: z.string().trim().optional(),
   clientId: z.string().optional(),
+  status: z.nativeEnum(OrderStatus).optional(),
+  paymentStatus: z.nativeEnum(PaymentStatus).optional(),
   assignedTo: z.string().optional(),
-  startDate: z.string().optional().transform(val => val ? new Date(val) : undefined),
-  endDate: z.string().optional().transform(val => val ? new Date(val) : undefined),
-  search: z.string().optional(),
-  sortBy: z.string().optional(),
-  sortOrder: z.enum(['asc', 'desc']).optional()
+  dateFrom: z.coerce.date().optional(),
+  dateTo: z.coerce.date().optional(),
+  sortBy: z.enum(['orderNumber', 'client', 'title', 'priority', 'status', 'requestedDate', 'createdAt', 'updatedAt']).optional().default('createdAt'),
+  sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),
 });

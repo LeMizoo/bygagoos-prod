@@ -11,12 +11,40 @@ export interface Design {
   type: string;
   status: string;
   price: number;
+  basePrice?: number;
   thumbnail?: string;
   images?: string[];
   tags?: string[];
   createdAt: string;
   updatedAt: string;
 }
+
+const normalizeDesign = (data: any): Design => {
+  const basePrice =
+    typeof data?.basePrice === "number"
+      ? data.basePrice
+      : typeof data?.metadata?.basePrice === "number"
+        ? data.metadata.basePrice
+        : typeof data?.price === "number"
+          ? data.price
+          : 0;
+
+  return {
+    _id: data._id || data.id || "",
+    id: data.id || data._id || "",
+    title: data.title || "Sans nom",
+    description: data.description,
+    type: data.type || "OTHER",
+    status: data.status || "DRAFT",
+    price: basePrice,
+    basePrice,
+    thumbnail: data.thumbnail,
+    images: data.images || data.files?.map((file: any) => file.url).filter(Boolean) || [],
+    tags: Array.isArray(data.tags) ? data.tags : [],
+    createdAt: data.createdAt,
+    updatedAt: data.updatedAt,
+  };
+};
 
 const unwrapApiData = <T,>(response: any): T => {
   if (!response) return response as T;
@@ -65,8 +93,9 @@ export const useDesignStore = create<DesignStore>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await api.get("/designs", { params: { page, limit, ...filters } });
+      const designs = extractDesignsList(response).map(normalizeDesign);
       set({
-        designs: extractDesignsList(response),
+        designs,
         totalPages: extractPaginationPages(response),
         currentPage: page,
         isLoading: false,
@@ -83,7 +112,7 @@ export const useDesignStore = create<DesignStore>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await api.get(`/designs/${id}`);
-      set({ currentDesign: unwrapApiData<Design>(response), isLoading: false });
+      set({ currentDesign: normalizeDesign(unwrapApiData<any>(response)), isLoading: false });
     } catch (error: any) {
       set({
         error: error.response?.data?.message || "Erreur lors du chargement du design",
@@ -97,7 +126,7 @@ export const useDesignStore = create<DesignStore>((set, get) => ({
     try {
       const response = await api.post("/designs", data);
       set({ isLoading: false });
-      return unwrapApiData<Design>(response);
+      return normalizeDesign(unwrapApiData<any>(response));
     } catch (error: any) {
       set({
         error: error.response?.data?.message || "Erreur lors de la création du design",

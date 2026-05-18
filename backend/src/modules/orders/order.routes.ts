@@ -35,22 +35,6 @@ import { UserRole } from '../../core/types/userRoles';
 
 const router = Router();
 
-// Debug: Vérifier que les contrôleurs sont bien importés
-console.log('📦 Chargement des routes orders:');
-console.log('  - createOrder:', typeof createOrder);
-console.log('  - getOrders:', typeof getOrders);
-console.log('  - getOrderById:', typeof getOrderById);
-console.log('  - updateOrder:', typeof updateOrder);
-console.log('  - deleteOrder:', typeof deleteOrder);
-console.log('  - updateOrderStatus:', typeof updateOrderStatus);
-console.log('  - assignOrder:', typeof assignOrder);
-console.log('  - addMessage:', typeof addMessage);
-console.log('  - markMessagesAsRead:', typeof markMessagesAsRead);
-console.log('  - getOrderStats:', typeof getOrderStats);
-console.log('  - getOrdersByClient:', typeof getOrdersByClient);
-console.log('  - downloadInvoice:', typeof downloadInvoice);
-console.log('  - restoreOrder:', typeof restoreOrder);
-
 // Middleware d'authentification pour toutes les routes
 router.use(protect);
 
