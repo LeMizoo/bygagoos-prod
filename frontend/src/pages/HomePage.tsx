@@ -14,7 +14,9 @@ import {
   Heart,
   Church,
   Phone,
-  Mail
+  Mail,
+  Bike,
+  Users,
 } from "lucide-react";
 import FamilyMembersGrid from "../components/family/FamilyMembersGrid";
 import ActivityModuleCard from "../components/home/ActivityModuleCard";
@@ -27,33 +29,27 @@ const heroStats = [
   { label: "Années d'expérience", value: "2", icon: Shield },
 ];
 
-const activityHighlights = [
+const activitiesHero = [
   {
+    name: "ByGagoos Ink",
     icon: Palette,
-    title: "ByGagoos Ink (Sérigraphie et Design)",
-    text: "Designs, commandes, production et galerie publique.",
-    route: "/ink",
-    color: "purple",
-    bgColor: "bg-purple-100",
-    iconColor: "text-purple-600"
+    color: "from-purple-500 to-purple-600",
+    bgGradient: "bg-gradient-to-br from-purple-500/20 to-purple-600/10",
+    description: "Designs, commandes, production et galerie publique.",
   },
   {
-    icon: Truck,
-    title: "ByGagoos Trans (Flotte Taxi-Moto)",
-    text: "Flotte Taxi-Moto, conducteurs, maintenance et missions.",
-    route: "/trans",
-    color: "cyan",
-    bgColor: "bg-cyan-100",
-    iconColor: "text-cyan-600"
+    name: "ByGagoos Trans",
+    icon: Bike,
+    color: "from-cyan-500 to-cyan-600",
+    bgGradient: "bg-gradient-to-br from-cyan-500/20 to-cyan-600/10",
+    description: "Flotte Taxi-Moto, conducteurs, maintenance et missions.",
   },
   {
+    name: "ByGagoos CDA (Cuisine, Dégustation, Accueil)",
     icon: UtensilsCrossed,
-    title: "ByGagoos CDA (Cuisine, Dégustation, Accueil)",
-    text: "Bar / restaurant, réservations, salle et exploitation.",
-    route: "/cda",
-    color: "amber",
-    bgColor: "bg-amber-100",
-    iconColor: "text-amber-600"
+    color: "from-amber-500 to-amber-600",
+    bgGradient: "bg-gradient-to-br from-amber-500/20 to-amber-600/10",
+    description: "Bar / restaurant, réservations, salle et exploitation.",
   },
 ];
 
@@ -69,115 +65,121 @@ export default function HomePage() {
 
   const fadeInUp = {
     hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0 }
+    visible: { opacity: 1, y: 0 },
   };
 
   const staggerContainer = {
     hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+    visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-amber-950 via-stone-900 to-slate-950 text-white">
-        <div className="absolute inset-0 opacity-25">
-          <div className="absolute left-[-10%] top-10 h-72 w-72 rounded-full bg-amber-500 blur-3xl" />
-          <div className="absolute right-0 top-24 h-96 w-96 rounded-full bg-cyan-500 blur-3xl" />
-          <div className="absolute bottom-[-20%] left-1/3 h-80 w-80 rounded-full bg-rose-500 blur-3xl" />
+      {/* Hero Section - Style AgileFleet */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
+        {/* Background decorative elements */}
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-purple-500 blur-3xl" />
+          <div className="absolute top-1/2 -left-40 w-80 h-80 rounded-full bg-cyan-500 blur-3xl" />
+          <div className="absolute -bottom-40 right-1/3 w-80 h-80 rounded-full bg-amber-500 blur-3xl" />
         </div>
 
         <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="grid gap-12 lg:grid-cols-[1.2fr_0.8fr] lg:items-center"
-          >
+          <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
+            {/* Left Column - Text (style AgileFleet mais contenu ByGagoos) */}
             <div>
               <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium backdrop-blur">
-                <Sparkles className="h-4 w-4" />
+                <Sparkles className="h-4 w-4 text-amber-400" />
                 Maison familiale multi-activités
               </div>
-              <h1 className="max-w-4xl text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl">
-                {prodBrand.name}
+              <h1 className="text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl">
+                <span className="bg-gradient-to-r from-purple-400 via-cyan-400 to-amber-400 bg-clip-text text-transparent">
+                  ByGagoos
+                </span>{" "}
+                Prod
               </h1>
-              <p className="mt-6 max-w-3xl text-lg leading-8 text-white/85">
-                {prodBrand.tagline}
+              <p className="mt-6 text-lg leading-8 text-white/80 max-w-2xl">
+                Une maison familiale, trois activités, une direction générale unique et un socle
+                technique commun.
               </p>
-              <p className="mt-4 max-w-3xl text-base leading-7 text-white/70">
-                {prodBrand.summary}
+              <p className="mt-4 text-base leading-7 text-white/60 max-w-2xl">
+                ByGagoos Prod rassemble la sérigraphie, le Taxi-Moto et le bar-restaurant dans une
+                même application modulaire.
               </p>
 
-              <div className="mt-8 flex flex-wrap gap-3">
+              <div className="mt-8 flex flex-wrap gap-4">
                 <Link
                   to="/prod/dashboard"
-                  className="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-gray-900 shadow-lg transition-transform hover:scale-[1.02]"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-3 text-sm font-semibold text-white shadow-lg transition-transform hover:scale-[1.02] hover:shadow-xl"
                 >
                   Voir la Direction Générale
                   <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link
                   to="/home#activities"
-                  className="inline-flex items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur transition-colors hover:bg-white/20"
+                  className="inline-flex items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur transition-colors hover:bg-white/20"
                 >
                   Explorer les activités
                   <ArrowUpRight className="h-4 w-4" />
                 </Link>
               </div>
-            </div>
 
-            <motion.div 
-              variants={staggerContainer}
-              initial="hidden"
-              animate="visible"
-              className="grid gap-4 rounded-[2rem] border border-white/15 bg-white/10 p-5 shadow-2xl backdrop-blur-md"
-            >
-              <div className="grid grid-cols-3 gap-3">
-                {heroStats.map((stat) => {
+              {/* Stats - style AgileFleet */}
+              <div className="mt-12 flex flex-wrap gap-6">
+                {heroStats.map((stat, index) => {
                   const Icon = stat.icon;
                   return (
-                    <motion.div key={stat.label} variants={fadeInUp} className="rounded-2xl bg-black/20 p-4 text-center">
-                      <Icon className="mx-auto h-5 w-5 text-amber-300" />
-                      <div className="mt-2 text-2xl font-bold">{stat.value}</div>
-                      <div className="mt-1 text-[11px] uppercase tracking-[0.25em] text-white/60">
-                        {stat.label}
+                    <div key={index} className="flex items-center gap-3">
+                      <div className="rounded-full bg-white/10 p-2">
+                        <Icon className="h-5 w-5 text-amber-400" />
                       </div>
-                    </motion.div>
+                      <div>
+                        <div className="text-2xl font-bold">{stat.value}</div>
+                        <div className="text-xs text-white/60">{stat.label}</div>
+                      </div>
+                    </div>
                   );
                 })}
               </div>
+            </div>
 
-              <div className="rounded-3xl bg-white p-5 text-gray-900">
-                <div className="mb-4 flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-                  <span className="text-sm font-semibold uppercase tracking-[0.2em] text-gray-500">
-                    Notre structure
-                  </span>
-                </div>
-                <div className="space-y-3">
-                  {businessUnits.map((unit) => {
-                    const Icon = unit.icon;
-                    return (
-                      <div key={unit.name} className="flex items-center gap-3 rounded-2xl bg-gray-50 p-3">
-                        <div className={`rounded-xl bg-gradient-to-r ${unit.accent} p-2 text-white`}>
-                          <Icon className="h-4 w-4" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-gray-900">{unit.name}</p>
-                          <p className="text-xs text-gray-500">{unit.tagline}</p>
-                        </div>
+            {/* Right Column - Three Activities Cards (style AgileFleet) */}
+            <div className="grid gap-4">
+              {activitiesHero.map((activity, index) => {
+                const Icon = activity.icon;
+                return (
+                  <motion.div
+                    key={activity.name}
+                    initial={{ opacity: 0, x: 30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.15, duration: 0.5 }}
+                    className={`group relative overflow-hidden rounded-2xl ${activity.bgGradient} border border-white/10 backdrop-blur-sm transition-all hover:scale-[1.02] hover:border-white/20`}
+                  >
+                    <Link to={activity.name === "ByGagoos Ink" ? "/ink" : activity.name === "ByGagoos Trans" ? "/trans" : "/cda"} className="relative flex items-center gap-4 p-5">
+                      {/* Icon avec dégradé */}
+                      <div
+                        className={`flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-r ${activity.color} shadow-lg`}
+                      >
+                        <Icon className="h-7 w-7 text-white" />
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
+
+                      {/* Content */}
+                      <div className="flex-1">
+                        <h3 className="text-lg font-bold">{activity.name}</h3>
+                        <p className="text-sm text-white/70">{activity.description}</p>
+                      </div>
+
+                      <ArrowRight className="h-5 w-5 text-white/40 transition-transform group-hover:translate-x-1 group-hover:text-white/80" />
+                    </Link>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* Activities Highlights */}
+      {/* Activities Highlights - inchangé */}
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -185,39 +187,76 @@ export default function HomePage() {
           viewport={{ once: true }}
           className="grid gap-6 md:grid-cols-3"
         >
-          {activityHighlights.map((item) => {
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.title}
-                to={item.route}
-                className="group rounded-3xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl"
-              >
-                <div className="flex items-start justify-between">
-                  <div className={`rounded-2xl ${item.bgColor} p-3`}>
-                    <Icon className={`h-5 w-5 ${item.iconColor}`} />
-                  </div>
-                  <ArrowUpRight className="h-5 w-5 text-gray-400 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
-                </div>
-                <h2 className="mt-6 text-2xl font-bold text-gray-900">{item.title}</h2>
-                <p className="mt-3 text-sm leading-6 text-gray-600">{item.text}</p>
-                <p className="mt-6 text-sm font-semibold text-amber-700">Découvrir l'activité</p>
-              </Link>
-            );
-          })}
+          <Link
+            to="/ink"
+            className="group rounded-3xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl"
+          >
+            <div className="flex items-start justify-between">
+              <div className="rounded-2xl bg-purple-100 p-3">
+                <Palette className="h-5 w-5 text-purple-600" />
+              </div>
+              <ArrowUpRight className="h-5 w-5 text-gray-400 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+            </div>
+            <h2 className="mt-6 text-2xl font-bold text-gray-900">ByGagoos Ink</h2>
+            <p className="mt-3 text-sm leading-6 text-gray-600">
+              Designs, commandes, production et galerie publique.
+            </p>
+            <p className="mt-6 text-sm font-semibold text-amber-700">Découvrir l'activité</p>
+          </Link>
+
+          <Link
+            to="/trans"
+            className="group rounded-3xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl"
+          >
+            <div className="flex items-start justify-between">
+              <div className="rounded-2xl bg-cyan-100 p-3">
+                <Truck className="h-5 w-5 text-cyan-600" />
+              </div>
+              <ArrowUpRight className="h-5 w-5 text-gray-400 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+            </div>
+            <h2 className="mt-6 text-2xl font-bold text-gray-900">ByGagoos Trans</h2>
+            <p className="mt-3 text-sm leading-6 text-gray-600">
+              Flotte Taxi-Moto, conducteurs, maintenance et missions.
+            </p>
+            <p className="mt-6 text-sm font-semibold text-amber-700">Découvrir l'activité</p>
+          </Link>
+
+          <Link
+            to="/cda"
+            className="group rounded-3xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl"
+          >
+            <div className="flex items-start justify-between">
+              <div className="rounded-2xl bg-amber-100 p-3">
+                <UtensilsCrossed className="h-5 w-5 text-amber-600" />
+              </div>
+              <ArrowUpRight className="h-5 w-5 text-gray-400 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+            </div>
+            <h2 className="mt-6 text-2xl font-bold text-gray-900">
+              ByGagoos CDA (Cuisine, Dégustation, Accueil)
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-gray-600">
+              Bar / restaurant, réservations, salle et exploitation.
+            </p>
+            <p className="mt-6 text-sm font-semibold text-amber-700">Découvrir l'activité</p>
+          </Link>
         </motion.div>
       </section>
 
-      {/* Three Activities Section */}
+      {/* Three Activities Section - inchangé */}
       <section id="activities" className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8 scroll-mt-24">
         <div className="mb-10 flex items-end justify-between gap-6">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.25em] text-amber-700">
               Les trois activités
             </p>
-            <h2 className="mt-3 text-3xl font-bold text-gray-900">Un seul système, trois espaces métier</h2>
+            <h2 className="mt-3 text-3xl font-bold text-gray-900">
+              Un seul système, trois espaces métier
+            </h2>
           </div>
-          <Link to="/prod/dashboard" className="hidden text-sm font-semibold text-gray-700 md:inline-flex hover:text-amber-700">
+          <Link
+            to="/prod/dashboard"
+            className="hidden text-sm font-semibold text-gray-700 md:inline-flex hover:text-amber-700"
+          >
             Accéder à la Direction Générale
           </Link>
         </div>
@@ -228,7 +267,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Family Section */}
+      {/* Family Section - inchangé */}
       <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -240,28 +279,29 @@ export default function HomePage() {
             <p className="text-sm font-semibold uppercase tracking-[0.25em] text-amber-700">
               Direction Générale
             </p>
-            <h2 className="mt-3 text-3xl font-bold text-gray-900">Le noyau familial qui pilote ByGagoos Prod</h2>
+            <h2 className="mt-3 text-3xl font-bold text-gray-900">
+              Le noyau familial qui pilote ByGagoos Prod
+            </h2>
             <p className="mt-3 max-w-3xl text-gray-600">
               La gouvernance reste familiale. Tovoniaina RAHENDRISON garde le rôle de super admin,
-              entouré de trois autres membres administratifs de la famille.
+              entouré de trois autres membres administratifs de la famille. Les noms peuvent être
+              complétés ensuite si tu veux les afficher publiquement.
             </p>
           </div>
           <FamilyMembersGrid />
         </motion.div>
       </section>
 
-      {/* Values Section */}
+      {/* Values Section - inchangé */}
       <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="grid gap-6 lg:grid-cols-3"
-        >
+        <div className="grid gap-6 lg:grid-cols-3">
           {executivePillars.map((pillar) => {
             const Icon = pillar.icon;
             return (
-              <div key={pillar.title} className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm hover:shadow-md transition-all">
+              <div
+                key={pillar.title}
+                className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm hover:shadow-md transition-all"
+              >
                 <div className="inline-flex rounded-2xl bg-amber-100 p-3 text-amber-700">
                   <Icon className="h-5 w-5" />
                 </div>
@@ -270,10 +310,10 @@ export default function HomePage() {
               </div>
             );
           })}
-        </motion.div>
+        </div>
       </section>
 
-      {/* Footer CTA */}
+      {/* Footer CTA - inchangé */}
       <section className="bg-gradient-to-r from-amber-800 to-amber-700 py-16">
         <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
           <Heart className="h-10 w-10 mx-auto text-white mb-4" />
