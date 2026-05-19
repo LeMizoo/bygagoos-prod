@@ -1,9 +1,10 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuthStore } from "./stores/authStore";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { stopKeepAlive } from "./api/axiosInstance";
+import useInactivityLogout from "./hooks/useInactivityLogout";
 
 // Layouts
 import MainLayout from "./layouts/MainLayout";
@@ -78,9 +79,23 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 function App() {
   const { checkAuth } = useAuthStore();
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Activer la déconnexion automatique en cas d'inactivité
+  useInactivityLogout();
 
   useEffect(() => {
-    checkAuth();
+    const initializeAuth = async () => {
+      try {
+        await checkAuth();
+      } catch (error) {
+        console.error("Auth initialization error:", error);
+      } finally {
+        setIsHydrated(true);
+      }
+    };
+    
+    initializeAuth();
   }, [checkAuth]);
 
   // Nettoyer le keep-alive au démontage de l'application
@@ -89,6 +104,18 @@ function App() {
       stopKeepAlive();
     };
   }, []);
+
+  // Afficher un écran de chargement pendant l'hydratation
+  if (!isHydrated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Chargement de l'application...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <ThemeProvider>
@@ -119,7 +146,7 @@ function App() {
           <Route path="/gallery" element={<GalleryPage />} />
           <Route path="/contact" element={<ContactPage />} />
           
-          {/* Nouvelles routes issues du Footer */}
+          {/* Routes du Footer */}
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/cookies" element={<CookiesPage />} />
@@ -181,6 +208,7 @@ function App() {
           <Route path="settings" element={<SettingsPage />} />
         </Route>
 
+        {/* ===== DASHBOARDS PAR ACTIVITÉ ===== */}
         <Route
           path="/prod/dashboard"
           element={
@@ -198,6 +226,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+        
         <Route
           path="/trans/dashboard"
           element={
@@ -206,6 +235,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+        
         <Route
           path="/cda/dashboard"
           element={

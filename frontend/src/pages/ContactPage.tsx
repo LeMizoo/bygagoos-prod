@@ -2,20 +2,20 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Mail, 
-  Phone, 
-  MapPin, 
   Send, 
   Clock, 
   AlertCircle,
   Heart,
-  MessageCircle,
   Instagram,
   Facebook,
   Linkedin,
   Map,
   CheckCircle,
   Cross,
-  Church
+  Church,
+  Bike,
+  UtensilsCrossed,
+  Palette
 } from "lucide-react";
 
 export default function ContactPage() {
@@ -23,6 +23,7 @@ export default function ContactPage() {
     name: "",
     email: "",
     phone: "",
+    activity: "",
     subject: "",
     message: "",
   });
@@ -51,6 +52,7 @@ export default function ContactPage() {
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = "Email invalide";
     }
+    if (!formData.activity) newErrors.activity = "Veuillez sélectionner une activité";
     if (!formData.subject.trim()) newErrors.subject = "Sujet requis";
     if (!formData.message.trim()) newErrors.message = "Message requis";
 
@@ -65,27 +67,24 @@ export default function ContactPage() {
 
     setIsSubmitting(true);
     try {
-      // Simuler l'envoi
       await new Promise((resolve) => setTimeout(resolve, 1500));
       setSubmitSuccess(true);
       setFormData({
         name: "",
         email: "",
         phone: "",
+        activity: "",
         subject: "",
         message: "",
       });
-      
-      // Cacher le message de succès après 5 secondes
       setTimeout(() => setSubmitSuccess(false), 5000);
-    } catch (error) {
+    } catch {
       alert("Erreur lors de l'envoi. Veuillez réessayer.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Animation variants
   const fadeInUp = {
     hidden: { opacity: 0, y: 30 },
     visible: { opacity: 1, y: 0 }
@@ -103,44 +102,44 @@ export default function ContactPage() {
 
   const contactInfo = [
     {
-      icon: MapPin,
-      title: "Notre Atelier",
-      details: ["Antananarivo", "Madagascar"],
-      bg: "bg-amber-50",
-      iconColor: "text-amber-600",
-      border: "border-amber-200",
-      verse: "« Tes pas se sont posés sur cette terre bénie »",
-      verseRef: "— Psaume 85:14"
-    },
-    {
-      icon: Phone,
-      title: "Téléphone",
-      details: ["+261 34 43 593 30", "Lun-Ven, 8h-17h"],
-      bg: "bg-blue-50",
-      iconColor: "text-blue-600",
-      border: "border-blue-200",
-      verse: "« Invoque-moi, et je te répondrai »",
-      verseRef: "— Jérémie 33:3"
-    },
-    {
-      icon: Mail,
-      title: "Email",
-      details: ["positifaid@live.fr", "Réponse sous 24h"],
+      icon: Palette,
+      title: "ByGagoos Ink",
+      subtitle: "Sérigraphie textile",
+      details: ["Création sur mesure", "Design personnalisé", "Packaging"],
       bg: "bg-purple-50",
       iconColor: "text-purple-600",
       border: "border-purple-200",
-      verse: "« Que ma parole soit accueillie avec grâce »",
-      verseRef: "— Psaume 19:15"
+    },
+    {
+      icon: Bike,
+      title: "ByGagoos Trans",
+      subtitle: "Taxi-Moto",
+      details: ["Courses rapides", "Flotte disponible", "Tarifs transparents"],
+      bg: "bg-cyan-50",
+      iconColor: "text-cyan-600",
+      border: "border-cyan-200",
+    },
+    {
+      icon: UtensilsCrossed,
+      title: "ByGagoos CDA",
+      subtitle: "Restaurant & Bar",
+      details: ["Réservations", "Menu varié", "Ambiance chaleureuse"],
+      bg: "bg-amber-50",
+      iconColor: "text-amber-600",
+      border: "border-amber-200",
     },
     {
       icon: Clock,
       title: "Horaires",
-      details: ["Lundi - Vendredi", "8h00 - 17h00", "Week-end sur RDV"],
+      subtitle: "Nos activités",
+      details: [
+        "Ink & Trans : Lun-Sam 8h-17h",
+        "CDA : Mar-Dim 11h-22h",
+        "Fermé le lundi (restaurant)"
+      ],
       bg: "bg-emerald-50",
       iconColor: "text-emerald-600",
       border: "border-emerald-200",
-      verse: "« Il y a un temps pour toute chose »",
-      verseRef: "— Ecclésiaste 3:1"
     }
   ];
 
@@ -150,17 +149,22 @@ export default function ContactPage() {
     { icon: Linkedin, href: "#", label: "LinkedIn", color: "hover:text-blue-700" },
   ];
 
+  const activities = [
+    { value: "ink", label: "ByGagoos Ink - Sérigraphie", icon: Palette, color: "text-purple-600" },
+    { value: "trans", label: "ByGagoos Trans - Taxi-Moto", icon: Bike, color: "text-cyan-600" },
+    { value: "cda", label: "ByGagoos CDA - Restaurant/Bar", icon: UtensilsCrossed, color: "text-amber-600" },
+    { value: "general", label: "Demande générale / Autre", icon: Mail, color: "text-gray-600" },
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* En-tête décoratif */}
       <div className="relative h-48 bg-gradient-to-r from-amber-900 via-amber-700 to-amber-800 overflow-hidden">
-        {/* Motifs décoratifs */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 left-0 w-64 h-64 bg-white rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
           <div className="absolute bottom-0 right-0 w-64 h-64 bg-amber-300 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
         </div>
         
-        {/* Croix décorative */}
         <div className="absolute inset-0 flex items-center justify-center opacity-5">
           <Cross className="h-32 w-32 text-white" />
         </div>
@@ -174,11 +178,11 @@ export default function ContactPage() {
           >
             <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full mb-4">
               <Heart className="h-4 w-4 text-amber-200" />
-              <span className="text-amber-100 text-sm">Matthieu 7:7</span>
+              <span className="text-amber-100 text-sm">Contactez-nous</span>
               <Heart className="h-4 w-4 text-amber-200" />
             </div>
             <h1 className="text-4xl md:text-5xl font-light text-white tracking-wide">
-              <span className="font-semibold">Entrons</span> en Contact
+              <span className="font-semibold">ByGagoos</span> Prod
             </h1>
           </motion.div>
         </div>
@@ -205,7 +209,7 @@ export default function ContactPage() {
             </motion.div>
 
             <div className="grid lg:grid-cols-12 gap-8">
-              {/* Informations de contact - Version luxe */}
+              {/* Informations de contact */}
               <motion.div 
                 variants={staggerContainer}
                 initial="hidden"
@@ -221,33 +225,21 @@ export default function ContactPage() {
                       whileHover={{ x: 5 }}
                       className={`group relative bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all border-l-4 ${info.border}`}
                     >
-                      {/* Fond décoratif */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-white/50 rounded-2xl"></div>
-                      
                       <div className="relative flex items-start gap-4">
                         <div className={`${info.bg} p-4 rounded-xl group-hover:scale-110 transition-transform`}>
                           <Icon className={`h-6 w-6 ${info.iconColor}`} />
                         </div>
                         
                         <div className="flex-1">
-                          <h3 className="font-bold text-gray-900 text-lg mb-2">
+                          <h3 className="font-bold text-gray-900 text-lg mb-1">
                             {info.title}
                           </h3>
+                          <p className="text-sm text-gray-500 mb-2">{info.subtitle}</p>
                           {info.details.map((detail, i) => (
                             <p key={i} className="text-gray-600 text-sm">
                               {detail}
                             </p>
                           ))}
-                          
-                          {/* Citation spirituelle */}
-                          <div className="mt-3 pt-3 border-t border-gray-100">
-                            <p className="text-xs italic text-gray-500">
-                              {info.verse}
-                            </p>
-                            <p className="text-[10px] text-gray-400 mt-0.5">
-                              {info.verseRef}
-                            </p>
-                          </div>
                         </div>
                       </div>
                     </motion.div>
@@ -294,6 +286,7 @@ export default function ContactPage() {
                     src="/production/atelier-serigraphie.jpg"
                     alt="Notre atelier"
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                    onError={(e) => { (e.target as HTMLImageElement).src = "/images/logo.png"; }}
                   />
                   <div className="absolute bottom-4 left-4 z-20 flex items-center gap-2 text-white">
                     <Map className="h-5 w-5" />
@@ -302,7 +295,7 @@ export default function ContactPage() {
                 </motion.div>
               </motion.div>
 
-              {/* Formulaire de contact - Version luxe */}
+              {/* Formulaire de contact */}
               <motion.div 
                 initial={{ opacity: 0, x: 30 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -310,7 +303,6 @@ export default function ContactPage() {
                 className="lg:col-span-7"
               >
                 <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-10 border border-gray-100">
-                  {/* En-tête du formulaire */}
                   <div className="flex items-center gap-3 mb-8">
                     <div className="w-1 h-8 bg-gradient-to-b from-amber-500 to-amber-300 rounded-full"></div>
                     <div>
@@ -318,12 +310,11 @@ export default function ContactPage() {
                         <span className="font-semibold">Envoyez-nous</span> un message
                       </h2>
                       <p className="text-gray-500 text-sm mt-1">
-                        Nous vous répondrons dans les plus brefs délais
+                        Précisez l'activité concernée pour un traitement plus rapide
                       </p>
                     </div>
                   </div>
 
-                  {/* Message de succès */}
                   <AnimatePresence>
                     {submitSuccess && (
                       <motion.div
@@ -347,11 +338,7 @@ export default function ContactPage() {
 
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid md:grid-cols-2 gap-6">
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 }}
-                      >
+                      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Nom complet <span className="text-amber-500">*</span>
                         </label>
@@ -360,28 +347,18 @@ export default function ContactPage() {
                           name="name"
                           value={formData.name}
                           onChange={handleChange}
-                          className={`w-full px-4 py-4 border ${
-                            errors.name ? "border-red-300" : "border-gray-200"
-                          } rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all bg-gray-50/50 hover:bg-white`}
+                          className={`w-full px-4 py-4 border ${errors.name ? "border-red-300" : "border-gray-200"} rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all bg-gray-50/50 hover:bg-white`}
                           placeholder="Jean Rakoto"
                         />
                         {errors.name && (
-                          <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="flex items-center mt-2 text-sm text-red-600"
-                          >
+                          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center mt-2 text-sm text-red-600">
                             <AlertCircle className="h-4 w-4 mr-1" />
                             {errors.name}
                           </motion.div>
                         )}
                       </motion.div>
 
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                      >
+                      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Email <span className="text-amber-500">*</span>
                         </label>
@@ -390,17 +367,11 @@ export default function ContactPage() {
                           name="email"
                           value={formData.email}
                           onChange={handleChange}
-                          className={`w-full px-4 py-4 border ${
-                            errors.email ? "border-red-300" : "border-gray-200"
-                          } rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all bg-gray-50/50 hover:bg-white`}
+                          className={`w-full px-4 py-4 border ${errors.email ? "border-red-300" : "border-gray-200"} rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all bg-gray-50/50 hover:bg-white`}
                           placeholder="votre@email.com"
                         />
                         {errors.email && (
-                          <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="flex items-center mt-2 text-sm text-red-600"
-                          >
+                          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center mt-2 text-sm text-red-600">
                             <AlertCircle className="h-4 w-4 mr-1" />
                             {errors.email}
                           </motion.div>
@@ -408,29 +379,49 @@ export default function ContactPage() {
                       </motion.div>
                     </div>
 
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.3 }}
-                    >
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Téléphone
-                      </label>
-                      <input
-                        type="tel"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleChange}
-                        className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all bg-gray-50/50 hover:bg-white"
-                        placeholder="+261 34 12 345 67"
-                      />
-                    </motion.div>
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Téléphone
+                        </label>
+                        <input
+                          type="tel"
+                          name="phone"
+                          value={formData.phone}
+                          onChange={handleChange}
+                          className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all bg-gray-50/50 hover:bg-white"
+                          placeholder="+261 34 12 345 67"
+                        />
+                      </motion.div>
 
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.4 }}
-                    >
+                      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Activité concernée <span className="text-amber-500">*</span>
+                        </label>
+                        <select
+                          name="activity"
+                          value={formData.activity}
+                          onChange={handleChange}
+                          title="Sélectionnez l'activité concernée"
+                          className={`w-full px-4 py-4 border ${errors.activity ? "border-red-300" : "border-gray-200"} rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all bg-gray-50/50 hover:bg-white appearance-none`}
+                        >
+                          <option value="">Sélectionnez une activité</option>
+                          {activities.map((activity) => (
+                            <option key={activity.value} value={activity.value}>
+                              {activity.label}
+                            </option>
+                          ))}
+                        </select>
+                        {errors.activity && (
+                          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center mt-2 text-sm text-red-600">
+                            <AlertCircle className="h-4 w-4 mr-1" />
+                            {errors.activity}
+                          </motion.div>
+                        )}
+                      </motion.div>
+                    </div>
+
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Sujet <span className="text-amber-500">*</span>
                       </label>
@@ -438,34 +429,26 @@ export default function ContactPage() {
                         name="subject"
                         value={formData.subject}
                         onChange={handleChange}
-                        className={`w-full px-4 py-4 border ${
-                          errors.subject ? "border-red-300" : "border-gray-200"
-                        } rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all bg-gray-50/50 hover:bg-white appearance-none`}
+                        title="Sélectionnez le sujet de votre message"
+                        className={`w-full px-4 py-4 border ${errors.subject ? "border-red-300" : "border-gray-200"} rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all bg-gray-50/50 hover:bg-white appearance-none`}
                       >
                         <option value="">Sélectionnez un sujet</option>
                         <option value="devis">Demande de devis</option>
                         <option value="commande">Commande personnalisée</option>
-                        <option value="info">Information sur nos produits</option>
+                        <option value="info">Information</option>
                         <option value="partenariat">Partenariat</option>
+                        <option value="reclamation">Réclamation</option>
                         <option value="autre">Autre</option>
                       </select>
                       {errors.subject && (
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          className="flex items-center mt-2 text-sm text-red-600"
-                        >
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center mt-2 text-sm text-red-600">
                           <AlertCircle className="h-4 w-4 mr-1" />
                           {errors.subject}
                         </motion.div>
                       )}
                     </motion.div>
 
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.5 }}
-                    >
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Message <span className="text-amber-500">*</span>
                       </label>
@@ -474,28 +457,21 @@ export default function ContactPage() {
                         value={formData.message}
                         onChange={handleChange}
                         rows={6}
-                        className={`w-full px-4 py-4 border ${
-                          errors.message ? "border-red-300" : "border-gray-200"
-                        } rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all bg-gray-50/50 hover:bg-white resize-none`}
-                        placeholder="Décrivez-nous votre projet en quelques mots..."
+                        className={`w-full px-4 py-4 border ${errors.message ? "border-red-300" : "border-gray-200"} rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all bg-gray-50/50 hover:bg-white resize-none`}
+                        placeholder="Décrivez-nous votre demande en quelques mots..."
                       />
                       {errors.message && (
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          className="flex items-center mt-2 text-sm text-red-600"
-                        >
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center mt-2 text-sm text-red-600">
                           <AlertCircle className="h-4 w-4 mr-1" />
                           {errors.message}
                         </motion.div>
                       )}
                     </motion.div>
 
-                    {/* Signature spirituelle */}
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      transition={{ delay: 0.6 }}
+                      transition={{ delay: 0.7 }}
                       className="flex items-center gap-2 text-xs text-gray-400"
                     >
                       <Cross className="h-3 w-3" />
@@ -506,7 +482,7 @@ export default function ContactPage() {
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.7 }}
+                      transition={{ delay: 0.8 }}
                       className="pt-4"
                     >
                       <motion.button
