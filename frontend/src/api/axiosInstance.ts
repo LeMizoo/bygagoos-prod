@@ -34,7 +34,25 @@ const onRefreshed = (token: string) => {
 
 // 🔑 Récupération fiable du token
 const getToken = (): string | null => {
-  return localStorage.getItem("token") || localStorage.getItem("accessToken") || useAuthStore.getState().token;
+  // Priorité 1: Zustand store (le plus fiable)
+  const storeToken = useAuthStore.getState().token;
+  if (storeToken) {
+    return storeToken;
+  }
+  
+  // Priorité 2: localStorage direct (Zustand persist)
+  const localStorageData = localStorage.getItem("auth-storage");
+  if (localStorageData) {
+    try {
+      const parsed = JSON.parse(localStorageData);
+      return parsed.state?.token || null;
+    } catch (e) {
+      dev.error("❌ Error parsing auth storage:", e);
+    }
+  }
+  
+  // Fallback legacy tokens
+  return localStorage.getItem("token") || localStorage.getItem("accessToken") || null;
 };
 
 // Interface pour les tokens JWT décodés
@@ -100,9 +118,14 @@ axiosInstance.interceptors.request.use(
     
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      dev.log(`🔐 Token ajouté à ${config.url}`);
+      dev.log(`🔐 Token ajouté à ${config.url} (${token.substring(0, 20)}...)`);
     } else {
-      dev.log(`⚠️ Aucun token pour ${config.url}`);
+      dev.warn(`⚠️ ATTENTION: Aucun token trouvé pour ${config.url}`);
+      dev.log('Token sources check:', {
+        storeToken: useAuthStore.getState().token ? 'exists' : 'missing',
+        localStorageAuth: localStorage.getItem('auth-storage') ? 'exists' : 'missing',
+        legacyToken: localStorage.getItem('token') ? 'exists' : 'missing'
+      });
     }
     
     dev.log(`📡 Requête API: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);

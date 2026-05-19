@@ -12,6 +12,10 @@ import {
   ArrowUpRight,
   Crown,
   CheckCircle2,
+  Heart,
+  Church,
+  Phone,
+  Mail
 } from "lucide-react";
 import FamilyMembersGrid from "../components/family/FamilyMembersGrid";
 import ActivityModuleCard from "../components/home/ActivityModuleCard";
@@ -21,7 +25,7 @@ import { businessUnits, executivePillars, prodBrand } from "../data/prod";
 const heroStats = [
   { label: "Activités", value: "3", icon: Sparkles },
   { label: "Direction", value: "4", icon: Crown },
-  { label: "Socle", value: "1", icon: Shield },
+  { label: "Années d'expérience", value: "2", icon: Shield },
 ];
 
 const activityHighlights = [
@@ -29,19 +33,28 @@ const activityHighlights = [
     icon: Palette,
     title: "ByGagoos Ink",
     text: "Designs, commandes, production et galerie publique.",
-    route: "/ink/dashboard",
+    route: "/ink",
+    color: "purple",
+    bgColor: "bg-purple-100",
+    iconColor: "text-purple-600"
   },
   {
     icon: Truck,
     title: "ByGagoos Trans",
     text: "Flotte Taxi-Moto, conducteurs, maintenance et missions.",
-    route: "/trans/dashboard",
+    route: "/trans",
+    color: "cyan",
+    bgColor: "bg-cyan-100",
+    iconColor: "text-cyan-600"
   },
   {
     icon: UtensilsCrossed,
     title: "ByGagoos CDA",
     text: "Bar / restaurant, réservations, salle et exploitation.",
-    route: "/cda/dashboard",
+    route: "/cda",
+    color: "amber",
+    bgColor: "bg-amber-100",
+    iconColor: "text-amber-600"
   },
 ];
 
@@ -55,8 +68,19 @@ export default function HomePage() {
     }
   }, [location.hash]);
 
+  const fadeInUp = {
+    hidden: { opacity: 0, y: 30 },
+    visible: { opacity: 1, y: 0 }
+  };
+
+  const staggerContainer = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+  };
+
   return (
-    <div className="min-h-screen bg-[#f6f2ea] text-gray-900">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-amber-950 via-stone-900 to-slate-950 text-white">
         <div className="absolute inset-0 opacity-25">
           <div className="absolute left-[-10%] top-10 h-72 w-72 rounded-full bg-amber-500 blur-3xl" />
@@ -65,13 +89,18 @@ export default function HomePage() {
         </div>
 
         <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
-          <div className="grid gap-12 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="grid gap-12 lg:grid-cols-[1.2fr_0.8fr] lg:items-center"
+          >
             <div>
               <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium backdrop-blur">
                 <Sparkles className="h-4 w-4" />
                 Maison familiale multi-activités
               </div>
-              <h1 className="max-w-4xl text-5xl font-black tracking-tight sm:text-6xl lg:text-7xl">
+              <h1 className="max-w-4xl text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl">
                 {prodBrand.name}
               </h1>
               <p className="mt-6 max-w-3xl text-lg leading-8 text-white/85">
@@ -99,18 +128,23 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="grid gap-4 rounded-[2rem] border border-white/15 bg-white/10 p-5 shadow-2xl backdrop-blur-md">
+            <motion.div 
+              variants={staggerContainer}
+              initial="hidden"
+              animate="visible"
+              className="grid gap-4 rounded-[2rem] border border-white/15 bg-white/10 p-5 shadow-2xl backdrop-blur-md"
+            >
               <div className="grid grid-cols-3 gap-3">
-                {heroStats.map((stat) => {
+                {heroStats.map((stat, idx) => {
                   const Icon = stat.icon;
                   return (
-                    <div key={stat.label} className="rounded-2xl bg-black/20 p-4 text-center">
+                    <motion.div key={stat.label} variants={fadeInUp} className="rounded-2xl bg-black/20 p-4 text-center">
                       <Icon className="mx-auto h-5 w-5 text-amber-300" />
                       <div className="mt-2 text-2xl font-bold">{stat.value}</div>
                       <div className="mt-1 text-[11px] uppercase tracking-[0.25em] text-white/60">
                         {stat.label}
                       </div>
-                    </div>
+                    </motion.div>
                   );
                 })}
               </div>
@@ -119,7 +153,7 @@ export default function HomePage() {
                 <div className="mb-4 flex items-center gap-2">
                   <CheckCircle2 className="h-5 w-5 text-emerald-600" />
                   <span className="text-sm font-semibold uppercase tracking-[0.2em] text-gray-500">
-                    Structure
+                    Notre structure
                   </span>
                 </div>
                 <div className="space-y-3">
@@ -139,13 +173,19 @@ export default function HomePage() {
                   })}
                 </div>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
       </section>
 
+      {/* Activities Highlights */}
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="grid gap-6 md:grid-cols-3">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="grid gap-6 md:grid-cols-3"
+        >
           {activityHighlights.map((item) => {
             const Icon = item.icon;
             return (
@@ -155,20 +195,21 @@ export default function HomePage() {
                 className="group rounded-3xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl"
               >
                 <div className="flex items-start justify-between">
-                  <div className="rounded-2xl bg-gray-900 p-3 text-white">
-                    <Icon className="h-5 w-5" />
+                  <div className={`rounded-2xl ${item.bgColor} p-3`}>
+                    <Icon className={`h-5 w-5 ${item.iconColor}`} />
                   </div>
                   <ArrowUpRight className="h-5 w-5 text-gray-400 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
                 </div>
-                <h2 className="mt-6 text-2xl font-bold">{item.title}</h2>
+                <h2 className="mt-6 text-2xl font-bold text-gray-900">{item.title}</h2>
                 <p className="mt-3 text-sm leading-6 text-gray-600">{item.text}</p>
-                <p className="mt-6 text-sm font-semibold text-amber-700">Ouvrir le dashboard</p>
+                <p className="mt-6 text-sm font-semibold text-amber-700">Découvrir l'activité</p>
               </Link>
             );
           })}
-        </div>
+        </motion.div>
       </section>
 
+      {/* Three Activities Section */}
       <section id="activities" className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8 scroll-mt-24">
         <div className="mb-10 flex items-end justify-between gap-6">
           <div>
@@ -177,7 +218,7 @@ export default function HomePage() {
             </p>
             <h2 className="mt-3 text-3xl font-bold text-gray-900">Un seul système, trois espaces métier</h2>
           </div>
-          <Link to="/prod/dashboard" className="hidden text-sm font-semibold text-gray-700 md:inline-flex">
+          <Link to="/prod/dashboard" className="hidden text-sm font-semibold text-gray-700 md:inline-flex hover:text-amber-700">
             Accéder à la Direction Générale
           </Link>
         </div>
@@ -189,8 +230,14 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Family Section */}
       <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
-        <div className="rounded-[2rem] bg-white p-8 shadow-sm ring-1 ring-gray-200">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="rounded-[2rem] bg-white p-8 shadow-sm ring-1 ring-gray-200"
+        >
           <div className="mb-8">
             <p className="text-sm font-semibold uppercase tracking-[0.25em] text-amber-700">
               Direction Générale
@@ -198,21 +245,25 @@ export default function HomePage() {
             <h2 className="mt-3 text-3xl font-bold text-gray-900">Le noyau familial qui pilote ByGagoos Prod</h2>
             <p className="mt-3 max-w-3xl text-gray-600">
               La gouvernance reste familiale. Tovoniaina RAHENDRISON garde le rôle de super admin,
-              entouré de trois autres membres administratifs de la famille. Les noms peuvent être
-              complétés ensuite si tu veux les afficher publiquement.
+              entouré de trois autres membres administratifs de la famille.
             </p>
           </div>
+          <FamilyMembersGrid />
+        </motion.div>
+      </section>
 
-            <FamilyMembersGrid />
-          </div>
-        </section>
-
+      {/* Values Section */}
       <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
-        <div className="grid gap-6 lg:grid-cols-3">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="grid gap-6 lg:grid-cols-3"
+        >
           {executivePillars.map((pillar) => {
             const Icon = pillar.icon;
             return (
-              <div key={pillar.title} className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+              <div key={pillar.title} className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm hover:shadow-md transition-all">
                 <div className="inline-flex rounded-2xl bg-amber-100 p-3 text-amber-700">
                   <Icon className="h-5 w-5" />
                 </div>
@@ -221,6 +272,38 @@ export default function HomePage() {
               </div>
             );
           })}
+        </motion.div>
+      </section>
+
+      {/* Footer CTA */}
+      <section className="bg-gradient-to-r from-amber-800 to-amber-700 py-16">
+        <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
+          <Heart className="h-10 w-10 mx-auto text-white mb-4" />
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">Une question ? Un projet ?</h2>
+          <p className="text-amber-100 mb-8 max-w-2xl mx-auto">
+            Notre équipe est à votre écoute pour répondre à toutes vos questions
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              to="/contact"
+              className="inline-flex items-center gap-2 bg-white text-amber-800 px-6 py-3 rounded-full font-semibold hover:bg-gray-100 transition-all"
+            >
+              <Mail className="h-4 w-4" />
+              Nous contacter
+            </Link>
+            <a
+              href="tel:+261344359330"
+              className="inline-flex items-center gap-2 border border-white/30 text-white px-6 py-3 rounded-full font-semibold hover:bg-white/10 transition-all"
+            >
+              <Phone className="h-4 w-4" />
+              Appeler
+            </a>
+          </div>
+          <div className="mt-8 flex items-center justify-center gap-2 text-amber-200 text-sm">
+            <Church className="h-4 w-4" />
+            <span>"Par la grâce de Dieu, nous servons avec joie"</span>
+            <Church className="h-4 w-4" />
+          </div>
         </div>
       </section>
     </div>

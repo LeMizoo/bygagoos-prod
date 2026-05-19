@@ -158,6 +158,9 @@ function App() {
           <Route path="/trans" element={<TransPage />} />
           <Route path="/cda" element={<CDAPage />} />
           
+          {/* Redirection /menu vers /cda */}
+          <Route path="/menu" element={<Navigate to="/cda" replace />} />
+          
           {/* Routes du Footer */}
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/terms" element={<TermsPage />} />

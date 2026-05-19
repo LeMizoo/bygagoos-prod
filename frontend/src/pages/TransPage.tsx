@@ -1,0 +1,210 @@
+import { motion } from "framer-motion";
+import { Bike, MapPin, Clock, Shield, Smartphone, Heart, Cross, Church, Headphones, Award, Phone } from "lucide-react";
+import { Link } from "react-router-dom";
+
+export default function TransPage() {
+  const features = [
+    {
+      icon: Clock,
+      title: "Course rapide",
+      description: "Temps d'attente réduit, arrivée rapide à destination",
+      image: "/images/trans/rapide.jpg"
+    },
+    {
+      icon: Shield,
+      title: "Sécurité garantie",
+      description: "Chauffeurs expérimentés, casques fournis, assurance incluse",
+      image: "/images/trans/securite.jpg"
+    },
+    {
+      icon: MapPin,
+      title: "Suivi GPS",
+      description: "Localisation en temps réel de votre course",
+      image: "/images/trans/gps.jpg"
+    },
+    {
+      icon: Smartphone,
+      title: "Réservation facile",
+      description: "Application, téléphone ou directement auprès des chauffeurs",
+      image: "/images/trans/reservation.jpg"
+    }
+  ];
+
+  const tarifs = [
+    { distance: "0-5 km", prix: "2 000 - 4 000 Ar", temps: "5-10 min" },
+    { distance: "5-10 km", prix: "4 000 - 8 000 Ar", temps: "10-20 min" },
+    { distance: "10-15 km", prix: "8 000 - 12 000 Ar", temps: "20-30 min" },
+    { distance: "15+ km", prix: "Sur devis", temps: "Sur mesure" }
+  ];
+
+  const fadeInUp = {
+    hidden: { opacity: 0, y: 30 },
+    visible: { opacity: 1, y: 0 }
+  };
+
+  const staggerContainer = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      {/* Hero section */}
+      <div className="relative bg-gradient-to-r from-cyan-900 via-cyan-800 to-cyan-900 text-white overflow-hidden">
+        <div className="absolute inset-0 bg-black/30"></div>
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl translate-x-1/2 -translate-y-1/2"></div>
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-cyan-300 rounded-full blur-3xl -translate-x-1/2 translate-y-1/2"></div>
+        </div>
+        
+        <div className="container mx-auto px-4 py-20 md:py-28 relative">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center max-w-3xl mx-auto"
+          >
+            <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full mb-6">
+              <Bike className="h-4 w-4" />
+              <span className="text-sm">Mobilité à Antananarivo</span>
+            </div>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
+              ByGagoos <span className="text-cyan-300">Trans</span>
+            </h1>
+            <p className="text-lg md:text-xl opacity-90 mb-8 max-w-2xl mx-auto">
+              Votre service de Taxi-Moto fiable, rapide et économique pour vos déplacements quotidiens.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                to="/contact"
+                className="inline-flex items-center justify-center gap-2 bg-white text-cyan-900 px-6 py-3 rounded-full font-semibold hover:bg-cyan-50 transition-all hover:scale-105"
+              >
+                Réserver une course
+                <Bike className="h-4 w-4" />
+              </Link>
+              <a
+                href="tel:+261344359330"
+                className="inline-flex items-center justify-center gap-2 border border-white/30 text-white px-6 py-3 rounded-full font-semibold hover:bg-white/10 transition-all"
+              >
+                <Headphones className="h-4 w-4" />
+                Appeler maintenant
+              </a>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+
+      <div className="py-16 md:py-20">
+        <div className="container mx-auto px-4">
+          {/* Pourquoi nous */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <span className="text-cyan-600 text-sm font-semibold uppercase tracking-wider">Nos atouts</span>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2 mb-4">Pourquoi choisir ByGagoos Trans ?</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Un service pensé pour votre confort, votre sécurité et votre rapidité
+            </p>
+          </motion.div>
+
+          <motion.div 
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20"
+          >
+            {features.map((feature, index) => {
+              const Icon = feature.icon;
+              return (
+                <motion.div
+                  key={index}
+                  variants={fadeInUp}
+                  whileHover={{ y: -5 }}
+                  className="bg-white rounded-2xl shadow-lg p-6 text-center border border-gray-100 hover:shadow-xl transition-all"
+                >
+                  <div className="bg-cyan-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Icon className="h-8 w-8 text-cyan-600" />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">{feature.title}</h3>
+                  <p className="text-gray-600 text-sm">{feature.description}</p>
+                </motion.div>
+              );
+            })}
+          </motion.div>
+
+          {/* Tarifs */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="bg-cyan-50 rounded-3xl p-8 md:p-12 mb-20"
+          >
+            <div className="text-center mb-10">
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">Tarifs transparents</h2>
+              <p className="text-gray-600 max-w-2xl mx-auto">
+                Prix par course, calculés selon la distance. Pas de mauvaise surprise.
+              </p>
+            </div>
+            <div className="grid md:grid-cols-4 gap-4">
+              {tarifs.map((tarif, index) => (
+                <div key={index} className="bg-white rounded-xl p-6 text-center shadow-sm hover:shadow-md transition-all">
+                  <p className="text-lg font-bold text-cyan-700 mb-2">{tarif.distance}</p>
+                  <p className="text-2xl font-bold text-gray-900 mb-1">{tarif.prix}</p>
+                  <p className="text-xs text-gray-500">Trajet estimé: {tarif.temps}</p>
+                </div>
+              ))}
+            </div>
+            <p className="text-center text-sm text-gray-500 mt-6">
+              *Tarifs susceptibles d'être modifiés selon les conditions de circulation et les heures d'affluence
+            </p>
+          </motion.div>
+
+          {/* CTA */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="bg-gradient-to-r from-cyan-700 to-cyan-600 rounded-3xl p-8 md:p-12 text-center text-white"
+          >
+            <Award className="h-12 w-12 mx-auto mb-4 opacity-80" />
+            <h2 className="text-2xl md:text-3xl font-bold mb-4">Prêt à rouler avec nous ?</h2>
+            <p className="mb-6 opacity-90 max-w-2xl mx-auto">
+              Réservez votre course dès maintenant et bénéficiez d'un service rapide et fiable
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                to="/contact"
+                className="inline-flex items-center justify-center gap-2 bg-white text-cyan-800 px-8 py-3 rounded-full font-semibold hover:bg-gray-100 transition-all hover:scale-105"
+              >
+                Réserver en ligne
+              </Link>
+              <a
+                href="tel:+261344359330"
+                className="inline-flex items-center justify-center gap-2 border border-white/30 text-white px-8 py-3 rounded-full font-semibold hover:bg-white/10 transition-all"
+              >
+                <Phone className="h-4 w-4" />
+                Appeler le +261 34 43 593 30
+              </a>
+            </div>
+          </motion.div>
+
+          {/* Verset */}
+          <div className="text-center py-12 border-t mt-12">
+            <div className="inline-block bg-amber-50 px-6 md:px-8 py-4 rounded-full border border-amber-200">
+              <p className="text-amber-800 italic flex items-center gap-2 md:gap-3 text-sm md:text-base">
+                <Church className="h-5 w-5 text-amber-600" />
+                "Va, et ne tarde pas à faire le bien autour de toi"
+                <Heart className="h-5 w-5 text-amber-600" />
+              </p>
+              <p className="text-amber-600 text-xs md:text-sm mt-1">— Proverbes 3:27</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

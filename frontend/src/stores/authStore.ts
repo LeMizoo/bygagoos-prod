@@ -316,3 +316,29 @@ export const useUser = () => useAuthStore((state) => state.user);
 export const useIsAuthenticated = () => useAuthStore((state) => state.isAuthenticated);
 export const useIsLoading = () => useAuthStore((state) => state.isLoading);
 export const useAuthError = () => useAuthStore((state) => state.error);
+
+/**
+ * Utilitaire pour attendre que la réhydratation soit complète
+ */
+export const waitForAuthHydration = (): Promise<void> => {
+  return new Promise((resolve) => {
+    const token = localStorage.getItem("auth-storage");
+    if (token) {
+      resolve();
+      return;
+    }
+    
+    const checkInterval = setInterval(() => {
+      const stored = localStorage.getItem("auth-storage");
+      if (stored) {
+        clearInterval(checkInterval);
+        resolve();
+      }
+    }, 10);
+    
+    setTimeout(() => {
+      clearInterval(checkInterval);
+      resolve();
+    }, 1000);
+  });
+};
