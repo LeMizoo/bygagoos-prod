@@ -40,8 +40,6 @@ export default function CDAPage() {
     visible: { opacity: 1, y: 0 }
   };
 
-  // Supprimer staggerContainer qui n'était pas utilisé
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Hero section */}
@@ -67,7 +65,7 @@ export default function CDAPage() {
               ByGagoos <span className="text-amber-300">CDA</span>
             </h1>
             <p className="text-lg md:text-xl opacity-90 mb-8 max-w-2xl mx-auto">
-              Restaurant & Bar - Une expérience culinaire unique au cœur d'Antananarivo.
+              Cuisine, Dégustation, Accueil - Une expérience culinaire unique au cœur d'Antananarivo.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link

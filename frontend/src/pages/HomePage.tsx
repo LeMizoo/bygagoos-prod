@@ -8,7 +8,6 @@ import {
   Truck,
   UtensilsCrossed,
   Palette,
-  Users,
   ArrowUpRight,
   Crown,
   CheckCircle2,
@@ -49,7 +48,7 @@ const activityHighlights = [
   },
   {
     icon: UtensilsCrossed,
-    title: "ByGagoos CDA",
+    title: "ByGagoos CDA (Cuisine, Dégustation, Accueil)",
     text: "Bar / restaurant, réservations, salle et exploitation.",
     route: "/cda",
     color: "amber",
@@ -135,7 +134,7 @@ export default function HomePage() {
               className="grid gap-4 rounded-[2rem] border border-white/15 bg-white/10 p-5 shadow-2xl backdrop-blur-md"
             >
               <div className="grid grid-cols-3 gap-3">
-                {heroStats.map((stat, idx) => {
+                {heroStats.map((stat) => {
                   const Icon = stat.icon;
                   return (
                     <motion.div key={stat.label} variants={fadeInUp} className="rounded-2xl bg-black/20 p-4 text-center">
@@ -222,7 +221,6 @@ export default function HomePage() {
             Accéder à la Direction Générale
           </Link>
         </div>
-
         <div className="grid gap-6 xl:grid-cols-3">
           {activityModules.map((module) => (
             <ActivityModuleCard key={module.key} module={module} />

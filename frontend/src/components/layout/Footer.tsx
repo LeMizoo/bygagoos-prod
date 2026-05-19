@@ -18,7 +18,7 @@ export default function Footer() {
       { label: "Tarifs", href: "/trans" },
       { label: "Réservation", href: "/trans" },
     ],
-    "ByGagoos CDA": [
+    "ByGagoos CDA (Cuisine, Dégustation, Accueil)": [
       { label: "À propos", href: "/cda" },
       { label: "Menu", href: "/cda" },
       { label: "Réservations", href: "/cda" },
