@@ -7,6 +7,9 @@ import {
   ShoppingBag,
   Settings,
   ChevronDown,
+  Palette,
+  Bike,
+  UtensilsCrossed,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -46,12 +49,38 @@ export default function Navbar() {
               >
                 À propos
               </Link>
-              <Link
-                to="/home#activities"
-                className="text-gray-700 hover:text-blue-600 transition-colors"
-              >
-                Nos Activités
-              </Link>
+              
+              {/* Menu déroulant Nos Activités */}
+              <div className="relative group">
+                <button className="text-gray-700 hover:text-blue-600 transition-colors flex items-center gap-1">
+                  Nos Activités
+                  <ChevronDown className="h-4 w-4" />
+                </button>
+                <div className="absolute left-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                  <Link
+                    to="/ink"
+                    className="flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors"
+                  >
+                    <Palette className="h-4 w-4 text-purple-600" />
+                    <span>ByGagoos Ink</span>
+                  </Link>
+                  <Link
+                    to="/trans"
+                    className="flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-cyan-50 hover:text-cyan-700 transition-colors"
+                  >
+                    <Bike className="h-4 w-4 text-cyan-600" />
+                    <span>ByGagoos Trans</span>
+                  </Link>
+                  <Link
+                    to="/cda"
+                    className="flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-amber-50 hover:text-amber-700 transition-colors"
+                  >
+                    <UtensilsCrossed className="h-4 w-4 text-amber-600" />
+                    <span>ByGagoos CDA</span>
+                  </Link>
+                </div>
+              </div>
+
               <Link
                 to="/contact"
                 className="text-gray-700 hover:text-blue-600 transition-colors"
@@ -61,7 +90,7 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* Actions utilisateur - inchangé */}
+          {/* Actions utilisateur */}
           <div className="flex items-center space-x-4">
             {user ? (
               <div className="relative">

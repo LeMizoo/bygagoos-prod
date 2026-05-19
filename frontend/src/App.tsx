@@ -11,11 +11,18 @@ import MainLayout from "./layouts/MainLayout";
 import AdminLayout from "./layouts/AdminLayout";
 import AuthLayout from "./layouts/AuthLayout";
 
-// Pages publiques
+// Pages publiques principales
 import HomePage from "./pages/HomePage";
 import AboutPage from "./pages/AboutPage";
 import GalleryPage from "./pages/GalleryPage";
 import ContactPage from "./pages/ContactPage";
+
+// Pages publiques des activités
+import InkPage from "./pages/InkPage";
+import TransPage from "./pages/TransPage";
+import CDAPage from "./pages/CDAPage";
+
+// Dashboards (protégés)
 import InkDashboardPage from "./pages/dashboards/InkDashboardPage";
 import TaxiDashboardPage from "./pages/dashboards/TaxiDashboardPage";
 import RestaurantDashboardPage from "./pages/dashboards/RestaurantDashboardPage";
@@ -146,6 +153,11 @@ function App() {
           <Route path="/gallery" element={<GalleryPage />} />
           <Route path="/contact" element={<ContactPage />} />
           
+          {/* Pages publiques des activités */}
+          <Route path="/ink" element={<InkPage />} />
+          <Route path="/trans" element={<TransPage />} />
+          <Route path="/cda" element={<CDAPage />} />
+          
           {/* Routes du Footer */}
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/terms" element={<TermsPage />} />
@@ -208,7 +220,7 @@ function App() {
           <Route path="settings" element={<SettingsPage />} />
         </Route>
 
-        {/* ===== DASHBOARDS PAR ACTIVITÉ ===== */}
+        {/* ===== DASHBOARDS PAR ACTIVITÉ (PROTÉGÉS) ===== */}
         <Route
           path="/prod/dashboard"
           element={

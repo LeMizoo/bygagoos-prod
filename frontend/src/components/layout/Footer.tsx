@@ -1,21 +1,28 @@
 // frontend/src/components/layout/Footer.tsx
 
-import { Facebook, Instagram, Mail, Phone, MapPin, Heart } from "lucide-react";
+import { Facebook, Instagram, Mail, Phone, MapPin, Heart, Bike, UtensilsCrossed, Palette } from "lucide-react";
 import { Icon } from "../ui/Icon";
 import { Link } from "react-router-dom";
 
 export default function Footer() {
   const links = {
-    Produits: [
-      { label: "Sérigraphie", href: "/gallery?category=serigraphie" },
-      { label: "Design personnalisé", href: "/gallery?category=design" },
-      { label: "Packaging", href: "/gallery?category=packaging" },
+    "ByGagoos Ink": [
+      { label: "À propos", href: "/ink" },
+      { label: "Sérigraphie", href: "/ink" },
+      { label: "Design personnalisé", href: "/ink" },
+      { label: "Galerie", href: "/gallery" },
     ],
-    Entreprise: [
-      { label: "À propos", href: "/about" },
-      { label: "Notre équipe", href: "/about#team" },
-      { label: "Carrières", href: "/careers" },
-      { label: "Presse", href: "/press" },
+    "ByGagoos Trans": [
+      { label: "À propos", href: "/trans" },
+      { label: "Flotte Taxi-Moto", href: "/trans" },
+      { label: "Tarifs", href: "/trans" },
+      { label: "Réservation", href: "/trans" },
+    ],
+    "ByGagoos CDA": [
+      { label: "À propos", href: "/cda" },
+      { label: "Menu", href: "/cda" },
+      { label: "Réservations", href: "/cda" },
+      { label: "Horaires", href: "/cda" },
     ],
     Support: [
       { label: "Centre d'aide", href: "/help" },
@@ -43,6 +50,12 @@ export default function Footer() {
     },
   ];
 
+  const activities = [
+    { name: "Ink", icon: Palette, color: "text-purple-400", href: "/ink" },
+    { name: "Trans", icon: Bike, color: "text-cyan-400", href: "/trans" },
+    { name: "CDA", icon: UtensilsCrossed, color: "text-amber-400", href: "/cda" },
+  ];
+
   // Permet de remonter en haut de page lors d'un clic sur un lien du footer
   const scrollToTop = () => {
     window.scrollTo({
@@ -55,7 +68,7 @@ export default function Footer() {
     <footer className="bg-gray-900 text-gray-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         {/* Top section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12 mb-16">
           {/* Logo et description */}
           <div className="lg:col-span-2">
             <Link 
@@ -65,22 +78,32 @@ export default function Footer() {
             >
               <img
                 src="/images/logo.png"
-                alt="ByGagoos-Ink"
+                alt="ByGagoos Prod"
                 className="h-12 w-auto"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = "/logo.png";
                 }}
               />
               <span className="text-2xl font-bold text-white">
-                ByGagoos<span className="text-blue-400">Ink</span>
+                ByGagoos<span className="text-blue-400">Prod</span>
               </span>
             </Link>
-            <p className="text-gray-400 mb-8 max-w-md">
-              Nous proposons trois activités complémentaires :
-              <strong> sérigraphie</strong>, <strong>design personnalisé</strong>
-              et <strong>packaging</strong>. Nous transformons vos idées en
-              œuvres d'art imprimées avec soin.
+            <p className="text-gray-400 mb-6 max-w-md">
+              <strong>ByGagoos Prod</strong> regroupe trois activités complémentaires :
             </p>
+            <div className="space-y-2 mb-8">
+              {activities.map((activity) => (
+                <Link
+                  key={activity.name}
+                  to={activity.href}
+                  onClick={scrollToTop}
+                  className="flex items-center gap-3 text-gray-400 hover:text-white transition-colors group"
+                >
+                  <activity.icon className={`h-5 w-5 ${activity.color}`} />
+                  <span>ByGagoos {activity.name}</span>
+                </Link>
+              ))}
+            </div>
             <div className="flex space-x-4">
               {social.map((item) => (
                 <a
@@ -137,7 +160,7 @@ export default function Footer() {
             </a>
             
             <a 
-              href="tel:+261344335930" 
+              href="tel:+261344359330" 
               className="flex items-center space-x-4 group"
             >
               <div className="p-3 bg-blue-900/30 rounded-lg group-hover:bg-blue-900/50 transition-colors">
@@ -145,7 +168,7 @@ export default function Footer() {
               </div>
               <div>
                 <p className="text-sm text-gray-400">Téléphone</p>
-                <p className="text-white group-hover:text-blue-400 transition-colors">+261 34 43 359 30</p>
+                <p className="text-white group-hover:text-blue-400 transition-colors">+261 34 43 593 30</p>
               </div>
             </a>
             
@@ -171,7 +194,7 @@ export default function Footer() {
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="flex items-center space-x-2">
               <span className="text-gray-400">
-                © {new Date().getFullYear()} ByGagoos Ink
+                © {new Date().getFullYear()} ByGagoos Prod
               </span>
               <span className="text-gray-600 hidden sm:inline">•</span>
               <span className="text-gray-400 hidden sm:flex items-center">
