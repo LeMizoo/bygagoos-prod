@@ -122,7 +122,7 @@ export default function ContactPage() {
     {
       icon: UtensilsCrossed,
       title: "ByGagoos CDA",
-      subtitle: "Restaurant & Bar",
+      subtitle: "Cuisine, Dégustation, Accueil",
       details: ["Réservations", "Menu varié", "Ambiance chaleureuse"],
       bg: "bg-amber-50",
       iconColor: "text-amber-600",
@@ -152,7 +152,7 @@ export default function ContactPage() {
   const activities = [
     { value: "ink", label: "ByGagoos Ink - Sérigraphie", icon: Palette, color: "text-purple-600" },
     { value: "trans", label: "ByGagoos Trans - Taxi-Moto", icon: Bike, color: "text-cyan-600" },
-    { value: "cda", label: "ByGagoos CDA - Restaurant/Bar", icon: UtensilsCrossed, color: "text-amber-600" },
+    { value: "cda", label: "ByGagoos CDA - Cuisine, Dégustation, Accueil", icon: UtensilsCrossed, color: "text-amber-600" },
     { value: "general", label: "Demande générale / Autre", icon: Mail, color: "text-gray-600" },
   ];
 
