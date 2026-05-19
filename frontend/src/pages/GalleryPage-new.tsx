@@ -250,10 +250,8 @@ export default function GalleryPage() {
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-amber-300 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
         </div>
         
-        <div className="absolute inset-0" style={{
-          backgroundImage: `radial-gradient(circle at 2px 2px, rgba(255,255,255,0.1) 1px, transparent 0)`,
-          backgroundSize: '40px 40px'
-        }}></div>
+        <div className="absolute inset-0 dot-grid" />
+        <style>{`.dot-grid{background-image: radial-gradient(circle at 2px 2px, rgba(255,255,255,0.1) 1px, transparent 0); background-size: 40px 40px;}`}</style>
         
         <div className="relative h-full flex items-center justify-center">
           <motion.div
@@ -980,10 +978,8 @@ function CTASection() {
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-amber-300 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
       </div>
       
-      <div className="absolute inset-0" style={{
-        backgroundImage: `radial-gradient(circle at 2px 2px, rgba(255,255,255,0.1) 1px, transparent 0)`,
-        backgroundSize: '40px 40px'
-      }}></div>
+      <div className="absolute inset-0 radial-grid"></div>
+      <style>{`.radial-grid{background-image:radial-gradient(circle at 2px 2px, rgba(255,255,255,0.1) 1px, transparent 0);background-size:40px 40px}`}</style>
       
       <div className="relative text-center text-white max-w-4xl mx-auto px-4">
         <h3 className="text-3xl md:text-4xl lg:text-5xl font-light mb-4">
