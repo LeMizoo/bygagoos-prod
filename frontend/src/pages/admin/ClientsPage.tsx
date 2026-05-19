@@ -280,14 +280,19 @@ const ClientsPage: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between space-y-4 md:space-y-0 md:space-x-4">
           <div className="flex-1">
             <div className="relative">
+                <label htmlFor="client-search" className="sr-only">
+                  Rechercher des clients par nom, email, téléphone
+                </label>
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Rechercher un client par nom, email, téléphone..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
+                <input
+                  id="client-search"
+                  type="text"
+                  placeholder="Rechercher un client par nom, email, téléphone..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  aria-labelledby="client-search"
+                />
             </div>
           </div>
 
@@ -309,6 +314,7 @@ const ClientsPage: React.FC = () => {
             <button 
               onClick={() => {/* TODO: Implémenter l'export */}}
               className="flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+              aria-label="Exporter la liste des clients"
             >
               <Download className="h-4 w-4 mr-2" />
               Exporter
@@ -464,6 +470,7 @@ const ClientsPage: React.FC = () => {
                           to={`/admin/clients/${client._id}`}
                           className="text-blue-600 hover:text-blue-900 p-1 hover:bg-blue-50 rounded transition-colors"
                           title="Voir les détails"
+                          aria-label={`Voir ${getClientName(client)}`}
                         >
                           <Eye className="h-4 w-4" />
                         </Link>
@@ -471,6 +478,7 @@ const ClientsPage: React.FC = () => {
                           to={`/admin/clients/edit/${client._id}`}
                           className="text-green-600 hover:text-green-900 p-1 hover:bg-green-50 rounded transition-colors"
                           title="Modifier"
+                          aria-label={`Modifier ${getClientName(client)}`}
                         >
                           <Edit className="h-4 w-4" />
                         </Link>
@@ -480,6 +488,7 @@ const ClientsPage: React.FC = () => {
                           }
                           className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded transition-colors"
                           title="Supprimer"
+                          aria-label={`Supprimer ${getClientName(client)}`}
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
