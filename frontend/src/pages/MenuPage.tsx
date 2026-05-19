@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { UtensilsCrossed, Heart, Church, Phone, MapPin, Clock } from "lucide-react";
+import { UtensilsCrossed, Heart, Church } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function MenuPage() {
@@ -48,7 +48,7 @@ export default function MenuPage() {
               Menu de <span className="text-amber-300">ByGagoos CDA</span>
             </h1>
             <p className="text-lg opacity-90 mb-8 max-w-2xl mx-auto">
-              Une cuisine généreuse aux saveurs locales et internationales
+              Cuisine, Dégustation, Accueil - Une cuisine généreuse aux saveurs locales et internationales
             </p>
           </motion.div>
         </div>
@@ -79,7 +79,7 @@ export default function MenuPage() {
 
           {/* Bouton retour */}
           <div className="text-center mt-8">
-            <Link to="/cda" className="inline-flex items-center gap-2 text-amber-600 hover:text-amber-700">
+            <Link to="/cda" className="inline-flex items-center gap-2 text-amber-600 hover:text-amber-700 transition-colors">
               ← Retour à la page CDA
             </Link>
           </div>
