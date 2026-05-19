@@ -30,7 +30,7 @@ const heroStats = [
 const activityHighlights = [
   {
     icon: Palette,
-    title: "ByGagoos Ink",
+    title: "ByGagoos Ink - Sérigraphie et Design",
     text: "Designs, commandes, production et galerie publique.",
     route: "/ink",
     color: "purple",
@@ -39,7 +39,7 @@ const activityHighlights = [
   },
   {
     icon: Truck,
-    title: "ByGagoos Trans",
+    title: "ByGagoos Trans - Flotte Taxi-Moto",
     text: "Flotte Taxi-Moto, conducteurs, maintenance et missions.",
     route: "/trans",
     color: "cyan",
