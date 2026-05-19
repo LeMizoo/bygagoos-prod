@@ -74,8 +74,8 @@ export default function Navbar() {
 
   // Activités
   const activities = [
-    { to: "/ink", label: "ByGagoos Ink", icon: Palette, color: "text-purple-600", bgHover: "hover:bg-purple-50" },
-    { to: "/trans", label: "ByGagoos Trans", icon: Bike, color: "text-cyan-600", bgHover: "hover:bg-cyan-50" },
+    { to: "/ink", label: "ByGagoos Ink (Sérigraphie)", icon: Palette, color: "text-purple-600", bgHover: "hover:bg-purple-50" },
+    { to: "/trans", label: "ByGagoos Trans (Taxi Moto)", icon: Bike, color: "text-cyan-600", bgHover: "hover:bg-cyan-50" },
     { to: "/cda", label: "ByGagoos CDA (Cuisine, Dégustation, Accueil)", icon: UtensilsCrossed, color: "text-amber-600", bgHover: "hover:bg-amber-50" },
   ];
 

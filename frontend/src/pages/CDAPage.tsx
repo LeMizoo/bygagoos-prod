@@ -96,9 +96,9 @@ export default function CDAPage() {
             className="grid md:grid-cols-3 gap-8 mb-20"
           >
             {[
-              { icon: Wine, title: "Bar à cocktails", desc: "Une sélection de cocktails maison et spiritueux", color: "amber" },
-              { icon: Coffee, title: "Café & Desserts", desc: "Pause gourmande en journée", color: "amber" },
-              { icon: Calendar, title: "Événements privés", desc: "Organisez vos soirées et anniversaires", color: "amber" }
+              { icon: Wine, title: "Bar à cocktails", desc: "Une sélection de cocktails maison et spiritueux" },
+              { icon: Coffee, title: "Café & Desserts", desc: "Pause gourmande en journée" },
+              { icon: Calendar, title: "Événements privés", desc: "Organisez vos soirées et anniversaires" }
             ].map((item, index) => {
               const Icon = item.icon;
               return (

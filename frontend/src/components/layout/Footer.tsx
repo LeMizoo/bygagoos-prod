@@ -16,7 +16,7 @@ export default function Footer() {
       { label: "Gestion véhicules", href: "/admin/taxi/vehicles" },
       { label: "Courses du jour", href: "/trans" },
     ],
-    "ByGagoos CDA (Cuisine, Dégustation, Accueil)": [
+    "ByGagoos CDA": [
       { label: "Réservations", href: "/cda" },
       { label: "Menu du jour", href: "/cda" },
       { label: "Gestion des tables", href: "/cda" },
@@ -52,7 +52,7 @@ export default function Footer() {
   const activities = [
     { name: "Ink", icon: Palette, color: "from-purple-500 to-purple-600", bgHover: "hover:border-purple-400/50 group-hover:text-purple-400", href: "/ink" },
     { name: "Trans", icon: Bike, color: "from-cyan-500 to-cyan-600", bgHover: "hover:border-cyan-400/50 group-hover:text-cyan-400", href: "/trans" },
-    { name: "CDA (Cuisine, Dégustation, Accueil)", icon: UtensilsCrossed, color: "from-amber-500 to-amber-600", bgHover: "hover:border-amber-400/50 group-hover:text-amber-400", href: "/cda" },
+    { name: "CDA", icon: UtensilsCrossed, color: "from-amber-500 to-amber-600", bgHover: "hover:border-amber-400/50 group-hover:text-amber-400", href: "/cda" },
   ];
 
   const scrollToTop = () => {
