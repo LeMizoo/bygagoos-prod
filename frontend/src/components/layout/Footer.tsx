@@ -10,7 +10,6 @@ export default function Footer() {
       { label: "Sérigraphie", href: "/gallery?category=serigraphie" },
       { label: "Design personnalisé", href: "/gallery?category=design" },
       { label: "Packaging", href: "/gallery?category=packaging" },
-      { label: "Textile", href: "/gallery?category=textile" },
     ],
     Entreprise: [
       { label: "À propos", href: "/about" },
@@ -77,8 +76,10 @@ export default function Footer() {
               </span>
             </Link>
             <p className="text-gray-400 mb-8 max-w-md">
-              Nous transformons vos idées en œuvres d'art imprimées. Excellence
-              en sérigraphie depuis 2025.
+              Nous proposons trois activités complémentaires :
+              <strong> sérigraphie</strong>, <strong>design personnalisé</strong>
+              et <strong>packaging</strong>. Nous transformons vos idées en
+              œuvres d'art imprimées avec soin.
             </p>
             <div className="flex space-x-4">
               {social.map((item) => (
