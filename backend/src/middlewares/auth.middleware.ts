@@ -54,25 +54,34 @@ export const protect = async (req: Request, res: Response, next: NextFunction): 
   try {
     let token: string | undefined;
 
-    if (req.headers.authorization?.startsWith('Bearer')) {
-      token = req.headers.authorization.split(' ')[1];
+    // Check Authorization header
+    const authHeader = req.headers.authorization;
+    logger.debug(`🔍 Authorization header: ${authHeader ? 'present' : 'missing'}`);
+    
+    if (authHeader?.startsWith('Bearer')) {
+      token = authHeader.split(' ')[1];
+      logger.debug(`✅ Token extracted from header: ${token ? `${token.substring(0, 20)}...` : 'empty'}`);
     }
 
     if (!token) {
+      logger.warn(`❌ Token missing for ${req.method} ${req.path}`);
       apiResponse.error(res, 'Non autorisé - Token manquant', HTTP_STATUS.UNAUTHORIZED);
       return;
     }
 
     const decoded = jwt.verify(token, env.JWT_SECRET) as DecodedToken;
+    logger.debug(`✅ Token verified for user: ${decoded.id}`);
 
     const user = await User.findById(decoded.id).select('-password');
 
     if (!user) {
+      logger.warn(`⚠️ User not found: ${decoded.id}`);
       apiResponse.error(res, 'Utilisateur non trouvé', HTTP_STATUS.UNAUTHORIZED);
       return;
     }
 
     if (!user.isActive) {
+      logger.warn(`⚠️ User account disabled: ${user.email}`);
       apiResponse.error(res, 'Compte désactivé', HTTP_STATUS.FORBIDDEN);
       return;
     }
@@ -92,11 +101,11 @@ export const protect = async (req: Request, res: Response, next: NextFunction): 
     };
     req.token = token;
 
-    logger.debug(`✅ Utilisateur authentifié: ${user.email} (${normalizedRole})`);
+    logger.debug(`✅ User authenticated: ${user.email} (${normalizedRole})`);
     next();
   } catch (error) {
     const err = error as Error;
-    logger.error('❌ Erreur auth middleware:', err.message);
+    logger.error('❌ Auth middleware error:', err.message);
 
     if (err.name === 'TokenExpiredError') {
       apiResponse.error(res, 'Token expiré', HTTP_STATUS.UNAUTHORIZED);

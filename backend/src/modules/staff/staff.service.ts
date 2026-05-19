@@ -3,7 +3,7 @@
 import StaffModel from './staff.model';
 import { AppError } from '../../core/utils/errors/AppError';
 import { HTTP_STATUS } from '../../core/constants/httpStatus';
-import { env } from '../../config/env';
+import { buildAvatarUrl } from '../../core/utils/urlBuilder';
 import logger from '../../core/utils/logger';
 import { Document } from 'mongoose';
 
@@ -17,10 +17,7 @@ export class StaffService {
     const staffObj = staff.toObject() as Record<string, unknown>;
     const avatarPath = staffObj.avatar as string | undefined;
     
-    if (avatarPath && !avatarPath.startsWith('http')) {
-      const baseUrl = env.API_URL;
-      staffObj.avatar = `${baseUrl}${avatarPath.startsWith('/') ? '' : '/'}${avatarPath}`;
-    }
+    staffObj.avatar = buildAvatarUrl(avatarPath);
     
     return staffObj;
   }

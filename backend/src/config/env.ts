@@ -10,7 +10,19 @@ export const env = {
   PORT: parseInt(process.env.PORT || '5000', 10),
   FALLBACK_PORT: parseInt(process.env.FALLBACK_PORT || '5001', 10),
   API_PREFIX: process.env.API_PREFIX || '/api/v1',
-  // Ajout pour la gestion des avatars
+  /**
+   * 🔧 IMPORTANT: This is used to construct full URLs for resources (avatars, uploads, etc.)
+   * 
+   * In PRODUCTION: Set this to your actual backend URL (e.g., https://api.example.com)
+   * Otherwise, resources from localhost will be served and cause HTTPS/CORS issues
+   * 
+   * In DEVELOPMENT: Defaults to http://localhost:5000
+   * 
+   * Set in environment variables:
+   *   - Railway: Project Settings > Environment
+   *   - Vercel: Project Settings > Environment Variables
+   *   - Local .env file: API_URL=https://your-backend-url
+   */
   API_URL: process.env.API_URL || 'http://localhost:5000',
 
   // MongoDB
