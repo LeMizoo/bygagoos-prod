@@ -61,6 +61,7 @@ import CreateClientPage from "./pages/admin/CreateClientPage";
 import ClientDetailPage from "./pages/admin/ClientDetailPage";
 import EditClientPage from "./pages/admin/EditClientPage";
 import TaxiVehiclesPage from "./pages/admin/TaxiVehiclesPage";
+import TaxiDriversPage from "./pages/admin/TaxiDriversPage";
 import FamilyAdminPage from "./pages/admin/FamilyAdminPage";
 
 // Pages commandes
@@ -88,7 +89,6 @@ function App() {
   const { checkAuth } = useAuthStore();
   const [isHydrated, setIsHydrated] = useState(false);
 
-  // Activer la déconnexion automatique en cas d'inactivité
   useInactivityLogout();
 
   useEffect(() => {
@@ -105,14 +105,12 @@ function App() {
     initializeAuth();
   }, [checkAuth]);
 
-  // Nettoyer le keep-alive au démontage de l'application
   useEffect(() => {
     return () => {
       stopKeepAlive();
     };
   }, []);
 
-  // Afficher un écran de chargement pendant l'hydratation
   if (!isHydrated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -146,22 +144,18 @@ function App() {
         <Route path="/" element={<Navigate to="/home" replace />} />
         <Route path="/login" element={<Navigate to="/auth/login" replace />} />
 
-        {/* ===== ROUTES PUBLIQUES AVEC MAIN LAYOUT ===== */}
         <Route element={<MainLayout />}>
           <Route path="/home" element={<HomePage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/gallery" element={<GalleryPage />} />
           <Route path="/contact" element={<ContactPage />} />
           
-          {/* Pages publiques des activités */}
           <Route path="/ink" element={<InkPage />} />
           <Route path="/trans" element={<TransPage />} />
           <Route path="/cda" element={<CDAPage />} />
           
-          {/* Redirection /menu vers /cda */}
           <Route path="/menu" element={<Navigate to="/cda" replace />} />
           
-          {/* Routes du Footer */}
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/cookies" element={<CookiesPage />} />
@@ -172,7 +166,6 @@ function App() {
           <Route path="/press" element={<PressPage />} />
         </Route>
 
-        {/* ===== ROUTES D'AUTHENTIFICATION ===== */}
         <Route path="/auth" element={<AuthLayout />}>
           <Route index element={<Navigate to="login" replace />} />
           <Route path="login" element={<LoginPage />} />
@@ -182,7 +175,6 @@ function App() {
           <Route path="reset-password/:token" element={<ResetPasswordPage />} />
         </Route>
 
-        {/* ===== ROUTES ADMIN PROTÉGÉES ===== */}
         <Route
           path="/admin"
           element={
@@ -218,12 +210,12 @@ function App() {
           </Route>
           <Route path="taxi">
             <Route path="vehicles" element={<TaxiVehiclesPage />} />
+            <Route path="drivers" element={<TaxiDriversPage />} />
           </Route>
           <Route path="family" element={<FamilyAdminPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
 
-        {/* ===== DASHBOARDS PAR ACTIVITÉ (PROTÉGÉS) ===== */}
         <Route
           path="/prod/dashboard"
           element={
@@ -260,7 +252,6 @@ function App() {
           }
         />
 
-        {/* ===== ROUTES UTILISATEUR PROTÉGÉES ===== */}
         <Route
           path="/user"
           element={
@@ -276,7 +267,6 @@ function App() {
           <Route path="orders/:id" element={<UserOrderTrackingPage />} />
         </Route>
 
-        {/* ===== ROUTES D'ERREUR ===== */}
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
         <Route path="/404" element={<NotFoundPage />} />
         <Route path="*" element={<NotFoundPage />} />
