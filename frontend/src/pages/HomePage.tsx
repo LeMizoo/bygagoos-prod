@@ -77,7 +77,6 @@ export default function HomePage() {
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Hero Section - Style AgileFleet */}
       <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
-        {/* Background decorative elements */}
         <div className="absolute inset-0 opacity-20">
           <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-purple-500 blur-3xl" />
           <div className="absolute top-1/2 -left-40 w-80 h-80 rounded-full bg-cyan-500 blur-3xl" />
@@ -86,7 +85,6 @@ export default function HomePage() {
 
         <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
           <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
-            {/* Left Column - Text (style AgileFleet mais contenu ByGagoos) */}
             <div>
               <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium backdrop-blur">
                 <Sparkles className="h-4 w-4 text-amber-400" />
@@ -124,7 +122,6 @@ export default function HomePage() {
                 </Link>
               </div>
 
-              {/* Stats - style AgileFleet */}
               <div className="mt-12 flex flex-wrap gap-6">
                 {heroStats.map((stat, index) => {
                   const Icon = stat.icon;
@@ -143,7 +140,6 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Right Column - Three Activities Cards (style AgileFleet) */}
             <div className="grid gap-4">
               {activitiesHero.map((activity, index) => {
                 const Icon = activity.icon;
@@ -156,14 +152,12 @@ export default function HomePage() {
                     className={`group relative overflow-hidden rounded-2xl ${activity.bgGradient} border border-white/10 backdrop-blur-sm transition-all hover:scale-[1.02] hover:border-white/20`}
                   >
                     <Link to={activity.name === "ByGagoos Ink" ? "/ink" : activity.name === "ByGagoos Trans" ? "/trans" : "/cda"} className="relative flex items-center gap-4 p-5">
-                      {/* Icon avec dégradé */}
                       <div
                         className={`flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-r ${activity.color} shadow-lg`}
                       >
                         <Icon className="h-7 w-7 text-white" />
                       </div>
 
-                      {/* Content */}
                       <div className="flex-1">
                         <h3 className="text-lg font-bold">{activity.name}</h3>
                         <p className="text-sm text-white/70">{activity.description}</p>
@@ -179,7 +173,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Activities Highlights - inchangé */}
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -242,7 +235,6 @@ export default function HomePage() {
         </motion.div>
       </section>
 
-      {/* Three Activities Section - inchangé */}
       <section id="activities" className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8 scroll-mt-24">
         <div className="mb-10 flex items-end justify-between gap-6">
           <div>
@@ -267,7 +259,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Family Section - inchangé */}
+      {/* Family Section - CORRIGÉE */}
       <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -280,19 +272,16 @@ export default function HomePage() {
               Direction Générale
             </p>
             <h2 className="mt-3 text-3xl font-bold text-gray-900">
-              Le noyau familial qui pilote ByGagoos Prod
+              La Direction Générale
             </h2>
             <p className="mt-3 max-w-3xl text-gray-600">
-              La gouvernance reste familiale. Tovoniaina RAHENDRISON garde le rôle de super admin,
-              entouré de trois autres membres administratifs de la famille. Les noms peuvent être
-              complétés ensuite si tu veux les afficher publiquement.
+              Retrouvez ici l'équipe dirigeante de ByGagoos Prod.
             </p>
           </div>
           <FamilyMembersGrid />
         </motion.div>
       </section>
 
-      {/* Values Section - inchangé */}
       <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
         <div className="grid gap-6 lg:grid-cols-3">
           {executivePillars.map((pillar) => {
@@ -313,7 +302,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Footer CTA - inchangé */}
       <section className="bg-gradient-to-r from-amber-800 to-amber-700 py-16">
         <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
           <Heart className="h-10 w-10 mx-auto text-white mb-4" />
