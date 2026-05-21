@@ -1,106 +1,166 @@
+// frontend/src/components/layout/Sidebar.tsx
 import { Link, useLocation } from "react-router-dom";
-import {
-  Bike,
-  Crown,
-  Home,
-  LayoutDashboard,
-  LogOut,
-  Palette,
-  Package,
-  Settings,
-  ShoppingCart,
-  ShieldCheck,
-  Users,
+import { 
+  LayoutDashboard, 
+  Palette, 
+  Bike, 
   UtensilsCrossed,
+  Truck,
+  Users,
+  Settings,
+  Crown,
+  LogOut,
+  Home,
+  ShoppingBag,
+  Image,
+  UserCheck,
+  Calendar,
+  Table
 } from "lucide-react";
 import { useAuthStore } from "../../stores/authStore";
 
-const navigationGroups = [
-  {
-    title: "Pilotage",
-    items: [
-      { icon: Home, label: "Accueil", path: "/home" },
-      { icon: Crown, label: "Direction Générale", path: "/prod/dashboard" },
-      { icon: ShieldCheck, label: "Famille", path: "/admin/family" },
-    ],
-  },
-  {
-    title: "Activités",
-    items: [
-      { icon: Palette, label: "Ink Dashboard", path: "/ink/dashboard" },
-      { icon: Bike, label: "Trans Dashboard", path: "/trans/dashboard" },
-      { icon: UtensilsCrossed, label: "CDA Dashboard", path: "/cda/dashboard" },
-    ],
-  },
-  {
-    title: "Administration",
-    items: [
-      { icon: LayoutDashboard, label: "Centre admin", path: "/admin/dashboard" },
-      { icon: Users, label: "Équipe", path: "/admin/staff" },
-      { icon: Users, label: "Clients", path: "/admin/clients" },
-      { icon: Package, label: "Designs", path: "/admin/designs" },
-      { icon: ShoppingCart, label: "Commandes", path: "/admin/orders" },
-      { icon: Bike, label: "Taxi-Moto", path: "/admin/taxi/vehicles" },
-      { icon: Settings, label: "Paramètres", path: "/admin/settings" },
-    ],
-  },
-];
+interface NavItem {
+  name: string;
+  href: string;
+  icon: React.ElementType;
+  roles?: string[];
+}
+
+interface NavSection {
+  title: string;
+  icon?: React.ElementType;
+  items: NavItem[];
+}
 
 export default function Sidebar() {
   const location = useLocation();
-  const { logout } = useAuthStore();
+  const { user, logout } = useAuthStore();
+  const userRole = user?.role || "USER";
+
+  const isAdmin = userRole === "ADMIN" || userRole === "SUPER_ADMIN" || userRole === "MANAGER";
+
+  const navigation: NavSection[] = [
+    {
+      title: "Accueil",
+      items: [
+        { name: "Tableau de bord", href: "/home", icon: Home },
+      ]
+    },
+    {
+      title: "ByGagoos Ink",
+      icon: Palette,
+      items: [
+        { name: "Dashboard", href: "/ink/dashboard", icon: LayoutDashboard },
+        { name: "Commandes", href: "/admin/orders", icon: ShoppingBag, roles: ["ADMIN", "SUPER_ADMIN", "MANAGER"] },
+        { name: "Designs", href: "/admin/designs", icon: Image, roles: ["ADMIN", "SUPER_ADMIN", "MANAGER"] },
+        { name: "Clients", href: "/admin/clients", icon: Users, roles: ["ADMIN", "SUPER_ADMIN", "MANAGER"] },
+      ]
+    },
+    {
+      title: "ByGagoos Trans",
+      icon: Bike,
+      items: [
+        { name: "Dashboard", href: "/trans/dashboard", icon: LayoutDashboard },
+        { name: "Véhicules", href: "/admin/taxi/vehicles", icon: Truck, roles: ["ADMIN", "SUPER_ADMIN", "MANAGER"] },
+        { name: "Conducteurs", href: "/admin/taxi/drivers", icon: Users, roles: ["ADMIN", "SUPER_ADMIN", "MANAGER"] },
+      ]
+    },
+    {
+      title: "ByGagoos CDA",
+      icon: UtensilsCrossed,
+      items: [
+        { name: "Dashboard", href: "/cda/dashboard", icon: LayoutDashboard },
+        { name: "Réservations", href: "/cda/dashboard", icon: Calendar, roles: ["ADMIN", "SUPER_ADMIN", "MANAGER"] },
+        { name: "Tables", href: "/cda/dashboard", icon: Table, roles: ["ADMIN", "SUPER_ADMIN", "MANAGER"] },
+      ]
+    },
+    {
+      title: "Administration",
+      icon: Settings,
+      items: [
+        { name: "Staff", href: "/admin/staff", icon: UserCheck, roles: ["ADMIN", "SUPER_ADMIN", "MANAGER"] },
+        { name: "Direction Générale", href: "/prod/dashboard", icon: Crown, roles: ["ADMIN", "SUPER_ADMIN", "MANAGER"] },
+        { name: "Paramètres", href: "/admin/settings", icon: Settings, roles: ["ADMIN", "SUPER_ADMIN"] },
+      ]
+    }
+  ];
+
+  const filteredNavigation = navigation.map(section => ({
+    ...section,
+    items: section.items.filter(item => 
+      !item.roles || item.roles.includes(userRole)
+    )
+  })).filter(section => section.items.length > 0);
+
+  const handleLogout = () => {
+    logout();
+  };
 
   return (
-    <aside className="w-full bg-gray-900 text-white lg:sticky lg:top-0 lg:h-screen lg:w-72">
-      <div className="flex h-full flex-col p-4 sm:p-6">
-        <div>
-          <h1 className="mb-2 text-2xl font-bold">Admin Panel</h1>
-          <p className="text-sm text-gray-400">Navigation centralisée des activités</p>
-        </div>
-
-        <Link
-          to="/home"
-          className="mt-5 flex items-center justify-center gap-3 rounded-xl bg-blue-600/20 px-4 py-3 transition-colors hover:bg-blue-600/30 lg:justify-start"
-        >
-          <Home size={20} />
-          <span>Retour à l’accueil</span>
+    <aside className="fixed left-0 top-0 h-full w-64 bg-gray-900 text-white flex flex-col z-30">
+      {/* Logo */}
+      <div className="p-5 border-b border-gray-800">
+        <Link to="/home" className="flex items-center gap-2">
+          <img src="/logo.svg" alt="ByGagoos" className="h-8 w-8" />
+          <span className="text-xl font-bold">ByGagoos Prod</span>
         </Link>
+      </div>
 
-        <nav className="mt-6 flex-1 space-y-6 overflow-y-auto pr-1">
-          {navigationGroups.map((group) => (
-            <div key={group.title}>
-              <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-[0.28em] text-gray-500">
-                {group.title}
-              </p>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-1">
-                {group.items.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = location.pathname === item.path;
-
-                  return (
-                    <Link
-                      key={item.path}
-                      to={item.path}
-                      className={`flex items-center justify-center gap-3 rounded-xl px-3 py-3 text-sm transition-colors lg:justify-start lg:text-base ${
-                        isActive ? "bg-blue-600 text-white" : "bg-white/5 text-gray-200 hover:bg-white/10"
-                      }`}
-                    >
-                      <Icon size={18} />
-                      <span>{item.label}</span>
-                    </Link>
-                  );
-                })}
-              </div>
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto py-4">
+        {filteredNavigation.map((section, idx) => (
+          <div key={idx} className="mb-6">
+            <div className="px-4 mb-2 flex items-center gap-2">
+              {section.icon && <section.icon className="h-4 w-4 text-gray-500" />}
+              <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                {section.title}
+              </span>
             </div>
-          ))}
-        </nav>
+            <div className="space-y-1">
+              {section.items.map((item) => {
+                const Icon = item.icon;
+                const isActive = location.pathname === item.href || 
+                  (item.href !== "/home" && location.pathname.startsWith(item.href));
+                
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={`flex items-center gap-3 px-4 py-2.5 mx-2 rounded-lg transition-colors ${
+                      isActive
+                        ? "bg-amber-600 text-white"
+                        : "text-gray-300 hover:bg-gray-800 hover:text-white"
+                    }`}
+                  >
+                    <Icon className="h-5 w-5" />
+                    <span className="text-sm font-medium">{item.name}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </nav>
 
+      {/* Footer */}
+      <div className="p-4 border-t border-gray-800">
+        <div className="flex items-center gap-3 mb-3 px-2">
+          <div className="w-8 h-8 rounded-full bg-amber-600 flex items-center justify-center">
+            <span className="text-sm font-bold">
+              {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
+            </span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium truncate">{user?.firstName} {user?.lastName}</p>
+            <p className="text-xs text-gray-400 truncate">{user?.email}</p>
+          </div>
+        </div>
         <button
-          onClick={logout}
-          className="mt-6 flex items-center justify-center gap-3 rounded-xl px-4 py-3 text-gray-300 transition-colors hover:bg-red-600/20 hover:text-red-300 lg:justify-start"
+          onClick={handleLogout}
+          className="flex items-center gap-3 w-full px-3 py-2 text-red-400 hover:bg-red-900/20 rounded-lg transition-colors"
         >
-          <LogOut size={20} />
-          <span>Déconnexion</span>
+          <LogOut className="h-5 w-5" />
+          <span className="text-sm font-medium">Déconnexion</span>
         </button>
       </div>
     </aside>
