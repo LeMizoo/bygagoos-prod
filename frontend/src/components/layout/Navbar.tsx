@@ -1,3 +1,4 @@
+// frontend/src/components/layout/Navbar.tsx
 import { Link } from "react-router-dom";
 import { useAuthStore } from "../../stores/authStore";
 import {
@@ -15,7 +16,6 @@ import {
   Home,
   Info,
   Phone,
-  GalleryVertical,
   LayoutDashboard,
   Crown,
   Heart,
@@ -64,19 +64,39 @@ export default function Navbar() {
     setUserMenuOpen(false);
   };
 
-  // Liens principaux pour desktop et mobile
+  // Liens principaux (sans Galerie - elle est dans ByGagoos Ink)
   const mainLinks = [
     { to: "/home", label: "Accueil", icon: Home },
     { to: "/about", label: "À propos", icon: Info },
-    { to: "/gallery", label: "Galerie", icon: GalleryVertical },
     { to: "/contact", label: "Contact", icon: Phone },
   ];
 
   // Activités
   const activities = [
-    { to: "/ink", label: "ByGagoos Ink (Sérigraphie)", icon: Palette, color: "text-purple-600", bgHover: "hover:bg-purple-50" },
-    { to: "/trans", label: "ByGagoos Trans (Taxi Moto)", icon: Bike, color: "text-cyan-600", bgHover: "hover:bg-cyan-50" },
-    { to: "/cda", label: "ByGagoos CDA (Cuisine, Dégustation, Accueil)", icon: UtensilsCrossed, color: "text-amber-600", bgHover: "hover:bg-amber-50" },
+    { 
+      to: "/ink", 
+      label: "ByGagoos Ink (Sérigraphie)", 
+      icon: Palette, 
+      color: "text-purple-600", 
+      bgHover: "hover:bg-purple-50",
+      description: "Designs, galerie, commandes"
+    },
+    { 
+      to: "/trans", 
+      label: "ByGagoos Trans (Taxi Moto)", 
+      icon: Bike, 
+      color: "text-cyan-600", 
+      bgHover: "hover:bg-cyan-50",
+      description: "Flotte, conducteurs, courses"
+    },
+    { 
+      to: "/cda", 
+      label: "ByGagoos CDA (Cuisine, Dégustation, Accueil)", 
+      icon: UtensilsCrossed, 
+      color: "text-amber-600", 
+      bgHover: "hover:bg-amber-50",
+      description: "Réservations, menu, tables"
+    },
   ];
 
   return (
@@ -107,7 +127,7 @@ export default function Navbar() {
                   <Link
                     key={link.to}
                     to={link.to}
-                    className="text-gray-700 hover:text-blue-600 transition-colors flex items-center gap-1"
+                    className="text-gray-700 hover:text-amber-600 transition-colors flex items-center gap-1"
                   >
                     <Icon className="h-4 w-4" />
                     <span>{link.label}</span>
@@ -117,22 +137,25 @@ export default function Navbar() {
               
               {/* Menu déroulant Nos Activités */}
               <div className="relative group">
-                <button className="text-gray-700 hover:text-blue-600 transition-colors flex items-center gap-1">
+                <button className="text-gray-700 hover:text-amber-600 transition-colors flex items-center gap-1">
                   <LayoutDashboard className="h-4 w-4" />
                   <span>Nos Activités</span>
                   <ChevronDown className="h-4 w-4" />
                 </button>
-                <div className="absolute left-0 mt-2 w-72 bg-white rounded-xl shadow-lg border border-gray-200 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                <div className="absolute left-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                   {activities.map((activity) => {
                     const Icon = activity.icon;
                     return (
                       <Link
                         key={activity.to}
                         to={activity.to}
-                        className={`flex items-center gap-3 px-4 py-2.5 text-gray-700 transition-colors ${activity.bgHover}`}
+                        className={`flex items-center gap-3 px-4 py-3 transition-colors ${activity.bgHover}`}
                       >
-                        <Icon className={`h-4 w-4 ${activity.color}`} />
-                        <span className="text-sm">{activity.label}</span>
+                        <Icon className={`h-5 w-5 ${activity.color}`} />
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{activity.label}</p>
+                          <p className="text-xs text-gray-500">{activity.description}</p>
+                        </div>
                       </Link>
                     );
                   })}
@@ -204,7 +227,7 @@ export default function Navbar() {
                           </div>
 
                           <div className="border-t border-gray-100 pt-2">
-                            <button onClick={handleLogout} className="flex items-center w-full px-4 py-2.5 text-red-600 hover:bg-red-50">
+                            <button onClick={handleLogout} className="flex items-center w-full px-4 py-2.5 text-red-600 hover:bg-red-50 transition-colors">
                               <LogOut className="h-4 w-4 mr-3" />
                               Déconnexion
                             </button>
@@ -215,11 +238,11 @@ export default function Navbar() {
                   </div>
                 ) : (
                   <div className="flex items-center space-x-3">
-                    <Link to="/auth/login" className="flex items-center space-x-2 text-gray-700 hover:text-blue-600">
+                    <Link to="/auth/login" className="flex items-center space-x-2 text-gray-700 hover:text-amber-600">
                       <LogIn size={18} />
                       <span>Connexion</span>
                     </Link>
-                    <Link to="/auth/register" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    <Link to="/auth/register" className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors">
                       S'inscrire
                     </Link>
                   </div>
@@ -239,11 +262,12 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* Menu Mobile - Plein écran avec overlay */}
+      {/* Menu Mobile */}
       <div
         className={`fixed inset-0 bg-white z-40 transform transition-transform duration-300 ease-in-out md:hidden ${
           mobileMenuOpen ? "translate-x-0" : "translate-x-full"
-        } navbar-mobile-menu`}
+        }`}
+        style={{ top: "64px" }}
       >
         <div className="h-full overflow-y-auto pb-20">
           <div className="px-4 py-6 space-y-6">
@@ -291,7 +315,7 @@ export default function Navbar() {
               </div>
             ) : (
               <div className="flex flex-col gap-3">
-                <Link to="/auth/login" className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-3 rounded-lg font-medium" onClick={closeAllMenus}>
+                <Link to="/auth/login" className="flex items-center justify-center gap-2 bg-amber-600 text-white px-4 py-3 rounded-lg font-medium" onClick={closeAllMenus}>
                   <LogIn className="h-4 w-4" />
                   Se connecter
                 </Link>
@@ -347,7 +371,10 @@ export default function Navbar() {
                         onClick={closeAllMenus}
                       >
                         <Icon className={`h-5 w-5 ${activity.color}`} />
-                        <span className="text-sm">{activity.label}</span>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{activity.label}</p>
+                          <p className="text-xs text-gray-500">{activity.description}</p>
+                        </div>
                       </Link>
                     );
                   })}
@@ -355,7 +382,7 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* Petit message de foi en bas du menu mobile */}
+            {/* Message de foi */}
             <div className="pt-8 pb-4 text-center">
               <div className="inline-flex items-center gap-1 text-xs text-gray-400">
                 <Heart className="h-3 w-3" />
@@ -367,10 +394,11 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Overlay sombre quand menu mobile est ouvert */}
+      {/* Overlay */}
       {mobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-30 md:hidden navbar-overlay"
+          className="fixed inset-0 bg-black/50 z-30 md:hidden"
+          style={{ top: "64px" }}
           onClick={closeAllMenus}
         />
       )}

@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   ShoppingBag, Package, Users, Clock, 
-  ArrowRight, Plus, Eye, CheckCircle
+  ArrowRight, Plus, Eye, CheckCircle, 
+  Bike, UtensilsCrossed, Crown, Palette
 } from 'lucide-react';
 
 export default function InkDashboardPage() {
@@ -30,8 +31,50 @@ export default function InkDashboardPage() {
     processing: 'En cours'
   };
 
+  const activityLinks = [
+    { name: "ByGagoos Ink", icon: Palette, href: "/ink/dashboard", current: true, color: "text-purple-600 bg-purple-100" },
+    { name: "ByGagoos Trans", icon: Bike, href: "/trans/dashboard", current: false, color: "text-cyan-600 bg-cyan-100" },
+    { name: "ByGagoos CDA", icon: UtensilsCrossed, href: "/cda/dashboard", current: false, color: "text-amber-600 bg-amber-100" },
+  ];
+
   return (
     <div className="space-y-6">
+      {/* Navigation entre activités */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-2">
+            <Crown className="h-5 w-5 text-amber-500" />
+            <span className="text-sm text-gray-500">Basculer vers :</span>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            {activityLinks.map((activity) => {
+              const Icon = activity.icon;
+              return (
+                <Link
+                  key={activity.name}
+                  to={activity.href}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                    activity.current
+                      ? "bg-gray-100 text-gray-900 cursor-default"
+                      : `${activity.color} hover:opacity-80 hover:scale-105`
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span className="text-sm font-medium">{activity.name}</span>
+                </Link>
+              );
+            })}
+          </div>
+          <Link
+            to="/prod/dashboard"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 transition-all"
+          >
+            <Crown className="h-4 w-4" />
+            <span className="text-sm font-medium">Direction Générale</span>
+          </Link>
+        </div>
+      </div>
+
       {/* En-tête */}
       <div className="flex justify-between items-center">
         <div>

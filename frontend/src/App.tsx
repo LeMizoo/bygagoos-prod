@@ -86,59 +86,41 @@ import UnauthorizedPage from "./pages/errors/UnauthorizedPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 function App() {
-  const { checkAuth, isAuthenticated } = useAuthStore();
+  const { checkAuth } = useAuthStore();
   const [isHydrated, setIsHydrated] = useState(false);
 
-  // Activer la déconnexion automatique en cas d'inactivité
   useInactivityLogout();
 
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // Vérifier s'il y a un token dans localStorage
         const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
-        
         if (!token) {
-          // Pas de token, on considère que l'utilisateur n'est pas connecté
           setIsHydrated(true);
           return;
         }
-        
-        // Token présent, on vérifie sa validité
         await checkAuth();
       } catch (error) {
         console.error("Auth initialization error:", error);
-        // En cas d'erreur, on nettoie le localStorage
         localStorage.removeItem('token');
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
       } finally {
-        // Toujours passer à hydraté après 2 secondes max (timeout de sécurité)
-        setTimeout(() => {
-          setIsHydrated(true);
-        }, 2000);
+        setTimeout(() => setIsHydrated(true), 2000);
       }
     };
     
     initializeAuth();
     
-    // Timeout de sécurité : forcer l'affichage après 3 secondes quoi qu'il arrive
-    const timeout = setTimeout(() => {
-      setIsHydrated(true);
-    }, 3000);
-    
+    const timeout = setTimeout(() => setIsHydrated(true), 3000);
     return () => clearTimeout(timeout);
   }, [checkAuth]);
 
-  // Nettoyer le keep-alive au démontage de l'application
   useEffect(() => {
-    return () => {
-      stopKeepAlive();
-    };
+    return () => stopKeepAlive();
   }, []);
 
-  // Afficher un écran de chargement pendant l'hydratation
   if (!isHydrated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -157,14 +139,8 @@ function App() {
         toastOptions={{
           duration: 4000,
           style: { background: "#363636", color: "#fff" },
-          success: {
-            duration: 3000,
-            iconTheme: { primary: "#10b981", secondary: "#fff" },
-          },
-          error: {
-            duration: 4000,
-            iconTheme: { primary: "#ef4444", secondary: "#fff" },
-          },
+          success: { duration: 3000, iconTheme: { primary: "#10b981", secondary: "#fff" } },
+          error: { duration: 4000, iconTheme: { primary: "#ef4444", secondary: "#fff" } },
         }}
       />
 
@@ -172,7 +148,7 @@ function App() {
         <Route path="/" element={<Navigate to="/home" replace />} />
         <Route path="/login" element={<Navigate to="/auth/login" replace />} />
 
-        {/* ===== ROUTES PUBLIQUES AVEC MAIN LAYOUT ===== */}
+        {/* ROUTES PUBLIQUES AVEC MAIN LAYOUT */}
         <Route element={<MainLayout />}>
           <Route path="/home" element={<HomePage />} />
           <Route path="/about" element={<AboutPage />} />
@@ -195,7 +171,7 @@ function App() {
           <Route path="/press" element={<PressPage />} />
         </Route>
 
-        {/* ===== ROUTES D'AUTHENTIFICATION ===== */}
+        {/* ROUTES D'AUTHENTIFICATION */}
         <Route path="/auth" element={<AuthLayout />}>
           <Route index element={<Navigate to="login" replace />} />
           <Route path="login" element={<LoginPage />} />
@@ -205,7 +181,7 @@ function App() {
           <Route path="reset-password/:token" element={<ResetPasswordPage />} />
         </Route>
 
-        {/* ===== ROUTES ADMIN PROTÉGÉES ===== */}
+        {/* ROUTES ADMIN PROTÉGÉES (avec Sidebar) */}
         <Route
           path="/admin"
           element={
@@ -247,52 +223,62 @@ function App() {
           <Route path="settings" element={<SettingsPage />} />
         </Route>
 
-        {/* ===== DASHBOARDS PAR ACTIVITÉ (PROTÉGÉS) ===== */}
+        {/* DASHBOARDS PAR ACTIVITÉ (avec Sidebar via AdminLayout) */}
+        
+        {/* Direction Générale */}
         <Route
           path="/prod/dashboard"
           element={
             <ProtectedRoute requiredRoles={["ADMIN", "SUPER_ADMIN", "MANAGER"]}>
-              <DashboardPage />
+              <AdminLayout />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route index element={<DashboardPage />} />
+        </Route>
 
+        {/* ByGagoos Ink Dashboard */}
         <Route
           path="/ink/dashboard"
           element={
             <ProtectedRoute requiredRoles={["ADMIN", "SUPER_ADMIN", "MANAGER"]}>
-              <InkDashboardPage />
+              <AdminLayout />
             </ProtectedRoute>
           }
-        />
-        
+        >
+          <Route index element={<InkDashboardPage />} />
+        </Route>
+
+        {/* ByGagoos Trans Dashboard */}
         <Route
           path="/trans/dashboard"
           element={
             <ProtectedRoute requiredRoles={["ADMIN", "SUPER_ADMIN", "MANAGER"]}>
-              <TaxiDashboardPage />
+              <AdminLayout />
             </ProtectedRoute>
           }
-        />
-        
+        >
+          <Route index element={<TaxiDashboardPage />} />
+        </Route>
+
+        {/* ByGagoos CDA Dashboard */}
         <Route
           path="/cda/dashboard"
           element={
             <ProtectedRoute requiredRoles={["ADMIN", "SUPER_ADMIN", "MANAGER"]}>
-              <RestaurantDashboardPage />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* ===== ROUTES UTILISATEUR PROTÉGÉES ===== */}
-        <Route
-          path="/user"
-          element={
-            <ProtectedRoute requiredRoles={["SUPER_ADMIN", "ADMIN", "STAFF", "CLIENT", "USER"]}>
-              <MainLayout />
+              <AdminLayout />
             </ProtectedRoute>
           }
         >
+          <Route index element={<RestaurantDashboardPage />} />
+        </Route>
+
+        {/* ROUTES UTILISATEUR PROTÉGÉES */}
+        <Route path="/user" element={
+          <ProtectedRoute requiredRoles={["SUPER_ADMIN", "ADMIN", "STAFF", "CLIENT", "USER"]}>
+            <MainLayout />
+          </ProtectedRoute>
+        }>
           <Route index element={<Navigate to="profile" replace />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="my-orders" element={<MyOrdersPage />} />
@@ -300,7 +286,7 @@ function App() {
           <Route path="orders/:id" element={<UserOrderTrackingPage />} />
         </Route>
 
-        {/* ===== ROUTES D'ERREUR ===== */}
+        {/* ROUTES D'ERREUR */}
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
         <Route path="/404" element={<NotFoundPage />} />
         <Route path="*" element={<NotFoundPage />} />
