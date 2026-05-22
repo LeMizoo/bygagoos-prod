@@ -1,46 +1,34 @@
 import { useEffect, useState } from 'react';
-import { Link } from "react-router-dom";
+import { Link } from 'react-router-dom';
 import {
-  ArrowRight,
-  Briefcase,
-  Crown,
-  ShieldCheck,
-  Sparkles,
-  TrendingUp,
-  DollarSign,
-  ShoppingBag,
-  Users,
-  Bike,
-  UtensilsCrossed,
-  AlertCircle,
-  Calendar,
-} from "lucide-react";
+  TrendingUp, DollarSign, Calendar, ArrowRight, Crown,
+  ShoppingBag, Users, ShieldCheck, Sparkles, Briefcase
+} from 'lucide-react';
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
   PointElement,
   LineElement,
-  BarElement,
   Title,
   Tooltip,
   Legend,
   Filler
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
-import DashboardAccessPanel from "../../components/dashboard/DashboardAccessPanel";
+import DashboardAccessPanel from '../../components/dashboard/DashboardAccessPanel';
 import {
   centralAdministrationLinks,
   homeNavigationLinks,
   transversalDashboardLinks,
-} from "../../data/dashboardNavigation";
-import { directionGenerale, executivePillars, prodBrand } from "../../data/prod";
+} from '../../data/dashboardNavigation';
+import { directionGenerale, executivePillars, prodBrand } from '../../data/prod';
 import dashboardApi from '../../api/dashboard.api';
 import dev from '../../utils/devLogger';
 
 // Enregistrer Chart.js
 ChartJS.register(
-  CategoryScale, LinearScale, PointElement, LineElement, BarElement,
+  CategoryScale, LinearScale, PointElement, LineElement,
   Title, Tooltip, Legend, Filler
 );
 
@@ -75,7 +63,7 @@ export default function DashboardPage() {
       try {
         setLoading(true);
         const data = await dashboardApi.getAdminStats();
-        setStats(data);
+        setStats(data as DashboardStats);
       } catch (error) {
         dev.error('Erreur chargement stats:', error);
         // Données de démonstration
@@ -133,21 +121,57 @@ export default function DashboardPage() {
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
-    interaction: { mode: 'index' as const, intersect: false },
+    interaction: {
+      mode: 'index' as const,
+      intersect: false,
+    },
     plugins: {
-      legend: { position: 'top' as const },
-      title: { display: false },
-      tooltip: { callbacks: { label: (context: any) => `${context.dataset.label}: ${context.raw.toLocaleString()} ${context.dataset.label === 'Chiffre d\'affaires (Ar)' ? 'Ar' : ''}` } }
+      legend: {
+        position: 'top' as const,
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context: any) {
+            const label = context.dataset.label || '';
+            const value = context.raw;
+            return `${label}: ${value.toLocaleString()} ${label === 'Chiffre d\'affaires (Ar)' ? 'Ar' : ''}`;
+          },
+        },
+      },
     },
     scales: {
-      y: { type: 'linear' as const, display: true, position: 'left' as const, ticks: { callback: (value: any) => `${(value / 1000000).toFixed(1)}M Ar` } },
-      y1: { type: 'linear' as const, display: true, position: 'right' as const, grid: { drawOnChartArea: false } },
+      y: {
+        type: 'linear' as const,
+        display: true,
+        position: 'left' as const,
+        ticks: {
+          callback: function(value: any) {
+            return `${(value / 1000000).toFixed(1)}M Ar`;
+          },
+        },
+      },
+      y1: {
+        type: 'linear' as const,
+        display: true,
+        position: 'right' as const,
+        grid: {
+          drawOnChartArea: false,
+        },
+      },
     },
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
-      {/* Section Hero - Direction Générale (conservée) */}
+      {/* Section Hero - Direction Générale */}
       <section className="rounded-[2rem] bg-gradient-to-r from-amber-950 via-stone-900 to-slate-950 p-8 text-white shadow-2xl">
         <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
           <div>
@@ -226,34 +250,44 @@ export default function DashboardPage() {
       {/* Graphique d'évolution */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
         <div className="flex items-center justify-between mb-4"><h2 className="text-lg font-semibold text-gray-900">Évolution du CA</h2><Calendar className="h-4 w-4 text-gray-400" /></div>
-        {loading ? <div className="h-80 flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600"></div></div> : <div className="h-80"><Line data={chartData} options={chartOptions} /></div>}
+        <div className="h-80"><Line data={chartData} options={chartOptions} /></div>
       </div>
 
       {/* Alertes */}
       <div className="grid lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-          <div className="p-5 border-b border-gray-100"><h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2"><AlertCircle className="h-5 w-5 text-amber-500" />Alertes stock</h2></div>
+          <div className="p-5 border-b border-gray-100"><h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">⚠️ Alertes stock</h2></div>
           <div className="divide-y divide-gray-100">
-            {(stats.lowStockAlerts || []).map(alert => (<div key={alert.id} className="p-4 flex items-center justify-between"><div><p className="font-medium text-gray-900">{alert.itemName}</p><p className="text-sm text-gray-500">Stock bas: {alert.currentStock} / {alert.threshold}</p></div><span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full">Critique</span></div>))}
+            {(stats.lowStockAlerts || []).map(alert => (
+              <div key={alert.id} className="p-4 flex items-center justify-between">
+                <div><p className="font-medium text-gray-900">{alert.itemName}</p><p className="text-sm text-gray-500">Stock bas: {alert.currentStock} / {alert.threshold}</p></div>
+                <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full">Critique</span>
+              </div>
+            ))}
             {(!stats.lowStockAlerts?.length) && <div className="p-8 text-center text-gray-500">Aucune alerte stock ⚡</div>}
           </div>
         </div>
         <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-          <div className="p-5 border-b border-gray-100"><h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2"><AlertCircle className="h-5 w-5 text-amber-500" />Maintenance à venir</h2></div>
+          <div className="p-5 border-b border-gray-100"><h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">🔧 Maintenance à venir</h2></div>
           <div className="divide-y divide-gray-100">
-            {(stats.maintenanceAlerts || []).map(alert => (<div key={alert.id} className="p-4 flex items-center justify-between"><div><p className="font-medium text-gray-900">{alert.type}</p><p className="text-sm text-gray-500">Véhicule {alert.vehicleId} - {new Date(alert.date).toLocaleDateString()}</p></div><span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full">À venir</span></div>))}
+            {(stats.maintenanceAlerts || []).map(alert => (
+              <div key={alert.id} className="p-4 flex items-center justify-between">
+                <div><p className="font-medium text-gray-900">{alert.type}</p><p className="text-sm text-gray-500">Véhicule {alert.vehicleId} - {new Date(alert.date).toLocaleDateString()}</p></div>
+                <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full">À venir</span>
+              </div>
+            ))}
             {(!stats.maintenanceAlerts?.length) && <div className="p-8 text-center text-gray-500">Aucune maintenance planifiée 🔧</div>}
           </div>
         </div>
       </div>
 
-      {/* Accès rapides (conservés) */}
+      {/* Accès rapides */}
       <div className="grid gap-6 xl:grid-cols-2">
         <DashboardAccessPanel title="Centre de commande" subtitle="Tous les dashboards métiers à portée de main" links={transversalDashboardLinks} columns={4} />
         <DashboardAccessPanel title="Administration centrale" subtitle="Équipe, clients, commandes et réglages" links={centralAdministrationLinks} columns={4} />
       </div>
 
-      {/* Membres de la famille (conservés) */}
+      {/* Membres de la famille */}
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {directionGenerale.map((member) => (
           <div key={member.name} className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
@@ -268,7 +302,7 @@ export default function DashboardPage() {
 
       <DashboardAccessPanel title="Vitrine rapide" subtitle="Retour vers l’accueil et le hub activités" links={homeNavigationLinks} columns={2} compact />
 
-      {/* Piliers exécutifs (conservés) */}
+      {/* Piliers exécutifs */}
       <div className="grid gap-6 xl:grid-cols-3">
         {executivePillars.map((pillar) => {
           const Icon = pillar.icon;
@@ -282,7 +316,7 @@ export default function DashboardPage() {
         })}
       </div>
 
-      {/* Footer section (conservée) */}
+      {/* Footer section */}
       <section className="rounded-[2rem] bg-gradient-to-r from-gray-900 to-stone-800 p-8 text-white shadow-2xl">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div>

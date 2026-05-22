@@ -56,7 +56,20 @@ export default function RestaurantTablesPage() {
     try {
       setLoading(true);
       const data = await restaurantApi.getTables();
-      setTables(data.tables || mockTables);
+      const apiTables = data.tables || [];
+      // Convertir les tables de l'API au format TableItem
+      const formattedTables: TableItem[] = apiTables.map((table: { id: string; number: number; capacity: number; status: string }, index: number) => ({
+        id: table.id || `table-${index}`,
+        number: table.number || index + 1,
+        capacity: table.capacity || 2,
+        status: (table.status === 'FREE' || table.status === 'OCCUPIED' || table.status === 'RESERVED' || table.status === 'MAINTENANCE') 
+          ? table.status as TableItem['status'] 
+          : 'FREE',
+        position: { x: 50 + (index % 4) * 120, y: 50 + Math.floor(index / 4) * 120 },
+        shape: 'square',
+        reservation: undefined
+      }));
+      setTables(formattedTables.length > 0 ? formattedTables : mockTables);
     } catch (error) {
       console.error('Erreur chargement tables:', error);
       setTables(mockTables);
@@ -69,9 +82,9 @@ export default function RestaurantTablesPage() {
     try {
       await restaurantApi.updateTableStatus(tableId, status);
       setTables(prev => prev.map(t => t.id === tableId ? { ...t, status } : t));
-      toast.success(`Table mise à jour`);
+      toast.success('Table mise à jour');
       setSelectedTable(null);
-    } catch (error) {
+    } catch {
       toast.error('Erreur lors de la mise à jour');
     }
   };
@@ -86,18 +99,19 @@ export default function RestaurantTablesPage() {
       return;
     }
     try {
-      const newTable = {
+      const newTable: TableItem = {
+        id: Date.now().toString(),
         number: editForm.number,
         capacity: editForm.capacity,
-        status: 'FREE' as const,
+        status: 'FREE',
         shape: editForm.shape,
         position: { x: 100 + (tables.length % 4) * 120, y: 100 + Math.floor(tables.length / 4) * 120 }
       };
-      setTables(prev => [...prev, { ...newTable, id: Date.now().toString() }]);
+      setTables(prev => [...prev, newTable]);
       toast.success('Table ajoutée');
       setShowModal(false);
       setEditForm({ number: 0, capacity: 2, shape: 'square' });
-    } catch (error) {
+    } catch {
       toast.error('Erreur lors de l\'ajout');
     }
   };
@@ -108,7 +122,7 @@ export default function RestaurantTablesPage() {
       setTables(prev => prev.filter(t => t.id !== tableId));
       toast.success('Table supprimée');
       setSelectedTable(null);
-    } catch (error) {
+    } catch {
       toast.error('Erreur lors de la suppression');
     }
   };
@@ -181,6 +195,7 @@ export default function RestaurantTablesPage() {
             <button
               onClick={() => setViewMode('grid')}
               className={`px-3 py-1.5 rounded-lg flex items-center gap-2 transition-all ${viewMode === 'grid' ? 'bg-white shadow-sm text-amber-600' : 'text-gray-500'}`}
+              title="Vue grille"
             >
               <Grid3x3 className="h-4 w-4" />
               <span className="text-sm">Grille</span>
@@ -188,6 +203,7 @@ export default function RestaurantTablesPage() {
             <button
               onClick={() => setViewMode('canvas')}
               className={`px-3 py-1.5 rounded-lg flex items-center gap-2 transition-all ${viewMode === 'canvas' ? 'bg-white shadow-sm text-amber-600' : 'text-gray-500'}`}
+              title="Vue plan"
             >
               <LayoutGrid className="h-4 w-4" />
               <span className="text-sm">Plan</span>
@@ -199,6 +215,7 @@ export default function RestaurantTablesPage() {
               setShowModal(true);
             }}
             className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-xl hover:bg-amber-700 transition-all"
+            title="Ajouter une table"
           >
             <Plus className="h-4 w-4" />
             Ajouter une table
@@ -240,14 +257,14 @@ export default function RestaurantTablesPage() {
           <div className="flex justify-between items-center mb-4">
             <h3 className="font-semibold text-gray-700">Plan du restaurant</h3>
             <div className="flex gap-2">
-              <button onClick={() => setZoom(z => Math.max(0.5, z - 0.1))} className="p-1 border rounded hover:bg-gray-50">
+              <button onClick={() => setZoom(z => Math.max(0.5, z - 0.1))} className="p-1 border rounded hover:bg-gray-50" title="Dézoomer">
                 <Minimize2 className="h-4 w-4" />
               </button>
               <span className="text-sm text-gray-500">{Math.round(zoom * 100)}%</span>
-              <button onClick={() => setZoom(z => Math.min(1.5, z + 0.1))} className="p-1 border rounded hover:bg-gray-50">
+              <button onClick={() => setZoom(z => Math.min(1.5, z + 0.1))} className="p-1 border rounded hover:bg-gray-50" title="Zoomer">
                 <Maximize2 className="h-4 w-4" />
               </button>
-              <button onClick={() => setZoom(1)} className="p-1 border rounded hover:bg-gray-50">
+              <button onClick={() => setZoom(1)} className="p-1 border rounded hover:bg-gray-50" title="Réinitialiser le zoom">
                 <RotateCw className="h-4 w-4" />
               </button>
             </div>
@@ -264,7 +281,7 @@ export default function RestaurantTablesPage() {
                   key={table.id}
                   drag
                   dragMomentum={false}
-                  onDragEnd={(e, info) => {
+                  onDragEnd={(_, info) => {
                     const newX = (table.position?.x || 50) + info.offset.x;
                     const newY = (table.position?.y || 50) + info.offset.y;
                     updateTablePosition(table.id, Math.max(10, Math.min(800, newX)), Math.max(10, Math.min(600, newY)));
@@ -325,7 +342,7 @@ export default function RestaurantTablesPage() {
                 <Table className="h-5 w-5 text-amber-600" />
                 Table #{selectedTable.number}
               </h2>
-              <button onClick={() => setSelectedTable(null)} className="text-gray-400 hover:text-gray-600">
+              <button onClick={() => setSelectedTable(null)} className="text-gray-400 hover:text-gray-600" title="Fermer">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -339,6 +356,7 @@ export default function RestaurantTablesPage() {
                       key={status}
                       onClick={() => updateTableStatus(selectedTable.id, status as TableItem['status'])}
                       className={`px-3 py-2 rounded-lg text-sm ${colors.bg} ${colors.text} hover:opacity-80`}
+                      title={`Changer le statut en ${colors.label}`}
                     >
                       {colors.label}
                     </button>
@@ -359,6 +377,7 @@ export default function RestaurantTablesPage() {
                 <button
                   onClick={() => handleDeleteTable(selectedTable.id)}
                   className="flex-1 px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 flex items-center justify-center gap-2"
+                  title="Supprimer la table"
                 >
                   <Trash2 className="h-4 w-4" />
                   Supprimer
@@ -375,7 +394,7 @@ export default function RestaurantTablesPage() {
           <div className="bg-white rounded-xl p-6 w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold">Ajouter une table</h2>
-              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600">
+              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600" title="Fermer">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -389,6 +408,7 @@ export default function RestaurantTablesPage() {
                   className="w-full border rounded-lg p-2"
                   placeholder="Numéro de la table"
                   min="1"
+                  title="Numéro de la table"
                 />
               </div>
               <div>
@@ -400,6 +420,7 @@ export default function RestaurantTablesPage() {
                   className="w-full border rounded-lg p-2"
                   min="1"
                   max="20"
+                  title="Capacité de la table"
                 />
               </div>
               <div>
@@ -410,6 +431,7 @@ export default function RestaurantTablesPage() {
                       key={shape}
                       onClick={() => setEditForm({ ...editForm, shape })}
                       className={`flex-1 py-2 rounded-lg border transition-all ${editForm.shape === shape ? 'bg-amber-600 text-white border-amber-600' : 'border-gray-200'}`}
+                      title={`Forme ${shape === 'square' ? 'carrée' : shape === 'round' ? 'ronde' : 'rectangulaire'}`}
                     >
                       {shape === 'square' && 'Carrée'}
                       {shape === 'round' && 'Ronde'}

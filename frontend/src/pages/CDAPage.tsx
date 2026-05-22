@@ -131,7 +131,7 @@ export default function CDAPage() {
         </div>
       </div>
 
-      {/* Suite du contenu - identique à la version précédente */}
+      {/* Suite du contenu */}
       <div className="py-16 md:py-20">
         <div className="container mx-auto px-4">
           {/* Menu Section */}
@@ -166,93 +166,98 @@ export default function CDAPage() {
             </div>
           </section>
 
-          {/* Chef Experience - Cuisine participative */}
+          {/* Chef Experience - Cuisine participative AVEC IMAGE */}
           <section id="chef-experience" className="scroll-mt-24 mb-20">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="bg-gradient-to-r from-amber-700 to-orange-700 rounded-3xl overflow-hidden shadow-xl"
-            >
-              <div className="grid md:grid-cols-2 gap-0">
-                <div className="p-8 md:p-10 text-white flex flex-col justify-center">
-                  <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-sm w-fit mb-4">
-                    <ChefHat className="h-4 w-4" />
-                    <span>Expérience exclusive</span>
-                    <Sparkles className="h-3 w-3" />
-                  </div>
-                  
-                  <h2 className="text-3xl md:text-4xl font-bold mb-4 flex items-center gap-2">
-                    Chef d'un jour
-                    <Gift className="h-6 w-6 text-amber-300" />
-                  </h2>
-                  
-                  <p className="text-amber-100 mb-4 leading-relaxed">
-                    Une expérience unique vous attend chez ByGagoos CDA ! 
-                    Chaque <strong className="text-white">vendredi à partir de 14H</strong>, le Chef vous ouvre les portes de sa cuisine.
-                  </p>
-                  
-                  <div className="space-y-4 mb-6">
-                    <div className="flex items-start gap-3">
-                      <div className="bg-white/20 rounded-full p-2 mt-0.5">
-                        <ChefHat className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <p className="font-semibold">Préparez votre propre plat</p>
-                        <p className="text-amber-100 text-sm">Sous la supervision bienveillante du Chef, apprenez à préparer votre commande.</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <div className="bg-white/20 rounded-full p-2 mt-0.5">
-                        <Users className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <p className="font-semibold">Dégustation collective</p>
-                        <p className="text-amber-100 text-sm">Partagez votre création avec les autres participants autour d'une table d'hôte.</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <div className="bg-white/20 rounded-full p-2 mt-0.5">
-                        <Star className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <p className="font-semibold">Certificat du Chef</p>
-                        <p className="text-amber-100 text-sm">Repartez avec un souvenir personnalisé de votre expérience culinaire.</p>
-                      </div>
-                    </div>
-                  </div>
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true }}
+    className="bg-gradient-to-r from-amber-700 to-orange-700 rounded-3xl overflow-hidden shadow-xl"
+  >
+    <div className="grid md:grid-cols-2 gap-0">
+      <div className="p-8 md:p-10 text-white flex flex-col justify-center">
+        <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-sm w-fit mb-4">
+          <ChefHat className="h-4 w-4" />
+          <span>Expérience exclusive</span>
+          <Sparkles className="h-3 w-3" />
+        </div>
+        
+        <h2 className="text-3xl md:text-4xl font-bold mb-4 flex items-center gap-2">
+          Chef d'un jour
+          <Gift className="h-6 w-6 text-amber-300" />
+        </h2>
+        
+        <p className="text-amber-100 mb-4 leading-relaxed">
+          Une expérience unique vous attend chez ByGagoos CDA ! 
+          Chaque <strong className="text-white">vendredi à partir de 14H</strong>, le Chef vous ouvre les portes de sa cuisine.
+        </p>
+        
+        <div className="space-y-4 mb-6">
+          <div className="flex items-start gap-3">
+            <div className="bg-white/20 rounded-full p-2 mt-0.5">
+              <ChefHat className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="font-semibold">Préparez votre propre plat</p>
+              <p className="text-amber-100 text-sm">Sous la supervision bienveillante du Chef, apprenez à préparer votre commande.</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <div className="bg-white/20 rounded-full p-2 mt-0.5">
+              <Users className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="font-semibold">Dégustation collective</p>
+              <p className="text-amber-100 text-sm">Partagez votre création avec les autres participants autour d'une table d'hôte.</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <div className="bg-white/20 rounded-full p-2 mt-0.5">
+              <Star className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="font-semibold">Certificat du Chef</p>
+              <p className="text-amber-100 text-sm">Repartez avec un souvenir personnalisé de votre expérience culinaire.</p>
+            </div>
+          </div>
+        </div>
 
-                  <div className="flex flex-wrap gap-4 mt-2">
-                    <Link
-                      to="/contact"
-                      className="inline-flex items-center gap-2 bg-white text-amber-800 px-6 py-3 rounded-full font-semibold hover:bg-gray-100 transition-all hover:scale-105"
-                    >
-                      Réserver mon expérience
-                      <Calendar className="h-4 w-4" />
-                    </Link>
-                    <div className="inline-flex items-center gap-2 text-amber-100 text-sm border border-amber-300/50 rounded-full px-4 py-2">
-                      <Clock className="h-4 w-4" />
-                      <span>Tous les vendredis à 14H</span>
-                    </div>
-                  </div>
+        <div className="flex flex-wrap gap-4 mt-2">
+          <Link
+            to="/contact"
+            className="inline-flex items-center gap-2 bg-white text-amber-800 px-6 py-3 rounded-full font-semibold hover:bg-gray-100 transition-all hover:scale-105"
+          >
+            Réserver mon expérience
+            <Calendar className="h-4 w-4" />
+          </Link>
+          <div className="inline-flex items-center gap-2 text-amber-100 text-sm border border-amber-300/50 rounded-full px-4 py-2">
+            <Clock className="h-4 w-4" />
+            <span>Tous les vendredis à 14H</span>
+          </div>
+        </div>
 
-                  <div className="mt-6 pt-4 border-t border-white/20 text-xs text-amber-200">
-                    <p>⚠️ Places limitées à 8 personnes par session. Réservation obligatoire au moins 48h à l'avance.</p>
-                  </div>
-                </div>
+        <div className="mt-6 pt-4 border-t border-white/20 text-xs text-amber-200">
+          <p>⚠️ Places limitées à 8 personnes par session. Réservation obligatoire au moins 48h à l'avance.</p>
+        </div>
+      </div>
 
-                <div className="relative h-64 md:h-auto overflow-hidden bg-gradient-to-br from-amber-800 to-orange-800">
-                  <img
-                    src="/placeholders/cda/chef-bg.jpg"
-                    alt="Chef en cuisine"
-                    className="w-full h-full object-cover"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent md:bg-gradient-to-l md:from-black/60 md:to-transparent" />
-                </div>
-              </div>
-            </motion.div>
-          </section>
+      {/* Image avec plat0.png */}
+      <div className="relative h-64 md:h-auto overflow-hidden bg-gradient-to-br from-amber-800 to-orange-800">
+        <img
+          src="/placeholders/cda/plat0.png"
+          alt="Plat signature ByGagoos CDA - Expérience culinaire unique"
+          className="w-full h-full object-cover"
+          onError={(e) => { 
+            (e.target as HTMLImageElement).src = "/images/logo.png";
+            (e.target as HTMLImageElement).style.objectFit = "contain";
+            (e.target as HTMLImageElement).style.backgroundColor = "#78350f";
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent md:bg-gradient-to-l md:from-black/60 md:to-transparent" />
+      </div>
+    </div>
+  </motion.div>
+</section>
 
           {/* Ambiance Section */}
           <section id="ambiance" className="scroll-mt-24">
@@ -380,7 +385,7 @@ export default function CDAPage() {
           {/* Verset */}
           <div className="text-center py-12 border-t mt-12">
             <div className="inline-block bg-amber-50 px-6 md:px-8 py-4 rounded-full border border-amber-200">
-              <p className="text-amber-800 italic flex-items-center gap-2 md:gap-3 text-sm md:text-base">
+              <p className="text-amber-800 italic flex items-center justify-center gap-2 md:gap-3 text-sm md:text-base">
                 <Church className="h-5 w-5 text-amber-600" />
                 "Goûtez et voyez comme l'Éternel est bon"
                 <Heart className="h-5 w-5 text-amber-600" />
