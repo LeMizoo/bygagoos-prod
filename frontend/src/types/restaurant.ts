@@ -16,10 +16,10 @@ export interface Table {
 
 export interface Reservation {
   id: string;
-  name: string;          // nom du client
-  time: string;          // heure
-  table: number;         // numéro de table
-  status: string;        // statut
+  name: string;
+  time: string;
+  table: number;
+  status: string;
 }
 
 export interface MenuItem {
@@ -37,7 +37,7 @@ export interface StockAlert {
   message: string;
 }
 
-// ==================== TYPES STOCK (NOUVEAUX) ====================
+// ==================== TYPES STOCK ====================
 export interface StockItem {
   id: string;
   _id?: string;
