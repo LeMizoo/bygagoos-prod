@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Bike, MapPin, Clock, Shield, Smartphone, Heart, Church, Headphones, Award, Phone, Star } from "lucide-react";
+import { Bike, MapPin, Clock, Shield, Smartphone, Heart, Church, Headphones, Award, Phone, Star, Calendar, Mountain, Users, UtensilsCrossed } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function TransPage() {
@@ -10,7 +10,37 @@ export default function TransPage() {
     { icon: Smartphone, title: "Réservation facile", description: "Application, téléphone ou directement auprès des chauffeurs" }
   ];
 
-  // Images du dossier /trans/
+  const excursions = [
+    {
+      saison: "Printemps",
+      mois: "Mars",
+      lieu: "Lac Vert",
+      distance: "45 km",
+      description: "Randonnée autour du lac, observation des oiseaux"
+    },
+    {
+      saison: "Été",
+      mois: "Juin",
+      lieu: "Chutes de la Lily",
+      distance: "50 km",
+      description: "Baignade dans les cascades, pique-nique au bord de l'eau"
+    },
+    {
+      saison: "Automne",
+      mois: "Septembre",
+      lieu: "Lac Tritriva",
+      distance: "35 km",
+      description: "Découverte du lac sacré, goûter traditionnel"
+    },
+    {
+      saison: "Hiver",
+      mois: "Décembre",
+      lieu: "Lemurs Park",
+      distance: "25 km",
+      description: "Safari des lémuriens, déjeuner dans le parc"
+    }
+  ];
+
   const transGalleryImages = [
     "/trans/gallery1.jpg",
     "/trans/gallery2.jpg",
@@ -94,13 +124,14 @@ export default function TransPage() {
       <div className="sticky top-16 z-40 bg-white border-b border-gray-200 shadow-sm">
         <div className="container mx-auto px-4">
           <div className="flex flex-wrap gap-6 py-3">
-            {["services", "gallery", "tarifs", "testimonials", "contact"].map((tab) => (
+            {["services", "excursions", "gallery", "tarifs", "testimonials", "contact"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => document.getElementById(tab)?.scrollIntoView({ behavior: "smooth" })}
                 className="px-4 py-2 text-sm font-medium text-gray-500 hover:text-cyan-600 transition-colors"
               >
                 {tab === "services" && "Services"}
+                {tab === "excursions" && "Excursions"}
                 {tab === "gallery" && "Galerie"}
                 {tab === "tarifs" && "Tarifs"}
                 {tab === "testimonials" && "Avis"}
@@ -155,7 +186,87 @@ export default function TransPage() {
             </motion.div>
           </section>
 
-          {/* Galerie Section - images du dossier /trans/ */}
+          {/* Excursions Section */}
+          <section id="excursions" className="scroll-mt-24 mb-20">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="bg-gradient-to-r from-emerald-700 to-teal-700 rounded-3xl overflow-hidden shadow-xl"
+            >
+              <div className="grid md:grid-cols-2 gap-0">
+                <div className="p-8 md:p-10 text-white flex flex-col justify-center">
+                  <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-sm w-fit mb-4">
+                    <Mountain className="h-4 w-4" />
+                    <span>Événement spécial</span>
+                    <Calendar className="h-3 w-3" />
+                  </div>
+                  
+                  <h2 className="text-3xl md:text-4xl font-bold mb-4 flex items-center gap-2">
+                    Excursions ByGagoos
+                    <Users className="h-6 w-6 text-emerald-300" />
+                  </h2>
+                  
+                  <p className="text-emerald-100 mb-4 leading-relaxed">
+                    4 fois par an, ByGagoos Trans organise des excursions d'une journée aux alentours d'Antananarivo.
+                    Départ le matin, retour en fin de journée. Une façon unique de découvrir les merveilles de la région !
+                  </p>
+                  
+                  <div className="space-y-3 mb-6">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-5 w-5 text-emerald-300" />
+                      <span className="font-semibold">4 excursions par an</span>
+                      <span className="text-emerald-200 text-sm">(Printemps, Été, Automne, Hiver)</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-5 w-5 text-emerald-300" />
+                      <span>Départ le matin - Retour en fin de journée</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-5 w-5 text-emerald-300" />
+                      <span>Dans un rayon de 50 km autour d'Antananarivo</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <UtensilsCrossed className="h-5 w-5 text-emerald-300" />
+                      <span>Pique-nique et spécialités préparés par ByGagoos CDA</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Users className="h-5 w-5 text-emerald-300" />
+                      <span>Groupes de 10 à 30 personnes</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-4">
+                    <Link
+                      to="/contact"
+                      className="inline-flex items-center gap-2 bg-white text-emerald-800 px-6 py-3 rounded-full font-semibold hover:bg-gray-100 transition-all hover:scale-105"
+                    >
+                      S'inscrire à la prochaine excursion
+                      <Calendar className="h-4 w-4" />
+                    </Link>
+                    <div className="inline-flex items-center gap-2 text-emerald-100 text-sm border border-emerald-300/50 rounded-full px-4 py-2">
+                      <Clock className="h-4 w-4" />
+                      <span>Prochaine excursion : Printemps 2026</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-0.5">
+                  {excursions.map((excursion, index) => (
+                    <div key={index} className="bg-white/10 backdrop-blur-sm p-4 text-center border border-white/10">
+                      <p className="text-emerald-300 font-bold text-lg">{excursion.saison}</p>
+                      <p className="text-white font-semibold text-sm">{excursion.mois}</p>
+                      <p className="text-emerald-200 text-xs mt-1">{excursion.lieu}</p>
+                      <p className="text-white text-xs mt-1">{excursion.distance}</p>
+                      <p className="text-emerald-200 text-xs mt-0.5">{excursion.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          </section>
+
+          {/* Galerie Section */}
           <section id="gallery" className="scroll-mt-24">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Notre flotte</h2>

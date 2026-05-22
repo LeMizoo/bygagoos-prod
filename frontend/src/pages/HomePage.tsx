@@ -17,6 +17,10 @@ import {
   Mail,
   Bike,
   Users,
+  Calendar,
+  Mountain,
+  ChefHat,
+  Gift
 } from "lucide-react";
 import FamilyMembersGrid from "../components/family/FamilyMembersGrid";
 import ActivityModuleCard from "../components/home/ActivityModuleCard";
@@ -56,7 +60,28 @@ const activitiesHero = [
   },
 ];
 
-// Images pour la section des valeurs / ambiance
+// Événements spéciaux
+const specialEvents = [
+  {
+    activity: "ByGagoos Trans",
+    title: "Excursions d'une journée",
+    description: "4 fois par an, partez à la découverte des alentours d'Antananarivo. Départ le matin, retour en fin de journée. Pique-nique préparé par ByGagoos CDA !",
+    icon: Mountain,
+    color: "from-cyan-600 to-teal-600",
+    link: "/trans#excursions",
+    badge: "4 excursions/an"
+  },
+  {
+    activity: "ByGagoos CDA",
+    title: "Chef d'un jour",
+    description: "Tous les vendredis à 14H, cuisinez votre propre plat avec notre Chef ! Dégustation collective et certificat offert.",
+    icon: ChefHat,
+    color: "from-amber-600 to-orange-600",
+    link: "/cda#chef-experience",
+    badge: "Vendredis 14H"
+  }
+];
+
 const homeGalleryImages = [
   "/home/gallery1.jpg",
   "/home/gallery2.jpg",
@@ -149,7 +174,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Right Column - Three Activities Cards avec images */}
+            {/* Right Column - Three Activities Cards */}
             <div className="grid gap-4">
               {activitiesHero.map((activity, index) => {
                 const Icon = activity.icon;
@@ -187,6 +212,62 @@ export default function HomePage() {
               })}
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Événements Spéciaux Section */}
+      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 bg-amber-100 px-4 py-2 rounded-full mb-4">
+            <Calendar className="h-4 w-4 text-amber-600" />
+            <span className="text-amber-800 text-sm font-medium">Événements exceptionnels</span>
+            <Gift className="h-4 w-4 text-amber-600" />
+          </div>
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2 mb-4">
+            Expériences uniques
+          </h2>
+          <p className="text-gray-600 max-w-2xl mx-auto">
+            Des moments privilégiés pour vivre ByGagoos autrement
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-8">
+          {specialEvents.map((event, index) => {
+            const Icon = event.icon;
+            return (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.2 }}
+                viewport={{ once: true }}
+                className={`group relative overflow-hidden rounded-3xl bg-gradient-to-r ${event.color} shadow-xl`}
+              >
+                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-all" />
+                <div className="relative p-8 text-white">
+                  <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-sm mb-4">
+                    <Icon className="h-4 w-4" />
+                    <span>{event.activity}</span>
+                  </div>
+                  <h3 className="text-2xl font-bold mb-2">{event.title}</h3>
+                  <p className="text-white/90 mb-4 leading-relaxed">{event.description}</p>
+                  <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs mb-6">
+                    <Calendar className="h-3 w-3" />
+                    <span>{event.badge}</span>
+                  </div>
+                  <div>
+                    <Link
+                      to={event.link}
+                      className="inline-flex items-center gap-2 bg-white text-gray-900 px-5 py-2 rounded-full font-semibold hover:bg-gray-100 transition-all hover:scale-105"
+                    >
+                      En savoir plus
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       </section>
 
@@ -246,7 +327,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Galerie rapide - images du dossier /home/ */}
+      {/* Galerie rapide */}
       <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
         <div className="text-center mb-10">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Notre univers</h2>
