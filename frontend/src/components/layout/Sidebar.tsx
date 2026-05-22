@@ -1,4 +1,3 @@
-// frontend/src/components/layout/Sidebar.tsx
 import { Link, useLocation } from "react-router-dom";
 import {
   Bike,
@@ -14,11 +13,11 @@ import {
   Users,
   UtensilsCrossed,
   Truck,
-  UserCheck,
   Calendar,
   Table,
   Image,
-  BarChart3,
+  Box,
+  LayoutGrid,
 } from "lucide-react";
 import { useAuthStore } from "../../stores/authStore";
 
@@ -41,7 +40,6 @@ export default function Sidebar() {
   const { user, logout } = useAuthStore();
   const userRole = user?.role || "USER";
 
-  // Navigation avec chemins UNIQUES
   const navigationGroups: NavGroup[] = [
     {
       title: "Général",
@@ -77,7 +75,9 @@ export default function Sidebar() {
         { icon: LayoutDashboard, label: "Dashboard", path: "/cda/dashboard", color: "text-amber-400" },
         { icon: Calendar, label: "Réservations", path: "/cda/dashboard?tab=reservations", color: "text-amber-400", roles: ["ADMIN", "SUPER_ADMIN"] },
         { icon: Table, label: "Tables", path: "/cda/dashboard?tab=tables", color: "text-amber-400", roles: ["ADMIN", "SUPER_ADMIN"] },
+        { icon: LayoutGrid, label: "Plan des tables", path: "/admin/restaurant/tables", color: "text-amber-400", roles: ["ADMIN", "SUPER_ADMIN"] },
         { icon: UtensilsCrossed, label: "Menu", path: "/menu", color: "text-amber-400" },
+        { icon: Box, label: "Stock", path: "/admin/restaurant/stock", color: "text-amber-400", roles: ["ADMIN", "SUPER_ADMIN"] },
       ],
     },
     {
@@ -99,7 +99,6 @@ export default function Sidebar() {
     .filter(group => group.items.length > 0);
 
   const isActivePath = (path: string) => {
-    // Ignorer les query params pour la comparaison
     const cleanPath = path.split('?')[0];
     if (cleanPath === "/home") return location.pathname === cleanPath;
     return location.pathname === cleanPath || location.pathname.startsWith(cleanPath);
@@ -111,7 +110,6 @@ export default function Sidebar() {
 
   return (
     <div className="w-64 bg-gray-900 text-white flex flex-col h-screen">
-      {/* Logo */}
       <div className="p-5 border-b border-gray-800">
         <Link to="/home" className="flex items-center gap-2">
           <img src="/logo.svg" alt="ByGagoos" className="h-8 w-8" onError={(e) => { (e.target as HTMLImageElement).src = "/logo.png"; }} />
@@ -122,15 +120,12 @@ export default function Sidebar() {
         </Link>
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-4">
         {filteredGroups.map((group, idx) => (
           <div key={`${group.title}-${idx}`} className="mb-6">
             <div className="px-4 mb-2 flex items-center gap-2">
               {group.icon && <group.icon className="h-4 w-4 text-gray-500" />}
-              <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-                {group.title}
-              </span>
+              <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">{group.title}</span>
             </div>
             <div className="space-y-1">
               {group.items.map((item, itemIdx) => {
@@ -158,14 +153,11 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* User info & Logout */}
       <div className="p-4 border-t border-gray-800">
         {user && (
           <div className="flex items-center gap-3 mb-3 px-2 pb-3 border-b border-gray-800">
             <div className="w-8 h-8 rounded-full bg-amber-600 flex items-center justify-center">
-              <span className="text-sm font-bold">
-                {user.firstName?.charAt(0)}{user.lastName?.charAt(0)}
-              </span>
+              <span className="text-sm font-bold">{user.firstName?.charAt(0)}{user.lastName?.charAt(0)}</span>
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">{user.firstName} {user.lastName}</p>
@@ -173,10 +165,7 @@ export default function Sidebar() {
             </div>
           </div>
         )}
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-3 w-full px-3 py-2 text-red-400 hover:bg-red-900/20 rounded-lg transition-colors"
-        >
+        <button onClick={handleLogout} className="flex items-center gap-3 w-full px-3 py-2 text-red-400 hover:bg-red-900/20 rounded-lg transition-colors">
           <LogOut className="h-5 w-5" />
           <span className="text-sm font-medium">Déconnexion</span>
         </button>

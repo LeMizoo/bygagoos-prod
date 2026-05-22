@@ -62,6 +62,8 @@ import ClientDetailPage from "./pages/admin/ClientDetailPage";
 import EditClientPage from "./pages/admin/EditClientPage";
 import TaxiVehiclesPage from "./pages/admin/TaxiVehiclesPage";
 import TaxiDriversPage from "./pages/admin/TaxiDriversPage";
+import RestaurantStockPage from "./pages/admin/RestaurantStockPage";
+import RestaurantTablesPage from "./pages/admin/RestaurantTablesPage";
 import FamilyAdminPage from "./pages/admin/FamilyAdminPage";
 
 // Pages commandes
@@ -218,6 +220,10 @@ function App() {
           <Route path="taxi">
             <Route path="vehicles" element={<TaxiVehiclesPage />} />
             <Route path="drivers" element={<TaxiDriversPage />} />
+          </Route>
+          <Route path="restaurant">
+            <Route path="stock" element={<RestaurantStockPage />} />
+            <Route path="tables" element={<RestaurantTablesPage />} />
           </Route>
           <Route path="family" element={<FamilyAdminPage />} />
           <Route path="settings" element={<SettingsPage />} />
