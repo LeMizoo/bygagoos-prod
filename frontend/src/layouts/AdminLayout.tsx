@@ -8,15 +8,9 @@ export default function AdminLayout() {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <div className="flex flex-1">
-        {/* Sidebar avec largeur fixe */}
-        <aside className="w-64 flex-shrink-0">
-          <Sidebar />
-        </aside>
-        {/* Contenu principal avec margin-left pour éviter l'écrasement */}
+        <Sidebar />
         <main className="flex-1 bg-gray-50 p-6 overflow-auto">
-          <div className="max-w-7xl mx-auto">
-            <Outlet />
-          </div>
+          <Outlet />
         </main>
       </div>
     </div>
