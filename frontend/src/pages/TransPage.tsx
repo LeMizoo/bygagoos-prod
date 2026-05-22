@@ -1,16 +1,23 @@
 import { motion } from "framer-motion";
-import { Bike, MapPin, Clock, Shield, Smartphone, Heart, Cross, Church, Headphones, Award, Phone, Star, ChevronRight } from "lucide-react";
+import { Bike, MapPin, Clock, Shield, Smartphone, Heart, Church, Headphones, Award, Phone, Star } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useState } from "react";
 
 export default function TransPage() {
-  const [activeTab, setActiveTab] = useState("services");
-
   const features = [
     { icon: Clock, title: "Course rapide", description: "Temps d'attente réduit, arrivée rapide à destination" },
     { icon: Shield, title: "Sécurité garantie", description: "Chauffeurs expérimentés, casques fournis, assurance incluse" },
     { icon: MapPin, title: "Suivi GPS", description: "Localisation en temps réel de votre course" },
     { icon: Smartphone, title: "Réservation facile", description: "Application, téléphone ou directement auprès des chauffeurs" }
+  ];
+
+  // Images du dossier /trans/
+  const transGalleryImages = [
+    "/trans/gallery1.jpg",
+    "/trans/gallery2.jpg",
+    "/trans/gallery3.jpg",
+    "/trans/gallery4.jpg",
+    "/trans/gallery5.jpg",
+    "/trans/gallery6.jpg",
   ];
 
   const tarifs = [
@@ -23,6 +30,7 @@ export default function TransPage() {
   const testimonials = [
     { name: "Hery R.", text: "Service rapide et fiable, les chauffeurs sont très professionnels.", rating: 5 },
     { name: "Miora T.", text: "Je recommande ByGagoos Trans pour leurs tarifs transparents.", rating: 5 },
+    { name: "Lanto S.", text: "Application facile à utiliser, course arrivée en 5 minutes !", rating: 5 },
   ];
 
   const fadeInUp = {
@@ -86,20 +94,14 @@ export default function TransPage() {
       <div className="sticky top-16 z-40 bg-white border-b border-gray-200 shadow-sm">
         <div className="container mx-auto px-4">
           <div className="flex flex-wrap gap-6 py-3">
-            {["services", "tarifs", "testimonials", "contact"].map((tab) => (
+            {["services", "gallery", "tarifs", "testimonials", "contact"].map((tab) => (
               <button
                 key={tab}
-                onClick={() => {
-                  setActiveTab(tab);
-                  document.getElementById(tab)?.scrollIntoView({ behavior: "smooth" });
-                }}
-                className={`px-4 py-2 text-sm font-medium transition-colors ${
-                  activeTab === tab
-                    ? "text-cyan-600 border-b-2 border-cyan-600"
-                    : "text-gray-500 hover:text-cyan-600"
-                }`}
+                onClick={() => document.getElementById(tab)?.scrollIntoView({ behavior: "smooth" })}
+                className="px-4 py-2 text-sm font-medium text-gray-500 hover:text-cyan-600 transition-colors"
               >
                 {tab === "services" && "Services"}
+                {tab === "gallery" && "Galerie"}
                 {tab === "tarifs" && "Tarifs"}
                 {tab === "testimonials" && "Avis"}
                 {tab === "contact" && "Contact"}
@@ -153,6 +155,36 @@ export default function TransPage() {
             </motion.div>
           </section>
 
+          {/* Galerie Section - images du dossier /trans/ */}
+          <section id="gallery" className="scroll-mt-24">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Notre flotte</h2>
+              <p className="text-gray-600 max-w-2xl mx-auto">
+                Découvrez nos véhicules et nos chauffeurs en action
+              </p>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-20">
+              {transGalleryImages.map((image, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.1 }}
+                  viewport={{ once: true }}
+                  className="relative overflow-hidden rounded-xl cursor-pointer group aspect-square"
+                >
+                  <img
+                    src={image}
+                    alt={`Flotte ByGagoos Trans ${index + 1}`}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    onError={(e) => { e.currentTarget.src = "/images/logo.png"; }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                </motion.div>
+              ))}
+            </div>
+          </section>
+
           {/* Tarifs Section */}
           <section id="tarifs" className="scroll-mt-24">
             <motion.div
@@ -190,7 +222,7 @@ export default function TransPage() {
                 Ce que nos clients disent de nous
               </p>
             </div>
-            <div className="grid md:grid-cols-2 gap-6 mb-20">
+            <div className="grid md:grid-cols-3 gap-6 mb-20">
               {testimonials.map((testimonial, index) => (
                 <div key={index} className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
                   <div className="flex gap-1 mb-4">

@@ -12,28 +12,32 @@ export default function InkPage() {
       title: "Sérigraphie textile",
       description: "Impression sur mesure sur t-shirts, sweats, tote bags, casquettes et textiles personnalisés.",
       features: ["10+ pièces minimum", "Jusqu'à 6 couleurs", "Encres écologiques certifiées"],
-      image: "/images/gallery/placeholder-tshirt.jpg"
+      image: "/ink/service1.jpg"
     },
     {
       icon: Palette,
       title: "Design personnalisé",
       description: "Création sur mesure de vos visuels avec notre équipe de designers passionnés.",
       features: ["Vectorisation incluse", "BAT gratuit", "Corrections illimitées"],
-      image: "/production/equipe-prod-02.jpg"
+      image: "/ink/service2.jpg"
     },
     {
       icon: Package,
       title: "Packaging",
       description: "Solutions d'emballage personnalisées pour valoriser vos produits.",
       features: ["Carton, papier, textile", "Finition premium", "Petites et grandes séries"],
-      image: "/production/atelier-serigraphie.jpg"
+      image: "/ink/service3.jpg"
     }
   ];
 
-  const galleryImages = [
-    { src: "/images/gallery/akanjo-ceremonie.png", title: "Akanjo Fomba", category: "Traditionnel" },
-    { src: "/images/gallery/baobab-sacre.jpg", title: "Baobab Sacré", category: "Nature" },
-    { src: "/images/gallery/lamba-urban.png", title: "Lamba Urban", category: "Moderne" },
+  // Images du dossier /ink/
+  const inkGalleryImages = [
+    "/ink/gallery1.jpg",
+    "/ink/gallery2.jpg",
+    "/ink/gallery3.jpg",
+    "/ink/gallery4.jpg",
+    "/ink/gallery5.jpg",
+    "/ink/gallery6.jpg",
   ];
 
   const processSteps = [
@@ -46,6 +50,7 @@ export default function InkPage() {
   const testimonials = [
     { name: "Marie R.", text: "Qualité exceptionnelle, je recommande !", rating: 5 },
     { name: "Jean M.", text: "Service professionnel et rendu parfait.", rating: 5 },
+    { name: "Sophie L.", text: "Créativité et savoir-faire au rendez-vous.", rating: 5 },
   ];
 
   const fadeInUp = {
@@ -226,7 +231,7 @@ export default function InkPage() {
             </motion.div>
           </section>
 
-          {/* Galerie Section */}
+          {/* Galerie Section - avec images du dossier /ink/ */}
           <section id="gallery" className="scroll-mt-24">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Nos créations</h2>
@@ -235,26 +240,22 @@ export default function InkPage() {
               </p>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-              {galleryImages.map((image, index) => (
+              {inkGalleryImages.map((image, index) => (
                 <motion.div
                   key={index}
                   initial={{ opacity: 0, scale: 0.9 }}
                   whileInView={{ opacity: 1, scale: 1 }}
                   transition={{ delay: index * 0.1 }}
                   viewport={{ once: true }}
-                  className="relative overflow-hidden rounded-xl cursor-pointer group"
+                  className="relative overflow-hidden rounded-xl cursor-pointer group aspect-square"
                 >
                   <img
-                    src={image.src}
-                    alt={image.title}
-                    className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
+                    src={image}
+                    alt={`Création ByGagoos Ink ${index + 1}`}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    onError={(e) => { e.currentTarget.src = "/images/logo.png"; }}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="absolute bottom-4 left-4 text-white">
-                      <p className="font-semibold">{image.title}</p>
-                      <p className="text-sm text-gray-300">{image.category}</p>
-                    </div>
-                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 </motion.div>
               ))}
             </div>
@@ -274,7 +275,7 @@ export default function InkPage() {
                 Ce que nos clients disent de nous
               </p>
             </div>
-            <div className="grid md:grid-cols-2 gap-6 mb-20">
+            <div className="grid md:grid-cols-3 gap-6 mb-20">
               {testimonials.map((testimonial, index) => (
                 <div key={index} className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
                   <div className="flex gap-1 mb-4">

@@ -36,6 +36,7 @@ const activitiesHero = [
     color: "from-purple-500 to-purple-600",
     bgGradient: "bg-gradient-to-br from-purple-500/20 to-purple-600/10",
     description: "Designs, commandes, production et galerie publique.",
+    image: "/home/ink-card.jpg"
   },
   {
     name: "ByGagoos Trans",
@@ -43,6 +44,7 @@ const activitiesHero = [
     color: "from-cyan-500 to-cyan-600",
     bgGradient: "bg-gradient-to-br from-cyan-500/20 to-cyan-600/10",
     description: "Flotte Taxi-Moto, conducteurs, maintenance et missions.",
+    image: "/home/trans-card.jpg"
   },
   {
     name: "ByGagoos CDA (Cuisine, Dégustation, Accueil)",
@@ -50,7 +52,15 @@ const activitiesHero = [
     color: "from-amber-500 to-amber-600",
     bgGradient: "bg-gradient-to-br from-amber-500/20 to-amber-600/10",
     description: "Bar / restaurant, réservations, salle et exploitation.",
+    image: "/home/cda-card.jpg"
   },
+];
+
+// Images pour la section des valeurs / ambiance
+const homeGalleryImages = [
+  "/home/gallery1.jpg",
+  "/home/gallery2.jpg",
+  "/home/gallery3.jpg",
 ];
 
 export default function HomePage() {
@@ -85,6 +95,7 @@ export default function HomePage() {
 
         <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
           <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
+            {/* Left Column - Text */}
             <div>
               <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium backdrop-blur">
                 <Sparkles className="h-4 w-4 text-amber-400" />
@@ -97,12 +108,10 @@ export default function HomePage() {
                 Prod
               </h1>
               <p className="mt-6 text-lg leading-8 text-white/80 max-w-2xl">
-                Une maison familiale, trois activités, une direction générale unique et un socle
-                technique commun.
+                {prodBrand.tagline}
               </p>
               <p className="mt-4 text-base leading-7 text-white/60 max-w-2xl">
-                ByGagoos Prod rassemble la sérigraphie, le Taxi-Moto et le bar-restaurant dans une
-                même application modulaire.
+                {prodBrand.summary}
               </p>
 
               <div className="mt-8 flex flex-wrap gap-4">
@@ -140,6 +149,7 @@ export default function HomePage() {
               </div>
             </div>
 
+            {/* Right Column - Three Activities Cards avec images */}
             <div className="grid gap-4">
               {activitiesHero.map((activity, index) => {
                 const Icon = activity.icon;
@@ -152,15 +162,22 @@ export default function HomePage() {
                     className={`group relative overflow-hidden rounded-2xl ${activity.bgGradient} border border-white/10 backdrop-blur-sm transition-all hover:scale-[1.02] hover:border-white/20`}
                   >
                     <Link to={activity.name === "ByGagoos Ink" ? "/ink" : activity.name === "ByGagoos Trans" ? "/trans" : "/cda"} className="relative flex items-center gap-4 p-5">
-                      <div
-                        className={`flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-r ${activity.color} shadow-lg`}
-                      >
-                        <Icon className="h-7 w-7 text-white" />
+                      <div className="relative w-14 h-14 rounded-xl overflow-hidden flex-shrink-0">
+                        <img
+                          src={activity.image}
+                          alt={activity.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent" />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <Icon className="h-7 w-7 text-white drop-shadow-lg" />
+                        </div>
                       </div>
 
                       <div className="flex-1">
-                        <h3 className="text-lg font-bold">{activity.name}</h3>
-                        <p className="text-sm text-white/70">{activity.description}</p>
+                        <h3 className="text-lg font-bold">{activity.name === "ByGagoos CDA (Cuisine, Dégustation, Accueil)" ? "ByGagoos CDA" : activity.name}</h3>
+                        <p className="text-sm text-white/70 line-clamp-1">{activity.description}</p>
                       </div>
 
                       <ArrowRight className="h-5 w-5 text-white/40 transition-transform group-hover:translate-x-1 group-hover:text-white/80" />
@@ -173,6 +190,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Activities Highlights */}
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -180,61 +198,30 @@ export default function HomePage() {
           viewport={{ once: true }}
           className="grid gap-6 md:grid-cols-3"
         >
-          <Link
-            to="/ink"
-            className="group rounded-3xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl"
-          >
-            <div className="flex items-start justify-between">
-              <div className="rounded-2xl bg-purple-100 p-3">
-                <Palette className="h-5 w-5 text-purple-600" />
-              </div>
-              <ArrowUpRight className="h-5 w-5 text-gray-400 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
-            </div>
-            <h2 className="mt-6 text-2xl font-bold text-gray-900">ByGagoos Ink</h2>
-            <p className="mt-3 text-sm leading-6 text-gray-600">
-              Designs, commandes, production et galerie publique.
-            </p>
-            <p className="mt-6 text-sm font-semibold text-amber-700">Découvrir l'activité</p>
-          </Link>
-
-          <Link
-            to="/trans"
-            className="group rounded-3xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl"
-          >
-            <div className="flex items-start justify-between">
-              <div className="rounded-2xl bg-cyan-100 p-3">
-                <Truck className="h-5 w-5 text-cyan-600" />
-              </div>
-              <ArrowUpRight className="h-5 w-5 text-gray-400 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
-            </div>
-            <h2 className="mt-6 text-2xl font-bold text-gray-900">ByGagoos Trans</h2>
-            <p className="mt-3 text-sm leading-6 text-gray-600">
-              Flotte Taxi-Moto, conducteurs, maintenance et missions.
-            </p>
-            <p className="mt-6 text-sm font-semibold text-amber-700">Découvrir l'activité</p>
-          </Link>
-
-          <Link
-            to="/cda"
-            className="group rounded-3xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl"
-          >
-            <div className="flex items-start justify-between">
-              <div className="rounded-2xl bg-amber-100 p-3">
-                <UtensilsCrossed className="h-5 w-5 text-amber-600" />
-              </div>
-              <ArrowUpRight className="h-5 w-5 text-gray-400 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
-            </div>
-            <h2 className="mt-6 text-2xl font-bold text-gray-900">
-              ByGagoos CDA (Cuisine, Dégustation, Accueil)
-            </h2>
-            <p className="mt-3 text-sm leading-6 text-gray-600">
-              Bar / restaurant, réservations, salle et exploitation.
-            </p>
-            <p className="mt-6 text-sm font-semibold text-amber-700">Découvrir l'activité</p>
-          </Link>
+          {activitiesHero.map((activity) => {
+            const Icon = activity.icon;
+            return (
+              <Link
+                key={activity.name}
+                to={activity.name === "ByGagoos Ink" ? "/ink" : activity.name === "ByGagoos Trans" ? "/trans" : "/cda"}
+                className="group rounded-3xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl overflow-hidden"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="rounded-2xl bg-gray-100 p-3">
+                    <Icon className="h-5 w-5 text-gray-700" />
+                  </div>
+                  <ArrowUpRight className="h-5 w-5 text-gray-400 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+                </div>
+                <h2 className="mt-6 text-2xl font-bold text-gray-900">{activity.name === "ByGagoos CDA (Cuisine, Dégustation, Accueil)" ? "ByGagoos CDA" : activity.name}</h2>
+                <p className="mt-3 text-sm leading-6 text-gray-600">{activity.description}</p>
+                <p className="mt-6 text-sm font-semibold text-amber-700">Découvrir l'activité</p>
+              </Link>
+            );
+          })}
         </motion.div>
       </section>
 
+      {/* Three Activities Section */}
       <section id="activities" className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8 scroll-mt-24">
         <div className="mb-10 flex items-end justify-between gap-6">
           <div>
@@ -259,7 +246,37 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Family Section - CORRIGÉE */}
+      {/* Galerie rapide - images du dossier /home/ */}
+      <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Notre univers</h2>
+          <p className="text-gray-600 max-w-2xl mx-auto">
+            Découvrez l'ambiance unique de ByGagoos Prod à travers nos espaces
+          </p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {homeGalleryImages.map((image, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{ delay: index * 0.1 }}
+              viewport={{ once: true }}
+              className="relative overflow-hidden rounded-2xl cursor-pointer group aspect-video"
+            >
+              <img
+                src={image}
+                alt={`ByGagoos Prod ${index + 1}`}
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                onError={(e) => { e.currentTarget.src = "/images/logo.png"; }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* Family Section */}
       <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -282,6 +299,7 @@ export default function HomePage() {
         </motion.div>
       </section>
 
+      {/* Values Section */}
       <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
         <div className="grid gap-6 lg:grid-cols-3">
           {executivePillars.map((pillar) => {
@@ -302,6 +320,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Footer CTA */}
       <section className="bg-gradient-to-r from-amber-800 to-amber-700 py-16">
         <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
           <Heart className="h-10 w-10 mx-auto text-white mb-4" />
