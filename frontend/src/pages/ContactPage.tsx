@@ -16,7 +16,6 @@ import {
   UtensilsCrossed,
   Palette,
   MapPin,
-  Phone,
   X
 } from "lucide-react";
 
