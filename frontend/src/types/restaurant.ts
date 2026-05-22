@@ -1,3 +1,4 @@
+// ==================== TYPES EXISTANTS ====================
 export interface RestaurantStats {
   totalTables: number;
   occupiedTables: number;
@@ -34,4 +35,58 @@ export interface MenuItem {
 export interface StockAlert {
   id: string;
   message: string;
+}
+
+// ==================== TYPES STOCK (NOUVEAUX) ====================
+export interface StockItem {
+  id: string;
+  _id?: string;
+  name: string;
+  category: string;
+  quantity: number;
+  unit: string;
+  minThreshold: number;
+  maxCapacity: number;
+  alertLevel: 'CRITICAL' | 'LOW' | 'NORMAL';
+  supplier?: string;
+  lastRestockDate?: string;
+  expiryDate?: string;
+  notes?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface StockMovement {
+  id: string;
+  itemId: string;
+  itemName: string;
+  type: 'IN' | 'OUT';
+  quantity: number;
+  previousStock: number;
+  newStock: number;
+  reason: 'PURCHASE' | 'SALE' | 'WASTE' | 'ADJUSTMENT' | 'RETURN';
+  note?: string;
+  createdBy: string;
+  createdAt: string;
+}
+
+export interface CreateStockItemDto {
+  name: string;
+  category: string;
+  quantity: number;
+  unit: string;
+  minThreshold: number;
+  maxCapacity: number;
+  supplier?: string;
+  expiryDate?: string;
+  notes?: string;
+}
+
+export interface StockStats {
+  totalItems: number;
+  criticalStock: number;
+  lowStock: number;
+  totalValue: number;
+  mostConsumed: Array<{ name: string; consumed: number }>;
 }
