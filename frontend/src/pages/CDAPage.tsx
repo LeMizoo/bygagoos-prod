@@ -38,13 +38,12 @@ export default function CDAPage() {
     { day: "Lundi", hours: "Fermé", icon: Clock }
   ];
 
-  // Images du dossier /cda/
   const cdaImages = [
-    "/cda/plat1.jpg",
-    "/cda/plat2.jpg",
-    "/cda/plat3.jpg",
-    "/cda/plat4.jpg",
-    "/cda/plat5.jpg",
+    "/placeholders/cda/plat1.jpg",
+    "/placeholders/cda/plat2.jpg",
+    "/placeholders/cda/plat3.jpg",
+    "/placeholders/cda/plat4.jpg",
+    "/placeholders/cda/plat5.jpg",
   ];
 
   const testimonials = [
@@ -52,9 +51,9 @@ export default function CDAPage() {
     { name: "Mamy A.", text: "Le meilleur restaurant d'Antananarivo, je recommande.", rating: 5 },
   ];
 
-  const fadeInUp = {
-    hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0 }
+  const staggerContainer = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
   };
 
   return (
@@ -132,6 +131,7 @@ export default function CDAPage() {
         </div>
       </div>
 
+      {/* Suite du contenu - identique à la version précédente */}
       <div className="py-16 md:py-20">
         <div className="container mx-auto px-4">
           {/* Menu Section */}
@@ -175,18 +175,6 @@ export default function CDAPage() {
               className="bg-gradient-to-r from-amber-700 to-orange-700 rounded-3xl overflow-hidden shadow-xl"
             >
               <div className="grid md:grid-cols-2 gap-0">
-                {/* Partie gauche - Image */}
-                <div className="relative h-64 md:h-auto overflow-hidden">
-                  <img
-                    src="/cda/chef-cooking.jpg"
-                    alt="Chef en cuisine"
-                    className="w-full h-full object-cover"
-                    onError={(e) => { (e.target as HTMLImageElement).src = "/cda/plat1.jpg"; }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent md:bg-gradient-to-r md:from-black/60 md:to-transparent" />
-                </div>
-
-                {/* Partie droite - Contenu */}
                 <div className="p-8 md:p-10 text-white flex flex-col justify-center">
                   <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-sm w-fit mb-4">
                     <ChefHat className="h-4 w-4" />
@@ -252,11 +240,21 @@ export default function CDAPage() {
                     <p>⚠️ Places limitées à 8 personnes par session. Réservation obligatoire au moins 48h à l'avance.</p>
                   </div>
                 </div>
+
+                <div className="relative h-64 md:h-auto overflow-hidden bg-gradient-to-br from-amber-800 to-orange-800">
+                  <img
+                    src="/placeholders/cda/chef-bg.jpg"
+                    alt="Chef en cuisine"
+                    className="w-full h-full object-cover"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent md:bg-gradient-to-l md:from-black/60 md:to-transparent" />
+                </div>
               </div>
             </motion.div>
           </section>
 
-          {/* Ambiance Section - avec les 5 images du dossier /cda/ */}
+          {/* Ambiance Section */}
           <section id="ambiance" className="scroll-mt-24">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Notre cadre</h2>
@@ -382,7 +380,7 @@ export default function CDAPage() {
           {/* Verset */}
           <div className="text-center py-12 border-t mt-12">
             <div className="inline-block bg-amber-50 px-6 md:px-8 py-4 rounded-full border border-amber-200">
-              <p className="text-amber-800 italic flex items-center gap-2 md:gap-3 text-sm md:text-base">
+              <p className="text-amber-800 italic flex-items-center gap-2 md:gap-3 text-sm md:text-base">
                 <Church className="h-5 w-5 text-amber-600" />
                 "Goûtez et voyez comme l'Éternel est bon"
                 <Heart className="h-5 w-5 text-amber-600" />

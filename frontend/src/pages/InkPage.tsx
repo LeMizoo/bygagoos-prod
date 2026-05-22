@@ -12,32 +12,31 @@ export default function InkPage() {
       title: "Sérigraphie textile",
       description: "Impression sur mesure sur t-shirts, sweats, tote bags, casquettes et textiles personnalisés.",
       features: ["10+ pièces minimum", "Jusqu'à 6 couleurs", "Encres écologiques certifiées"],
-      image: "/ink/service1.jpg"
+      image: "/placeholders/ink/service1.jpg"
     },
     {
       icon: Palette,
       title: "Design personnalisé",
       description: "Création sur mesure de vos visuels avec notre équipe de designers passionnés.",
       features: ["Vectorisation incluse", "BAT gratuit", "Corrections illimitées"],
-      image: "/ink/service2.jpg"
+      image: "/placeholders/ink/service2.jpg"
     },
     {
       icon: Package,
       title: "Packaging",
       description: "Solutions d'emballage personnalisées pour valoriser vos produits.",
       features: ["Carton, papier, textile", "Finition premium", "Petites et grandes séries"],
-      image: "/ink/service3.jpg"
+      image: "/placeholders/ink/service3.jpg"
     }
   ];
 
-  // Images du dossier /ink/
   const inkGalleryImages = [
-    "/ink/gallery1.jpg",
-    "/ink/gallery2.jpg",
-    "/ink/gallery3.jpg",
-    "/ink/gallery4.jpg",
-    "/ink/gallery5.jpg",
-    "/ink/gallery6.jpg",
+    "/placeholders/ink/gallery1.jpg",
+    "/placeholders/ink/gallery2.jpg",
+    "/placeholders/ink/gallery3.jpg",
+    "/placeholders/ink/gallery4.jpg",
+    "/placeholders/ink/gallery5.jpg",
+    "/placeholders/ink/gallery6.jpg",
   ];
 
   const processSteps = [
@@ -231,7 +230,7 @@ export default function InkPage() {
             </motion.div>
           </section>
 
-          {/* Galerie Section - avec images du dossier /ink/ */}
+          {/* Galerie Section */}
           <section id="gallery" className="scroll-mt-24">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Nos créations</h2>

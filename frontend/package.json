@@ -13,7 +13,8 @@
     "generate-icons": "node scripts/generate-icons-simple.js",
     "sync-content": "node scripts/sync-content.js",
     "replace-emojis": "bash scripts/replace-emojis.sh",
-    "setup": "npm install && npm run generate-icons"
+    "setup": "npm install && npm run generate-icons",
+    "setup:placeholders": "node scripts/setup-placeholders.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
