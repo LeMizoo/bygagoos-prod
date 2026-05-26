@@ -8,6 +8,14 @@ export class TaxiVehicleResponseDTO {
   color?: string;
   year?: number;
   status: TaxiVehicleStatus;
+  currentLocation?: {
+    latitude: number;
+    longitude: number;
+    address?: string;
+    heading?: number;
+    speed?: number;
+    updatedAt?: Date;
+  };
   currentMileage?: number;
   lastMaintenanceAt?: Date | null;
   notes?: string;
@@ -28,6 +36,7 @@ export class TaxiVehicleResponseDTO {
     this.color = vehicle.color;
     this.year = vehicle.year;
     this.status = vehicle.status;
+    this.currentLocation = vehicle.currentLocation;
     this.currentMileage = vehicle.currentMileage;
     this.lastMaintenanceAt = vehicle.lastMaintenanceAt;
     this.notes = vehicle.notes;

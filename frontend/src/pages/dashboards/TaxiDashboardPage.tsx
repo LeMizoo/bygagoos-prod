@@ -22,6 +22,9 @@ import {
 import { Line } from 'react-chartjs-2';
 import ActivityDashboardFrame from "../../components/dashboard/ActivityDashboardFrame";
 import taxiApi from "../../api/taxi.api";
+import taxiVehiclesApi from "../../api/taxiVehicles.api";
+import VehicleMap from "../../components/taxi/VehicleMap";
+import type { TaxiVehicle } from "../../types/taxi";
 
 // Enregistrer Chart.js
 ChartJS.register(
@@ -93,6 +96,13 @@ export default function TaxiDashboardPage() {
     queryKey: ['taxi-drivers-stats'],
     queryFn: () => taxiApi.getDrivers({ limit: 10 }).catch(() => ({ drivers: [], total: 0, available: 0 })),
     staleTime: 5 * 60 * 1000
+  });
+
+  const { data: vehicles = [] as TaxiVehicle[] } = useQuery({
+    queryKey: ['taxi-vehicles-map'],
+    queryFn: () => taxiVehiclesApi.getAll({ limit: 50, sortBy: 'updatedAt', sortOrder: 'desc' }).catch(() => []),
+    refetchInterval: 30 * 1000,
+    staleTime: 30 * 1000
   });
 
   const trips = tripsData.trips || [];
@@ -177,6 +187,60 @@ export default function TaxiDashboardPage() {
 
   const getInitials = (firstName: string, lastName: string) => `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
 
+  const displayVehicles: TaxiVehicle[] = vehicles.length > 0 ? vehicles : [
+    {
+      id: 'demo-1',
+      plateNumber: '1234TMA',
+      brand: 'Toyota',
+      model: 'Corolla',
+      status: 'IN_SERVICE',
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      currentLocation: {
+        latitude: -18.8792,
+        longitude: 47.5079,
+        address: 'Analakely, Antananarivo',
+        speed: 28,
+        updatedAt: new Date().toISOString(),
+      },
+    },
+    {
+      id: 'demo-2',
+      plateNumber: '5678TMA',
+      brand: 'Kia',
+      model: 'Picanto',
+      status: 'AVAILABLE',
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      currentLocation: {
+        latitude: -18.8896,
+        longitude: 47.5255,
+        address: 'Anosy, Antananarivo',
+        speed: 0,
+        updatedAt: new Date().toISOString(),
+      },
+    },
+    {
+      id: 'demo-3',
+      plateNumber: '9012TMA',
+      brand: 'Renault',
+      model: 'Logan',
+      status: 'MAINTENANCE',
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      currentLocation: {
+        latitude: -18.8627,
+        longitude: 47.4934,
+        address: 'Ivandry, Antananarivo',
+        speed: 0,
+        updatedAt: new Date().toISOString(),
+      },
+    },
+  ];
+
   const activityLinks = [
     { name: "ByGagoos Ink", icon: Palette, href: "/ink/dashboard", current: false, color: "text-purple-600 bg-purple-100" },
     { name: "ByGagoos Trans", icon: Bike, href: "/trans/dashboard", current: true, color: "text-cyan-600 bg-cyan-100" },
@@ -246,6 +310,28 @@ export default function TaxiDashboardPage() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
           <div className="flex items-center justify-between mb-4"><h2 className="text-lg font-semibold text-gray-900">Revenus par jour</h2><DollarSign className="h-4 w-4 text-gray-400" /></div>
           <div className="h-64"><Line data={revenueChartData} options={chartOptions} /></div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-cyan-600" />
+              Géolocalisation des véhicules
+            </h2>
+            <p className="text-sm text-gray-500">Carte temps réel de la flotte Trans, actualisée toutes les 30 secondes.</p>
+          </div>
+          <Link to="/admin/taxi/vehicles" className="text-sm text-cyan-600 hover:text-cyan-700">
+            Gérer les positions →
+          </Link>
+        </div>
+        <VehicleMap vehicles={displayVehicles} />
+        <div className="mt-4 grid grid-cols-2 gap-3 text-xs text-gray-600 sm:grid-cols-4">
+          <div className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-green-600" />Disponible</div>
+          <div className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-cyan-600" />En course</div>
+          <div className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-amber-600" />Maintenance</div>
+          <div className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-slate-500" />Hors ligne</div>
         </div>
       </div>
 

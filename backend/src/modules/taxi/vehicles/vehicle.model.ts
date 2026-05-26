@@ -17,6 +17,14 @@ export interface ITaxiVehicle extends Document {
   color?: string;
   year?: number;
   status: TaxiVehicleStatus;
+  currentLocation?: {
+    latitude: number;
+    longitude: number;
+    address?: string;
+    heading?: number;
+    speed?: number;
+    updatedAt?: Date;
+  };
   currentMileage?: number;
   lastMaintenanceAt?: Date;
   notes?: string;
@@ -67,6 +75,34 @@ const taxiVehicleSchema = new Schema<ITaxiVehicle>(
       enum: Object.values(TaxiVehicleStatus),
       default: TaxiVehicleStatus.AVAILABLE,
     },
+    currentLocation: {
+      latitude: {
+        type: Number,
+        min: -90,
+        max: 90,
+      },
+      longitude: {
+        type: Number,
+        min: -180,
+        max: 180,
+      },
+      address: {
+        type: String,
+        trim: true,
+      },
+      heading: {
+        type: Number,
+        min: 0,
+        max: 360,
+      },
+      speed: {
+        type: Number,
+        min: 0,
+      },
+      updatedAt: {
+        type: Date,
+      },
+    },
     currentMileage: {
       type: Number,
       min: 0,
@@ -105,6 +141,7 @@ const taxiVehicleSchema = new Schema<ITaxiVehicle>(
 taxiVehicleSchema.index({ user: 1, plateNumber: 1 }, { unique: true });
 taxiVehicleSchema.index({ user: 1, status: 1 });
 taxiVehicleSchema.index({ user: 1, brand: 1, vehicleModel: 1 });
+taxiVehicleSchema.index({ 'currentLocation.latitude': 1, 'currentLocation.longitude': 1 });
 taxiVehicleSchema.index({ plateNumber: 'text', brand: 'text', vehicleModel: 'text', notes: 'text' });
 
 const TaxiVehicle = mongoose.model<ITaxiVehicle>('TaxiVehicle', taxiVehicleSchema);

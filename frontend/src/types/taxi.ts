@@ -10,6 +10,14 @@ export interface TaxiVehicle {
   color?: string;
   year?: number;
   status: TaxiVehicleStatus;
+  currentLocation?: {
+    latitude: number;
+    longitude: number;
+    address?: string;
+    heading?: number;
+    speed?: number;
+    updatedAt?: string;
+  };
   currentMileage?: number;
   lastMaintenanceAt?: string;
   notes?: string;
@@ -36,6 +44,14 @@ export interface CreateTaxiVehicleDto {
   color?: string;
   year?: number;
   status?: TaxiVehicleStatus;
+  currentLocation?: {
+    latitude: number;
+    longitude: number;
+    address?: string;
+    heading?: number;
+    speed?: number;
+    updatedAt?: string;
+  };
   currentMileage?: number;
   lastMaintenanceAt?: string;
   notes?: string;
