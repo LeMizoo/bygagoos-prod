@@ -1,4 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
 import {
   Bike,
   Crown,
@@ -18,6 +19,9 @@ import {
   Image,
   Box,
   LayoutGrid,
+  Menu,
+  X,
+  FileText
 } from "lucide-react";
 import { useAuthStore } from "../../stores/authStore";
 
@@ -39,6 +43,32 @@ export default function Sidebar() {
   const location = useLocation();
   const { user, logout } = useAuthStore();
   const userRole = user?.role || "USER";
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Détecter la taille de l'écran
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 768);
+      if (window.innerWidth >= 768) {
+        setIsMobileMenuOpen(true);
+      } else {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
+
+  // Fermer le menu mobile lors de la navigation
+  useEffect(() => {
+    if (isMobile) {
+      setIsMobileMenuOpen(false);
+    }
+  }, [location.pathname, isMobile]);
 
   const navigationGroups: NavGroup[] = [
     {
@@ -66,6 +96,7 @@ export default function Sidebar() {
         { icon: LayoutDashboard, label: "Dashboard", path: "/trans/dashboard", color: "text-cyan-400" },
         { icon: Truck, label: "Véhicules", path: "/admin/taxi/vehicles", color: "text-cyan-400", roles: ["ADMIN", "SUPER_ADMIN"] },
         { icon: Users, label: "Conducteurs", path: "/admin/taxi/drivers", color: "text-cyan-400", roles: ["ADMIN", "SUPER_ADMIN"] },
+        { icon: FileText, label: "Rapports", path: "/admin/taxi/reports", color: "text-cyan-400", roles: ["ADMIN", "SUPER_ADMIN"] },
       ],
     },
     {
@@ -106,12 +137,13 @@ export default function Sidebar() {
 
   const handleLogout = () => {
     logout();
+    if (isMobile) setIsMobileMenuOpen(false);
   };
 
-  return (
-    <div className="w-64 bg-gray-900 text-white flex flex-col h-screen">
+  const sidebarContent = (
+    <div className="flex flex-col h-full">
       <div className="p-5 border-b border-gray-800">
-        <Link to="/home" className="flex items-center gap-2">
+        <Link to="/home" className="flex items-center gap-2" onClick={() => isMobile && setIsMobileMenuOpen(false)}>
           <img src="/logo.svg" alt="ByGagoos" className="h-8 w-8" onError={(e) => { (e.target as HTMLImageElement).src = "/logo.png"; }} />
           <div>
             <h1 className="text-lg font-bold">ByGagoos Prod</h1>
@@ -137,6 +169,7 @@ export default function Sidebar() {
                   <Link
                     key={`${item.path}-${itemIdx}`}
                     to={item.path}
+                    onClick={() => isMobile && setIsMobileMenuOpen(false)}
                     className={`flex items-center gap-3 px-4 py-2.5 mx-2 rounded-lg transition-all duration-200 ${
                       isActive
                         ? "bg-gray-800 text-white shadow-sm"
@@ -171,5 +204,40 @@ export default function Sidebar() {
         </button>
       </div>
     </div>
+  );
+
+  return (
+    <>
+      {/* Bouton hamburger pour mobile */}
+      {isMobile && (
+        <button
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="fixed top-4 left-4 z-50 p-2 bg-gray-800 rounded-lg text-white shadow-lg hover:bg-gray-700 transition-colors md:hidden"
+          aria-label="Menu"
+        >
+          {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        </button>
+      )}
+
+      {/* Sidebar pour desktop toujours visible */}
+      {!isMobile && (
+        <div className="w-64 bg-gray-900 text-white flex flex-col h-screen sticky top-0">
+          {sidebarContent}
+        </div>
+      )}
+
+      {/* Sidebar overlay pour mobile */}
+      {isMobile && isMobileMenuOpen && (
+        <>
+          <div 
+            className="fixed inset-0 bg-black/50 z-40 md:hidden"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+          <div className="fixed top-0 left-0 w-64 h-full bg-gray-900 text-white z-50 shadow-xl animate-in slide-in-from-left duration-300 md:hidden">
+            {sidebarContent}
+          </div>
+        </>
+      )}
+    </>
   );
 }
