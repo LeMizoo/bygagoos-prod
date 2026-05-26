@@ -137,7 +137,7 @@ export const HelpCenterPage = () => (
         </div>
       </div>
       <div className="text-center py-6 border-t border-dashed">
-        <p className="text-gray-500">Besoin d'aide ? Contactez-nous : <strong>+261 34 43 593 30</strong></p>
+        <p className="text-gray-500">Besoin d'aide ? Contactez-nous : <strong>+261 34 43 359 30</strong></p>
       </div>
     </div>
   </LegalLayout>
@@ -152,7 +152,7 @@ export const FAQPage = () => (
       </div>
       <div className="border-b pb-4">
         <h3 className="text-lg font-bold text-gray-900 mb-2">Comment réserver un Taxi-Moto ?</h3>
-        <p className="text-gray-600">Via notre application ou par téléphone au +261 34 43 593 30.</p>
+        <p className="text-gray-600">Via notre application ou par téléphone au +261 34 43 359 30.</p>
       </div>
       <div className="border-b pb-4">
         <h3 className="text-lg font-bold text-gray-900 mb-2">Faut-il réserver une table au restaurant ?</h3>

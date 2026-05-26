@@ -178,7 +178,7 @@ export default function Footer() {
               </div>
               <div>
                 <p className="text-sm text-gray-400">Téléphone</p>
-                <p className="text-white group-hover:text-green-400 transition-colors">+261 34 43 593 30</p>
+                <p className="text-white group-hover:text-green-400 transition-colors">+261 34 43 359 30</p>
               </div>
             </a>
             

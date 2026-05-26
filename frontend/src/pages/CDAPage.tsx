@@ -318,7 +318,7 @@ export default function CDAPage() {
                   </div>
                   <div className="flex items-center gap-2 text-sm text-gray-500 mt-2">
                     <Phone className="h-4 w-4" />
-                    <span>+261 34 43 593 30</span>
+                    <span>+261 34 43 359 30</span>
                   </div>
                 </div>
               </div>
