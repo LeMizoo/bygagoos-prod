@@ -62,6 +62,7 @@ import ClientDetailPage from "./pages/admin/ClientDetailPage";
 import EditClientPage from "./pages/admin/EditClientPage";
 import TaxiVehiclesPage from "./pages/admin/TaxiVehiclesPage";
 import TaxiDriversPage from "./pages/admin/TaxiDriversPage";
+import TaxiReportsPage from "./pages/admin/TaxiReportsPage";
 import RestaurantStockPage from "./pages/admin/RestaurantStockPage";
 import RestaurantTablesPage from "./pages/admin/RestaurantTablesPage";
 import FamilyAdminPage from "./pages/admin/FamilyAdminPage";
@@ -86,6 +87,10 @@ import UnauthorizedPage from "./pages/errors/UnauthorizedPage";
 
 // Composants de protection
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+
+// Composants PWA
+import PWAInstallPrompt from "./components/PWAInstallPrompt";
+import PWAUpdatePrompt from "./components/PWAUpdatePrompt";
 
 function App() {
   const { checkAuth } = useAuthStore();
@@ -145,6 +150,10 @@ function App() {
           error: { duration: 4000, iconTheme: { primary: "#ef4444", secondary: "#fff" } },
         }}
       />
+
+      {/* Composants PWA */}
+      <PWAInstallPrompt />
+      <PWAUpdatePrompt />
 
       <Routes>
         <Route path="/" element={<Navigate to="/home" replace />} />
@@ -220,6 +229,7 @@ function App() {
           <Route path="taxi">
             <Route path="vehicles" element={<TaxiVehiclesPage />} />
             <Route path="drivers" element={<TaxiDriversPage />} />
+            <Route path="reports" element={<TaxiReportsPage />} />
           </Route>
           <Route path="restaurant">
             <Route path="stock" element={<RestaurantStockPage />} />
