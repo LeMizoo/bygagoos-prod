@@ -105,6 +105,22 @@ export const taxiApi = {
     return data;
   },
 
+  // ==================== RAPPORTS & STATISTIQUES ====================
+  getTripsByDate: async (date: string): Promise<{ trips: any[] }> => {
+    const { data } = await axiosInstance.get(`${API_BASE}/trips/by-date`, { params: { date } });
+    return data;
+  },
+
+  getTripsByDateRange: async (startDate: string, endDate: string): Promise<{ trips: any[] }> => {
+    const { data } = await axiosInstance.get(`${API_BASE}/trips/by-date-range`, { params: { startDate, endDate } });
+    return data;
+  },
+
+  getDriversStats: async (startDate: string, endDate: string): Promise<{ drivers: any[] }> => {
+    const { data } = await axiosInstance.get(`${API_BASE}/drivers/stats-by-period`, { params: { startDate, endDate } });
+    return data;
+  },
+
   // ==================== MAINTENANCE & STATS ====================
   getMaintenanceDueSoon: async (days = 7) => {
     const { data } = await axiosInstance.get(`${API_BASE}/maintenance/due-soon`, {
