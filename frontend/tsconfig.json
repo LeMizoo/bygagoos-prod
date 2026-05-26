@@ -15,10 +15,8 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
-    "allowSyntheticDefaultImports": true,
-    "types": ["vite/client", "cypress", "@testing-library/jest-dom"],
-    "typeRoots": ["./node_modules/@types", "./cypress/support"]
+    "allowSyntheticDefaultImports": true
   },
-  "include": ["src", "cypress"],
+  "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
