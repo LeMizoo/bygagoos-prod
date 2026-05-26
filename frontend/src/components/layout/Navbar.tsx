@@ -21,6 +21,7 @@ import {
   Heart,
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import NotificationButton from "../notifications/NotificationButton";
 
 export default function Navbar() {
   const { user, logout } = useAuthStore();
@@ -165,6 +166,8 @@ export default function Navbar() {
 
             {/* Actions utilisateur et bouton mobile */}
             <div className="flex items-center space-x-4">
+              {user && <NotificationButton />}
+
               {/* Desktop User Menu */}
               <div className="hidden md:block">
                 {user ? (

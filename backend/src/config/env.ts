@@ -78,6 +78,11 @@ export const env = {
       ? ['https://bygagoos-prod.vercel.app']
       : ['http://localhost:3000', 'http://localhost:5173'],
 
+  // Web Push
+  VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY || '',
+  VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY || '',
+  VAPID_SUBJECT: process.env.VAPID_SUBJECT || 'mailto:contact@bygagoos.com',
+
   // Rate Limiting
   RATE_LIMIT_WINDOW_MS: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10),
   RATE_LIMIT_MAX: parseInt(process.env.RATE_LIMIT_MAX || '100', 10),

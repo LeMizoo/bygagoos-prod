@@ -147,15 +147,26 @@ self.addEventListener('message', event => {
 // Gestion des notifications push (pour plus tard)
 self.addEventListener('push', event => {
   console.log('📢 Notification push reçue:', event);
+
+  let payload = {};
+  try {
+    payload = event.data ? event.data.json() : {};
+  } catch {
+    payload = {
+      body: event.data?.text()
+    };
+  }
   
   const options = {
-    body: event.data?.text() || 'Nouvelle notification de ByGagoos Ink',
+    body: payload.body || 'Nouvelle notification de ByGagoos Prod',
     icon: '/icons/icon-192x192.png',
     badge: '/icons/icon-72x72.png',
     vibrate: [200, 100, 200],
+    tag: payload.tag || 'bygagoos-notification',
     data: {
       dateOfArrival: Date.now(),
-      primaryKey: '1'
+      url: payload.url || '/',
+      primaryKey: payload.tag || '1'
     },
     actions: [
       {
@@ -172,7 +183,7 @@ self.addEventListener('push', event => {
   };
   
   event.waitUntil(
-    self.registration.showNotification('ByGagoos Ink', options)
+    self.registration.showNotification(payload.title || 'ByGagoos Prod', options)
   );
 });
 
@@ -185,13 +196,14 @@ self.addEventListener('notificationclick', event => {
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true })
       .then(clientList => {
+        const targetUrl = new URL(event.notification.data?.url || '/', self.location.origin).href;
         for (const client of clientList) {
-          if (client.url === '/' && 'focus' in client) {
+          if (client.url === targetUrl && 'focus' in client) {
             return client.focus();
           }
         }
         if (clients.openWindow) {
-          return clients.openWindow('/');
+          return clients.openWindow(targetUrl);
         }
       })
   );
