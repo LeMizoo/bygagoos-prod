@@ -16,8 +16,9 @@
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
     "allowSyntheticDefaultImports": true,
-    "types": ["vite/client"] // Retirer "node" si pas utilisé
+    "types": ["vite/client", "cypress", "@testing-library/jest-dom"],
+    "typeRoots": ["./node_modules/@types", "./cypress/support"]
   },
-  "include": ["src"],
+  "include": ["src", "cypress"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

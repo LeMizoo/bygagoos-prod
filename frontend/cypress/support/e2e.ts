@@ -1,8 +1,5 @@
-// Déclaration des types pour les commandes Cypress
-export type LoginCredentials = {
-  email: string;
-  password: string;
-};
+// Commandes personnalisées Cypress
+// Les types sont définis dans index.d.ts
 
 // Commande de login
 Cypress.Commands.add('login', (email: string, password: string) => {
@@ -25,15 +22,3 @@ Cypress.Commands.add('logout', () => {
 Cypress.Commands.add('getByDataCy', (selector: string) => {
   return cy.get(`[data-cy="${selector}"]`);
 });
-
-declare global {
-  namespace Cypress {
-    interface Chainable {
-      login(email: string, password: string): Chainable<void>;
-      logout(): Chainable<void>;
-      getByDataCy(selector: string): Chainable<JQuery<HTMLElement>>;
-    }
-  }
-}
-
-export {};
