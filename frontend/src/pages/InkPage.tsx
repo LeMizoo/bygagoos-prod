@@ -310,7 +310,7 @@ export default function InkPage() {
                   <Sparkles className="h-4 w-4" />
                 </Link>
                 <a
-                  href="tel:+261344359330"
+                  href="tel:+261344335930"
                   className="inline-flex items-center gap-2 border border-white/30 text-white px-8 py-3 rounded-full font-semibold hover:bg-white/10 transition-all"
                 >
                   <Phone className="h-4 w-4" />

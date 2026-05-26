@@ -170,7 +170,7 @@ export default function Footer() {
             </a>
             
             <a 
-              href="tel:+261344359330" 
+              href="tel:+261344335930" 
               className="group flex items-center gap-4 p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 transition-all hover:bg-white/10 hover:scale-[1.02] hover:border-white/20"
             >
               <div className="p-3 rounded-xl bg-gradient-to-r from-green-500 to-green-600 group-hover:scale-110 transition-transform">
