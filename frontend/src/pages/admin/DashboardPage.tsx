@@ -254,6 +254,24 @@ export default function DashboardPage() {
         <div className="h-80"><Line data={chartData} options={chartOptions} /></div>
       </div>
 
+      <section className="grid gap-6 lg:grid-cols-2">
+        <div>
+          <div className="mb-4">
+            <p className="text-sm font-semibold">1 - Centre de commande</p>
+            <h2 className="text-2xl font-bold">Dashboards métiers</h2>
+          </div>
+          <DashboardAccessPanel title="Centre de commande" subtitle="" links={transversalDashboardLinks} columns={4} />
+        </div>
+
+        <div>
+          <div className="mb-4">
+            <p className="text-sm font-semibold">2 - Administration centrale</p>
+            <h2 className="text-2xl font-bold">Clients, commandes et équipes</h2>
+          </div>
+          <DashboardAccessPanel title="Administration centrale" subtitle="" links={centralAdministrationLinks} columns={4} />
+        </div>
+      </section>
+
       {/* Alertes */}
       <div className="grid lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow-sm border border-gray-100">
@@ -282,8 +300,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1.4fr_0.6fr]">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-lg font-semibold text-gray-900">Focus opérationnel</h2>
@@ -322,25 +339,6 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-
-        <section className="grid gap-6 lg:grid-cols-2">
-          <div>
-            <div className="mb-4">
-              <p className="text-sm font-semibold">1 - Centre de commande</p>
-              <h2 className="text-2xl font-bold">Dashboards métiers</h2>
-            </div>
-            <DashboardAccessPanel title="Centre de commande" subtitle="" links={transversalDashboardLinks} columns={4} />
-          </div>
-
-          <div>
-            <div className="mb-4">
-              <p className="text-sm font-semibold">2 - Administration centrale</p>
-              <h2 className="text-2xl font-bold">Clients, commandes et équipes</h2>
-            </div>
-            <DashboardAccessPanel title="Administration centrale" subtitle="" links={centralAdministrationLinks} columns={4} />
-          </div>
-        </section>
-      </div>
 
       <DashboardAccessPanel title="Vitrine rapide" subtitle="Retour vers l’accueil et le hub activités" links={homeNavigationLinks} columns={2} compact />
 
