@@ -171,10 +171,10 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10 max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
       {/* Section Hero - Direction Générale */}
-      <section className="rounded-[2rem] bg-gradient-to-r from-amber-950 via-stone-900 to-slate-950 p-8 text-white shadow-2xl">
-        <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
+      <section className="rounded-[2rem] border border-white/10 bg-slate-950/95 p-8 text-white shadow-2xl backdrop-blur-xl">
+        <div className="grid gap-8 lg:grid-cols-[1.28fr_0.82fr] lg:items-center">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium backdrop-blur">
               <Crown className="h-4 w-4" />
@@ -194,12 +194,12 @@ export default function DashboardPage() {
               </Link>
             </div>
           </div>
-          <div className="grid gap-4 rounded-[1.75rem] border border-white/15 bg-white/10 p-5 backdrop-blur-md">
+          <div className="grid gap-4 rounded-[1.75rem] border border-white/10 bg-white/10 p-5 backdrop-blur-md">
             <div className="grid grid-cols-2 gap-3">
               {governanceStats.map((item) => {
                 const Icon = item.icon;
                 return (
-                  <div key={item.label} className="rounded-2xl bg-black/20 p-4">
+                  <div key={item.label} className="rounded-2xl bg-slate-900/70 p-4">
                     <Icon className="h-5 w-5 text-amber-300" />
                     <div className="mt-2 text-2xl font-black">{item.value}</div>
                     <div className="mt-1 text-[11px] uppercase tracking-[0.25em] text-white/60">{item.label}</div>
@@ -207,10 +207,10 @@ export default function DashboardPage() {
                 );
               })}
             </div>
-            <div className="rounded-3xl bg-white p-5 text-gray-900">
-              <p className="text-sm font-semibold uppercase tracking-[0.25em] text-gray-500">Priorité de la semaine</p>
+            <div className="rounded-3xl bg-slate-900/80 p-5 text-slate-100">
+              <p className="text-sm font-semibold uppercase tracking-[0.25em] text-slate-400">Priorité de la semaine</p>
               <p className="mt-3 text-lg font-bold">Aligner les trois dashboards sur le même socle</p>
-              <p className="mt-2 text-sm text-gray-600">Chaque activité garde son propre écran, mais l’accès et la lecture se font désormais depuis un centre de commande unique.</p>
+              <p className="mt-2 text-sm text-slate-300">Chaque activité garde son propre écran, mais l’accès et la lecture se font désormais depuis un centre de commande unique.</p>
             </div>
           </div>
         </div>
