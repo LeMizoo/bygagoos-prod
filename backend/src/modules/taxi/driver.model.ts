@@ -60,7 +60,6 @@ const DriverSchema = new Schema<IDriver>(
 
 // Index pour les recherches rapides
 DriverSchema.index({ email: 1 });
-DriverSchema.index({ licenseNumber: 1 });
 DriverSchema.index({ status: 1 });
 DriverSchema.index({ vehicleId: 1 });
 
