@@ -13,6 +13,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { useAuthStore } from "../../stores/authStore";
+import { normalizeResourceUrl } from "../../api";
 import { dev } from "../../utils/devLogger";
 
 export default function ProfilePage() {
@@ -210,7 +211,7 @@ export default function ProfilePage() {
                 <div className="h-32 w-32 rounded-full bg-blue-100 flex items-center justify-center">
                   {user?.avatar ? (
                     <img
-                      src={user.avatar}
+                      src={normalizeResourceUrl(user.avatar)}
                       alt={user.name}
                       className="h-32 w-32 rounded-full object-cover"
                     />

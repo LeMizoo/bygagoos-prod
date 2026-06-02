@@ -1,5 +1,7 @@
 // frontend/src/api/index.ts
 
+import { dev } from '../utils/devLogger';
+
 // Déterminer l'URL de l'API de manière robuste
 const getApiUrl = (): string => {
   const envUrl = import.meta.env.VITE_API_URL;
@@ -26,8 +28,16 @@ const getApiUrl = (): string => {
 };
 
 export const API_URL = getApiUrl();
+export const BACKEND_ORIGIN = API_URL.replace(/\/api\/?$/, '');
 
-import { dev } from '../utils/devLogger';
+export const normalizeResourceUrl = (resourceUrl?: string): string | undefined => {
+  if (!resourceUrl) return resourceUrl;
+
+  return resourceUrl.replace(
+    /^http:\/\/(localhost|127\.0\.0\.1):5000(\/.*)$/i,
+    `${BACKEND_ORIGIN}$2`
+  );
+};
 
 dev.log("✅ API_URL configured:", API_URL);
 

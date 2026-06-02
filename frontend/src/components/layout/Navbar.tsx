@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import NotificationButton from "../notifications/NotificationButton";
+import { normalizeResourceUrl } from "../../api";
 
 export default function Navbar() {
   const { user, logout } = useAuthStore();
@@ -179,7 +180,7 @@ export default function Navbar() {
                       <div className="flex items-center space-x-2">
                         <div className="h-8 w-8 rounded-full bg-blue-100 border-2 border-blue-200 flex items-center justify-center overflow-hidden">
                           {user?.avatar ? (
-                            <img src={user.avatar} alt={user.firstName} className="h-full w-full object-cover" />
+                            <img src={normalizeResourceUrl(user.avatar)} alt={user.firstName} className="h-full w-full object-cover" />
                           ) : (
                             <User className="h-5 w-5 text-blue-600" />
                           )}
