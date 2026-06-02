@@ -17,18 +17,40 @@ const queryClient = new QueryClient({
   },
 });
 
-// Enregistrer le Service Worker pour PWA
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').then(
-      (registration) => {
-        console.log('Service Worker enregistré avec succès:', registration);
-      },
-      (error) => {
-        console.error('Erreur enregistrement Service Worker:', error);
+// Enregistrer le Service Worker pour PWA en production uniquement
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  const registerSW = async () => {
+    try {
+      const registration = await navigator.serviceWorker.register('/sw.js');
+      console.log('Service Worker enregistré:', registration);
+
+      // If a new service worker is found, reload when it takes control to avoid
+      // serving stale cached assets (prevents broken layout after deploy)
+      if (registration.waiting) {
+        registration.waiting.postMessage({ type: 'SKIP_WAITING' });
       }
-    );
-  });
+
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing;
+        if (!newWorker) return;
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            // A new SW installed and is waiting — claim it and reload
+            newWorker.postMessage({ type: 'SKIP_WAITING' });
+          }
+        });
+      });
+
+      // Listen for controlling worker change and reload page to get fresh assets
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        window.location.reload();
+      });
+    } catch (err) {
+      console.error('Erreur enregistrement Service Worker:', err);
+    }
+  };
+
+  window.addEventListener('load', registerSW);
 }
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
