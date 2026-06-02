@@ -323,10 +323,23 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="space-y-6">
-          <DashboardAccessPanel title="Centre de commande" subtitle="Dashboards métiers" links={transversalDashboardLinks} columns={4} />
-          <DashboardAccessPanel title="Administration centrale" subtitle="Clients, commandes et équipes" links={centralAdministrationLinks} columns={4} />
-        </div>
+        <section className="grid gap-6 lg:grid-cols-2">
+          <div>
+            <div className="mb-4">
+              <p className="text-sm font-semibold">1 - Centre de commande</p>
+              <h2 className="text-2xl font-bold">Dashboards métiers</h2>
+            </div>
+            <DashboardAccessPanel title="Centre de commande" subtitle="" links={transversalDashboardLinks} columns={4} />
+          </div>
+
+          <div>
+            <div className="mb-4">
+              <p className="text-sm font-semibold">2 - Administration centrale</p>
+              <h2 className="text-2xl font-bold">Clients, commandes et équipes</h2>
+            </div>
+            <DashboardAccessPanel title="Administration centrale" subtitle="" links={centralAdministrationLinks} columns={4} />
+          </div>
+        </section>
       </div>
 
       <DashboardAccessPanel title="Vitrine rapide" subtitle="Retour vers l’accueil et le hub activités" links={homeNavigationLinks} columns={2} compact />
