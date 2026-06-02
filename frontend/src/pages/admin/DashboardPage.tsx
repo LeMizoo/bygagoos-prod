@@ -57,6 +57,7 @@ interface DashboardStats {
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats>({});
   const [loading, setLoading] = useState(true);
+  const [showDetails, setShowDetails] = useState(false);
 
   useEffect(() => {
     const loadStats = async () => {
@@ -281,40 +282,104 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Accès rapides */}
-      <div className="grid gap-6 xl:grid-cols-2">
-        <DashboardAccessPanel title="Centre de commande" subtitle="Tous les dashboards métiers à portée de main" links={transversalDashboardLinks} columns={4} />
-        <DashboardAccessPanel title="Administration centrale" subtitle="Équipe, clients, commandes et réglages" links={centralAdministrationLinks} columns={4} />
-      </div>
-
-      {/* Membres de la famille */}
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {directionGenerale.map((member) => (
-          <div key={member.name} className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
-            <div className={`inline-flex rounded-2xl bg-gradient-to-r ${member.accent} px-4 py-3 text-lg font-black text-white`}>{member.initials}</div>
-            <h2 className="mt-4 text-lg font-bold text-gray-900">{member.name}</h2>
-            <p className="mt-1 text-sm font-semibold text-amber-700">{member.role}</p>
-            <p className="mt-3 text-sm font-medium text-gray-900">{member.title}</p>
-            <p className="mt-2 text-sm leading-6 text-gray-600">{member.description}</p>
+      <div className="grid gap-6 lg:grid-cols-[1.4fr_0.6fr]">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">Focus opérationnel</h2>
+              <p className="text-sm text-gray-500">Vue consolidée des priorités de la Direction Générale.</p>
+            </div>
+            <Calendar className="h-5 w-5 text-gray-400" />
           </div>
-        ))}
-      </section>
+
+          <div className="space-y-4">
+            <div className="rounded-2xl bg-slate-50 p-4">
+              <p className="text-sm font-semibold text-gray-700">Alertes stocks</p>
+              {(stats.lowStockAlerts || []).slice(0, 2).map(alert => (
+                <div key={alert.id} className="mt-3 flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">{alert.itemName}</p>
+                    <p className="text-sm text-gray-500">Stock {alert.currentStock} / {alert.threshold}</p>
+                  </div>
+                  <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full">Critique</span>
+                </div>
+              ))}
+              {!(stats.lowStockAlerts?.length) && <p className="mt-3 text-sm text-gray-500">Aucune alerte stock critique.</p>}
+            </div>
+
+            <div className="rounded-2xl bg-slate-50 p-4">
+              <p className="text-sm font-semibold text-gray-700">Maintenance à venir</p>
+              {(stats.maintenanceAlerts || []).slice(0, 2).map(alert => (
+                <div key={alert.id} className="mt-3 flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">{alert.type}</p>
+                    <p className="text-sm text-gray-500">Véhicule {alert.vehicleId} • {new Date(alert.date).toLocaleDateString()}</p>
+                  </div>
+                  <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full">À venir</span>
+                </div>
+              ))}
+              {!(stats.maintenanceAlerts?.length) && <p className="mt-3 text-sm text-gray-500">Aucune maintenance planifiée.</p>}
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <DashboardAccessPanel title="Centre de commande" subtitle="Tous les dashboards métiers à portée de main" links={transversalDashboardLinks} columns={4} />
+          <DashboardAccessPanel title="Administration centrale" subtitle="Équipe, clients, commandes et réglages" links={centralAdministrationLinks} columns={4} />
+        </div>
+      </div>
 
       <DashboardAccessPanel title="Vitrine rapide" subtitle="Retour vers l’accueil et le hub activités" links={homeNavigationLinks} columns={2} compact />
 
-      {/* Piliers exécutifs */}
-      <div className="grid gap-6 xl:grid-cols-3">
-        {executivePillars.map((pillar) => {
-          const Icon = pillar.icon;
-          return (
-            <div key={pillar.title} className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
-              <div className="inline-flex rounded-2xl bg-amber-100 p-3 text-amber-700"><Icon className="h-5 w-5" /></div>
-              <h3 className="mt-5 text-xl font-bold text-gray-900">{pillar.title}</h3>
-              <p className="mt-2 text-sm leading-6 text-gray-600">{pillar.description}</p>
-            </div>
-          );
-        })}
+      <div className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">Infos directionnelles</h2>
+            <p className="mt-1 text-sm text-gray-500">Gardez la page légère et consultez le reste uniquement si nécessaire.</p>
+          </div>
+          <button
+            type="button"
+            className="inline-flex items-center justify-center rounded-2xl border border-gray-200 bg-gray-50 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-100"
+            onClick={() => setShowDetails(prev => !prev)}
+          >
+            {showDetails ? 'Masquer les détails' : 'Voir les détails de la gouvernance'}
+          </button>
+        </div>
       </div>
+
+      {showDetails && (
+        <section className="grid gap-6 xl:grid-cols-2">
+          <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
+            <h2 className="text-xl font-bold text-gray-900">Membres de la famille</h2>
+            <div className="mt-5 grid gap-4 md:grid-cols-2">
+              {directionGenerale.map((member) => (
+                <div key={member.name} className="rounded-3xl border border-gray-100 bg-gray-50 p-4">
+                  <div className={`inline-flex rounded-2xl ${member.accent} px-3 py-2 text-lg font-black text-white`}>{member.initials}</div>
+                  <h3 className="mt-4 text-lg font-semibold text-gray-900">{member.name}</h3>
+                  <p className="mt-1 text-sm font-semibold text-amber-700">{member.role}</p>
+                  <p className="mt-2 text-sm text-gray-600">{member.description}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
+            <h2 className="text-xl font-bold text-gray-900">Piliers exécutifs</h2>
+            <div className="mt-5 space-y-4">
+              {executivePillars.map((pillar) => {
+                const Icon = pillar.icon;
+                return (
+                  <div key={pillar.title} className="rounded-3xl border border-gray-100 bg-gray-50 p-4">
+                    <div className="inline-flex rounded-2xl bg-amber-100 p-3 text-amber-700"><Icon className="h-5 w-5" /></div>
+                    <h3 className="mt-4 text-lg font-semibold text-gray-900">{pillar.title}</h3>
+                    <p className="mt-2 text-sm text-gray-600">{pillar.description}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        </section>
+      )}
 
       {/* Footer section */}
       <section className="rounded-[2rem] bg-gradient-to-r from-gray-900 to-stone-800 p-8 text-white shadow-2xl">
