@@ -1,7 +1,11 @@
 /* eslint-disable no-console */
 // frontend/src/utils/devLogger.ts
-// Simple logger wrapper that only emits logs in development mode (Vite/DEV or NODE_ENV=development)
-const isDev = typeof import.meta !== 'undefined' && Boolean(import.meta.env?.DEV) || import.meta.env?.MODE === 'development';
+// Simple logger wrapper that only emits logs in local development.
+// Avoid import.meta here so Jest can parse this module in CommonJS mode.
+const isDev =
+  typeof window !== 'undefined'
+    ? ['localhost', '127.0.0.1'].includes(window.location.hostname)
+    : false;
 
 export const dev = {
   log: (...args: unknown[]) => { if (isDev) console.log(...args); },
