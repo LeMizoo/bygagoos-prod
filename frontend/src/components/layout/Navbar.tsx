@@ -208,20 +208,21 @@ export default function Navbar() {
                           </div>
 
                           <div className="py-2">
+                            {/* Ordre modifié : Mon profil en premier */}
                             <Link to="/user/profile" className="flex items-center px-4 py-2.5 text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}>
                               <User className="h-4 w-4 mr-3 text-gray-400" />
                               Mon profil
                             </Link>
-                            <Link to="/user/my-orders" className="flex items-center px-4 py-2.5 text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}>
-                              <ShoppingBag className="h-4 w-4 mr-3 text-gray-400" />
-                              Mes commandes
-                            </Link>
+                            {/* Séparateur après Mon profil */}
+                            <div className="border-t border-gray-100 my-2"></div>
                             {(user.role === "ADMIN" || user.role === "SUPER_ADMIN") && (
                               <>
                                 <Link to="/prod/dashboard" className="flex items-center px-4 py-2.5 text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}>
                                   <Crown className="h-4 w-4 mr-3 text-amber-600" />
                                   Direction Générale
                                 </Link>
+                                {/* Séparateur après Direction Générale */}
+                                <div className="border-t border-gray-100 my-2"></div>
                                 <Link to="/admin/settings" className="flex items-center px-4 py-2.5 text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}>
                                   <Settings className="h-4 w-4 mr-3 text-gray-400" />
                                   Paramètres admin
@@ -291,26 +292,27 @@ export default function Navbar() {
                   </div>
                 </div>
                 <div className="space-y-2">
+                  {/* Ordre modifié : Mon profil en premier */}
                   <Link to="/user/profile" className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg" onClick={closeAllMenus}>
                     <User className="h-4 w-4" />
                     Mon profil
                   </Link>
-                  <Link to="/user/my-orders" className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg" onClick={closeAllMenus}>
-                    <ShoppingBag className="h-4 w-4" />
-                    Mes commandes
-                  </Link>
+                  {/* Pas de Mes commandes - supprimé */}
                   {(user.role === "ADMIN" || user.role === "SUPER_ADMIN") && (
                     <>
+                      <div className="border-t border-gray-200 my-2"></div>
                       <Link to="/prod/dashboard" className="flex items-center gap-3 px-3 py-2 text-amber-700 hover:bg-amber-50 rounded-lg" onClick={closeAllMenus}>
                         <Crown className="h-4 w-4" />
                         Direction Générale
                       </Link>
+                      <div className="border-t border-gray-200 my-2"></div>
                       <Link to="/admin/settings" className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg" onClick={closeAllMenus}>
                         <Settings className="h-4 w-4" />
                         Paramètres admin
                       </Link>
                     </>
                   )}
+                  <div className="border-t border-gray-200 my-2"></div>
                   <button onClick={handleLogout} className="flex items-center gap-3 w-full px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg">
                     <LogOut className="h-4 w-4" />
                     Déconnexion
