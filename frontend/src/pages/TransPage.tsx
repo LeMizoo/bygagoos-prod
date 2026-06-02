@@ -12,28 +12,28 @@ export default function TransPage() {
 
   const excursions = [
     {
-      saison: "Printemps",
+      saison: "Automne",
       mois: "Mars",
       lieu: "Lac Vert",
       distance: "45 km",
       description: "Randonnée autour du lac, observation des oiseaux"
     },
     {
-      saison: "Été",
+      saison: "Hiver",
       mois: "Juin",
       lieu: "Chutes de la Lily",
       distance: "50 km",
       description: "Baignade dans les cascades, pique-nique au bord de l'eau"
     },
     {
-      saison: "Automne",
+      saison: "Printemps",
       mois: "Septembre",
       lieu: "Lac Tritriva",
       distance: "35 km",
       description: "Découverte du lac sacré, goûter traditionnel"
     },
     {
-      saison: "Hiver",
+      saison: "Été",
       mois: "Décembre",
       lieu: "Lemurs Park",
       distance: "25 km",

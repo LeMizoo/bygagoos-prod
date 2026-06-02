@@ -130,9 +130,32 @@ export default function Sidebar() {
     .filter(group => group.items.length > 0);
 
   const isActivePath = (path: string) => {
-    const cleanPath = path.split('?')[0];
-    if (cleanPath === "/home") return location.pathname === cleanPath;
-    return location.pathname === cleanPath || location.pathname.startsWith(cleanPath);
+    const [pathPart, queryPart] = path.split('?');
+    
+    if (pathPart === "/home") return location.pathname === pathPart;
+    
+    const pathMatches = location.pathname === pathPart || location.pathname.startsWith(pathPart);
+    
+    // Si le chemin a des paramètres de requête, les vérifier aussi
+    if (queryPart && pathMatches) {
+      const params = new URLSearchParams(queryPart);
+      const locationParams = new URLSearchParams(location.search);
+      
+      // Vérifier que tous les paramètres du path correspondent à la location
+      for (const [key, value] of params) {
+        if (locationParams.get(key) !== value) {
+          return false;
+        }
+      }
+      return true;
+    }
+    
+    // Si le chemin n'a pas de paramètres mais la location en a, ce n'est pas actif
+    if (!queryPart && pathMatches && location.search) {
+      return false;
+    }
+    
+    return pathMatches;
   };
 
   const handleLogout = () => {
