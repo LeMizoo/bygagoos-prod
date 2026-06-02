@@ -324,8 +324,8 @@ export default function DashboardPage() {
         </div>
 
         <div className="space-y-6">
-          <DashboardAccessPanel title="Centre de commande" subtitle="Tous les dashboards métiers à portée de main" links={transversalDashboardLinks} columns={4} />
-          <DashboardAccessPanel title="Administration centrale" subtitle="Équipe, clients, commandes et réglages" links={centralAdministrationLinks} columns={4} />
+          <DashboardAccessPanel title="Centre de commande" subtitle="Dashboards métiers" links={transversalDashboardLinks} columns={4} />
+          <DashboardAccessPanel title="Administration centrale" subtitle="Clients, commandes et équipes" links={centralAdministrationLinks} columns={4} />
         </div>
       </div>
 
