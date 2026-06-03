@@ -5,18 +5,15 @@ import {
   ArrowRight,
   Sparkles,
   Shield,
-  Truck,
   UtensilsCrossed,
   Palette,
   ArrowUpRight,
   Crown,
-  CheckCircle2,
   Heart,
   Church,
   Phone,
   Mail,
   Bike,
-  Users,
   Calendar,
   Mountain,
   ChefHat,
@@ -25,7 +22,7 @@ import {
 import FamilyMembersGrid from "../components/family/FamilyMembersGrid";
 import ActivityModuleCard from "../components/home/ActivityModuleCard";
 import { activityModules } from "../data/activities";
-import { businessUnits, executivePillars, prodBrand } from "../data/prod";
+import { executivePillars, prodBrand } from "../data/prod";
 
 const heroStats = [
   { label: "Activités", value: "3", icon: Sparkles },
@@ -98,21 +95,18 @@ export default function HomePage() {
     }
   }, [location.hash]);
 
-  const fadeInUp = {
-    hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0 },
-  };
-
-  const staggerContainer = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      {/* Hero Section - Style AgileFleet */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
-        <div className="absolute inset-0 opacity-20">
+      {/* Hero Section - Avec image de fond */}
+      <section 
+        className="relative overflow-hidden text-white bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: "url('/ecosyst/slide-bygagoos.jpg')" }}
+      >
+        {/* Overlay pour assombrir l'image et rendre le texte lisible */}
+        <div className="absolute inset-0 bg-black/60" />
+        
+        {/* Effet de lumière */}
+        <div className="absolute inset-0 opacity-30">
           <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-purple-500 blur-3xl" />
           <div className="absolute top-1/2 -left-40 w-80 h-80 rounded-full bg-cyan-500 blur-3xl" />
           <div className="absolute -bottom-40 right-1/3 w-80 h-80 rounded-full bg-amber-500 blur-3xl" />
