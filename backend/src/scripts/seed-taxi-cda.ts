@@ -17,7 +17,7 @@ import Maintenance from '../modules/taxi/maintenance.model';
 import RestaurantTable from '../modules/restaurant/table.model';
 import Reservation from '../modules/restaurant/reservation.model';
 import MenuItem from '../modules/restaurant/menu.model';
-import StockItem from '../modules/restaurant/stock.model';
+import { StockItem } from '../modules/restaurant/stock.model';
 
 const seed = async () => {
   console.log('🔌 Connexion à MongoDB...');

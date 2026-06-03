@@ -164,6 +164,7 @@ export class TaxiVehicleService {
       if (data.color !== undefined) updateData.color = data.color;
       if (data.year !== undefined) updateData.year = data.year;
       if (data.status !== undefined) updateData.status = data.status;
+      if (data.currentLocation !== undefined) updateData.currentLocation = data.currentLocation;
       if (data.currentMileage !== undefined) updateData.currentMileage = data.currentMileage;
       if (data.lastMaintenanceAt !== undefined) updateData.lastMaintenanceAt = data.lastMaintenanceAt;
       if (data.notes !== undefined) updateData.notes = data.notes;

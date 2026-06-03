@@ -6,6 +6,7 @@ import Design from '../designs/design.model';
 import { EmailService } from '../../services/email.service';
 import { generatePDF } from '../../services/pdf.service';
 import { cache } from '../../services/cache.service';
+import { notificationService } from '../notifications/notification.service';
 import { AppError } from '../../core/utils/errors/AppError';
 import { catchAsync } from '../../core/utils/catchAsync';
 import { UserRole } from '../../core/types/userRoles';
@@ -259,6 +260,15 @@ export const createOrder = catchAsync(async (req: Request, res: Response) => {
 
     EmailService.sendOrderCreated(order._id.toString()).catch((error) => {
       console.error('Email Error:', error);
+    });
+
+    notificationService.notifyRoles([UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER], {
+      title: 'Nouvelle commande Ink',
+      body: `${clientExists.firstName || clientExists.company || 'Client'} a créé la commande ${order.orderNumber}.`,
+      url: `/admin/orders/${order._id.toString()}`,
+      tag: `order-${order._id.toString()}`,
+    }).catch((error) => {
+      console.error('Push Notification Error:', error);
     });
 
     const populatedOrder = await populateOrderQuery(

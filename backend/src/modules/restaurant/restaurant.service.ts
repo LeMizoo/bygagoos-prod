@@ -2,7 +2,7 @@ import { Types } from 'mongoose';
 import RestaurantTable from './table.model';
 import Reservation from './reservation.model';
 import MenuItem from './menu.model';
-import StockItem from './stock.model';
+import { StockItem } from './stock.model';
 import logger from '../../core/utils/logger';
 
 export class RestaurantService {

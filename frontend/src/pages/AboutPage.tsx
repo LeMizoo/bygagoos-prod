@@ -1,22 +1,25 @@
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import FamilyMembersGrid from "../components/family/FamilyMembersGrid";
 import {
   Users,
   Heart,
   Target,
-  Award,
   Shield,
   Sparkles,
   Globe,
-  Check,
   Calendar,
   Church,
   Cross,
   Sun,
+  Bike,
+  UtensilsCrossed,
+  Palette,
+  Truck,
+  Wine,
 } from "lucide-react";
 
 export default function AboutPage() {
-  // Animation variants - CORRIGÉ
+  // Animation variants
   const fadeInUp = {
     hidden: { opacity: 0, y: 30 },
     visible: { opacity: 1, y: 0 }
@@ -46,7 +49,6 @@ export default function AboutPage() {
         transition={{ duration: 1.2 }}
         className="bg-gradient-to-r from-blue-900 to-blue-700 text-white py-16 relative overflow-hidden"
       >
-        {/* Éléments décoratifs */}
         <motion.div 
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 0.1, scale: 1 }}
@@ -72,8 +74,7 @@ export default function AboutPage() {
               Notre Histoire Familiale
             </h1>
             <p className="text-xl text-blue-100 mb-8">
-              Plus qu'un atelier, une passion familiale dédiée à l'art de la
-              sérigraphie
+              De la sérigraphie à la mobilité, en passant par la gastronomie
             </p>
           </motion.div>
         </div>
@@ -87,7 +88,7 @@ export default function AboutPage() {
             animate="visible"
             className="max-w-6xl mx-auto"
           >
-            {/* ✅ Proverbes 16:3 - Intégré en haut pour bénir la lecture */}
+            {/* Proverbes 16:3 */}
             <motion.div 
               variants={fadeInUp}
               transition={{ duration: 0.6 }}
@@ -111,11 +112,11 @@ export default function AboutPage() {
             >
               <img
                 src="/team-family.jpg"
-                alt="Équipe familiale ByGagoos-Ink"
+                alt="Équipe familiale ByGagoos Prod"
                 className="w-full h-64 sm:h-80 md:h-96 object-cover rounded-2xl shadow-xl"
               />
               <p className="text-center text-gray-500 text-sm mt-2">
-                L'équipe fondatrice de ByGagoos-Ink le jour de l'inauguration
+                La famille Rahendrison, fondatrice de ByGagoos Prod
               </p>
             </motion.div>
 
@@ -140,7 +141,7 @@ export default function AboutPage() {
               </div>
             </motion.div>
 
-            {/* Direction Générale - source de vérité familiale */}
+            {/* Direction Générale */}
             <motion.div
               variants={fadeInUp}
               transition={{ duration: 0.6 }}
@@ -155,14 +156,14 @@ export default function AboutPage() {
                     Les membres de la famille et leurs accès
                   </h2>
                   <p className="mt-3 text-gray-600 max-w-3xl mx-auto">
-                    Chaque membre dispose d’un email, d’une mission claire et d’un dashboard dédié dans ByGagoos Prod.
+                    Chaque membre dispose d'un email, d'une mission claire et d'un dashboard dédié dans ByGagoos Prod.
                   </p>
                 </div>
                 <FamilyMembersGrid />
               </div>
             </motion.div>
 
-            {/* Histoire */}
+            {/* Histoire - Les trois activités */}
             <motion.div 
               variants={fadeInUp}
               transition={{ duration: 0.6 }}
@@ -171,38 +172,69 @@ export default function AboutPage() {
               <div className="flex items-center gap-3 mb-6">
                 <Heart className="h-8 w-8 text-red-500" />
                 <h2 className="text-3xl font-bold text-gray-900">
-                  La naissance de ByGagoos-Ink
+                  La naissance de ByGagoos Prod
                 </h2>
               </div>
 
-              <div className="space-y-6">
-                <p className="text-lg text-gray-700 leading-relaxed">
-                  <strong className="text-blue-600">Le 18 mai 2025</strong> restera gravé dans nos mémoires. 
-                  C'est ce jour-là que ByGagoos-Ink a ouvert officiellement ses portes, transformant un rêve 
-                  familial en réalité. Dans notre atelier d'Antananarivo, entourés de nos proches et de nos 
-                  premiers clients, nous avons célébré le début d'une nouvelle aventure.
-                </p>
+              <div className="space-y-8">
+                {/* ByGagoos Ink - 18 Mai 2025 */}
+                <div className="border-l-4 border-purple-500 pl-6">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Palette className="h-6 w-6 text-purple-600" />
+                    <h3 className="text-xl font-bold text-gray-900">ByGagoos Ink</h3>
+                    <span className="text-sm text-purple-600 font-semibold bg-purple-100 px-3 py-1 rounded-full">18 Mai 2025</span>
+                  </div>
+                  <p className="text-gray-700 leading-relaxed">
+                    <strong className="text-purple-600">Le 18 mai 2025</strong> restera gravé dans nos mémoires. 
+                    C'est ce jour-là que ByGagoos-Ink a ouvert officiellement ses portes, transformant un rêve 
+                    familial en réalité. Dans notre atelier d'Antananarivo, entourés de nos proches et de nos 
+                    premiers clients, nous avons célébré le début d'une nouvelle aventure. Le nom <strong>"Gagoos"</strong> 
+                    vient du surnom affectueux donné à Tovoniaina, notre fondateur, par ses petits-enfants.
+                  </p>
+                </div>
 
-                <p className="text-lg text-gray-700 leading-relaxed">
-                  <strong className="text-blue-600">ByGagoos-Ink</strong> est né d'une évidence : notre famille 
-                  partageait la même passion pour l'artisanat textile et le désir de créer ensemble. 
-                  Ce qui n'était au début qu'une idée discutée autour de la table familiale est devenu, 
-                  après des mois de préparation, un atelier de sérigraphie artisanal.
-                </p>
+                {/* ByGagoos Trans - 16 Mai 2026 */}
+                <div className="border-l-4 border-cyan-500 pl-6">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Bike className="h-6 w-6 text-cyan-600" />
+                    <h3 className="text-xl font-bold text-gray-900">ByGagoos Trans</h3>
+                    <span className="text-sm text-cyan-600 font-semibold bg-cyan-100 px-3 py-1 rounded-full">16 Mai 2026</span>
+                  </div>
+                  <p className="text-gray-700 leading-relaxed">
+                    <strong className="text-cyan-600">Un an après, le 16 mai 2026</strong>, la famille Rahendrison 
+                    a élargi son horizon en lançant <strong>ByGagoos Trans</strong>, un service de Taxi-Moto dédié 
+                    aux déplacements rapides et sécurisés à Antananarivo. Cette nouvelle activité est née d'un constat : 
+                    la mobilité est un défi quotidien pour les habitants de la capitale. Avec la même foi et le même 
+                    engagement que pour la sérigraphie, la famille s'est lancée dans cette aventure pour offrir un 
+                    service fiable, économique et respectueux des valeurs familiales.
+                  </p>
+                </div>
 
-                <p className="text-lg text-gray-700 leading-relaxed">
-                  Le nom <strong className="text-blue-600">"Gagoos"</strong> vient du surnom affectueux donné 
-                  à Tovoniaina, notre fondateur, par ses petits-enfants. Ce nom représente parfaitement 
-                  l'ambiance que nous voulions créer : chaleureuse, familiale et authentique.
-                </p>
+                {/* ByGagoos CDA - 16 Mai 2026 */}
+                <div className="border-l-4 border-amber-500 pl-6">
+                  <div className="flex items-center gap-3 mb-3">
+                    <UtensilsCrossed className="h-6 w-6 text-amber-600" />
+                    <h3 className="text-xl font-bold text-gray-900">ByGagoos CDA</h3>
+                    <span className="text-sm text-amber-600 font-semibold bg-amber-100 px-3 py-1 rounded-full">16 Mai 2026</span>
+                  </div>
+                  <p className="text-gray-700 leading-relaxed">
+                    Le même jour, <strong className="text-amber-600">le 16 mai 2026</strong>, ByGagoos a également 
+                    ouvert les portes de <strong>ByGagoos CDA (Cuisine, Dégustation, Accueil)</strong>, un bar-restaurant 
+                    chaleureux où se mêlent saveurs malgaches et internationales. Porté par la passion culinaire de 
+                    la famille, cet établissement est conçu comme un lieu de rencontre, de partage et de convivialité. 
+                    Chaque plat est préparé avec amour, dans le respect des traditions et des produits locaux.
+                  </p>
+                </div>
 
                 <motion.div 
                   whileHover={{ scale: 1.02 }}
-                  className="bg-blue-50 p-6 rounded-xl border border-blue-200 mt-4"
+                  className="bg-gradient-to-r from-purple-50 via-cyan-50 to-amber-50 p-6 rounded-xl border border-gray-200 mt-4"
                 >
-                  <p className="text-blue-800 font-medium italic flex items-center gap-2">
+                  <p className="text-gray-700 font-medium italic flex items-center gap-2">
                     <Church className="h-5 w-5 text-blue-600" />
-                    "Avant chaque grande décision, nous prions ensemble en famille. C'est dans la foi que nous avons trouvé le courage de nous lancer."
+                    "Aujourd'hui, ByGagoos Prod rassemble trois activités complémentaires, toutes guidées par les mêmes valeurs : 
+                    l'excellence, la foi et l'amour du travail bien fait. Chaque jour, nous rendons grâce pour ce chemin parcouru 
+                    et pour les bénédictions à venir."
                   </p>
                 </motion.div>
               </div>
@@ -218,8 +250,7 @@ export default function AboutPage() {
                 Notre Histoire en Dates
               </h2>
               <div className="relative">
-                {/* Ligne de temps */}
-                <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-blue-200 hidden md:block"></div>
+                <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-gradient-to-b from-purple-500 via-cyan-500 to-amber-500 hidden md:block"></div>
                 
                 <div className="space-y-8">
                   {/* 2024 - Début du projet */}
@@ -232,44 +263,52 @@ export default function AboutPage() {
                       <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
                         <span className="inline-block bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-bold mb-3">Début 2024</span>
                         <h3 className="text-xl font-bold text-gray-900 mb-2">La genèse du projet</h3>
-                        <p className="text-gray-600">Premières discussions familiales autour de l'idée de créer un atelier de sérigraphie. Les soirées se prolongent autour de croquis, d'échantillons et de prières communes.</p>
+                        <p className="text-gray-600">Premières discussions familiales autour de l'idée de créer un atelier de sérigraphie.</p>
                       </div>
                     </div>
                     <div className="w-4 h-4 bg-blue-600 rounded-full border-4 border-white shadow z-10 hidden md:block"></div>
                     <div className="md:w-1/2 md:pl-8"></div>
                   </motion.div>
 
-                  {/* Fin 2024 - Préparatifs */}
+                  {/* 18 Mai 2025 - Inauguration Ink */}
                   <motion.div 
                     variants={fadeInUp}
                     transition={{ duration: 0.6 }}
                     className="relative flex flex-col md:flex-row items-center md:items-start gap-8"
                   >
                     <div className="md:w-1/2 md:text-right md:pr-8"></div>
-                    <div className="w-4 h-4 bg-blue-600 rounded-full border-4 border-white shadow z-10 hidden md:block"></div>
+                    <div className="w-4 h-4 bg-purple-600 rounded-full border-4 border-white shadow z-10 hidden md:block"></div>
                     <div className="md:w-1/2 md:pl-8">
-                      <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
-                        <span className="inline-block bg-amber-600 text-white px-4 py-1 rounded-full text-sm font-bold mb-3">Fin 2024</span>
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">L'atelier prend forme</h3>
-                        <p className="text-gray-600">Recherche du local idéal, acquisition des premières machines. Nous avons béni chaque nouvel équipement avant son installation.</p>
+                      <div className="bg-white p-6 rounded-xl shadow-lg border-l-4 border-purple-600">
+                        <span className="inline-block bg-purple-600 text-white px-4 py-1 rounded-full text-sm font-bold mb-3">18 MAI 2025</span>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">🎨 Inauguration de ByGagoos Ink</h3>
+                        <p className="text-gray-600">Ouverture de l'atelier de sérigraphie. Un prêtre est venu bénir les lieux avant la célébration.</p>
                       </div>
                     </div>
                   </motion.div>
 
-                  {/* 18 Mai 2025 - Inauguration */}
+                  {/* 16 Mai 2026 - Inauguration Trans & CDA */}
                   <motion.div 
                     variants={fadeInUp}
                     transition={{ duration: 0.6 }}
                     className="relative flex flex-col md:flex-row items-center md:items-start gap-8"
                   >
                     <div className="md:w-1/2 md:text-right md:pr-8">
-                      <div className="bg-white p-6 rounded-xl shadow-lg border-l-4 border-blue-600">
-                        <span className="inline-block bg-green-600 text-white px-4 py-1 rounded-full text-sm font-bold mb-3">18 MAI 2025</span>
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">🎉 Inauguration officielle</h3>
-                        <p className="text-gray-600">Ouverture des portes de ByGagoos-Ink. Un prêtre est venu bénir les lieux avant la célébration. Famille, amis et premiers clients se rassemblent pour ce moment historique.</p>
+                      <div className="bg-white p-6 rounded-xl shadow-lg border-r-4 border-cyan-600">
+                        <span className="inline-block bg-cyan-600 text-white px-4 py-1 rounded-full text-sm font-bold mb-3">16 MAI 2026</span>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Bike className="h-5 w-5 text-cyan-600" />
+                          <h3 className="text-xl font-bold text-gray-900">ByGagoos Trans</h3>
+                        </div>
+                        <p className="text-gray-600">Lancement du service de Taxi-Moto pour faciliter la mobilité à Antananarivo.</p>
+                        <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+                          <UtensilsCrossed className="h-5 w-5 text-amber-600" />
+                          <h3 className="text-xl font-bold text-gray-900">ByGagoos CDA</h3>
+                        </div>
+                        <p className="text-gray-600">Ouverture du bar-restaurant familial au cœur de la ville.</p>
                       </div>
                     </div>
-                    <div className="w-4 h-4 bg-green-600 rounded-full border-4 border-white shadow z-10 hidden md:block"></div>
+                    <div className="w-4 h-4 bg-gradient-to-r from-cyan-500 to-amber-500 rounded-full border-4 border-white shadow z-10 hidden md:block"></div>
                     <div className="md:w-1/2 md:pl-8"></div>
                   </motion.div>
 
@@ -280,12 +319,12 @@ export default function AboutPage() {
                     className="relative flex flex-col md:flex-row items-center md:items-start gap-8"
                   >
                     <div className="md:w-1/2 md:text-right md:pr-8"></div>
-                    <div className="w-4 h-4 bg-blue-600 rounded-full border-4 border-white shadow z-10 hidden md:block"></div>
+                    <div className="w-4 h-4 bg-amber-600 rounded-full border-4 border-white shadow z-10 hidden md:block"></div>
                     <div className="md:w-1/2 md:pl-8">
                       <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
-                        <span className="inline-block bg-purple-600 text-white px-4 py-1 rounded-full text-sm font-bold mb-3">Aujourd'hui</span>
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">Les premiers pas</h3>
-                        <p className="text-gray-600">Depuis l'inauguration, nous réalisons nos premières commandes et construisons jour après jour notre réputation, toujours guidés par notre foi.</p>
+                        <span className="inline-block bg-gradient-to-r from-purple-600 via-cyan-600 to-amber-600 text-white px-4 py-1 rounded-full text-sm font-bold mb-3">AUJOURD'HUI</span>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">ByGagoos Prod</h3>
+                        <p className="text-gray-600">Trois activités, une seule famille, une même foi. Nous grandissons chaque jour en rendant grâce.</p>
                       </div>
                     </div>
                   </motion.div>
@@ -304,7 +343,7 @@ export default function AboutPage() {
                   Nos Valeurs Fondamentales
                 </h2>
                 <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-                  Les principes chrétiens qui guident chaque décision et chaque création depuis notre inauguration
+                  Les principes chrétiens qui guident chaque décision et chaque création
                 </p>
               </div>
 
@@ -354,13 +393,12 @@ export default function AboutPage() {
               </div>
             </motion.div>
 
-            {/* L'Équipe Fondatrice - Version Prestige */}
+            {/* L'Équipe Fondatrice */}
             <motion.div 
               variants={fadeInUp}
               transition={{ duration: 0.6 }}
               className="mb-20"
             >
-              {/* En-tête luxueux */}
               <div className="text-center mb-12">
                 <motion.div 
                   initial={{ scale: 0.9, opacity: 0 }}
@@ -376,7 +414,7 @@ export default function AboutPage() {
                 </motion.div>
                 
                 <h2 className="text-4xl md:text-5xl font-light tracking-wide text-gray-900 mb-4">
-                  L'<span className="font-semibold bg-gradient-to-r from-amber-700 to-amber-500 bg-clip-text text-transparent">Artisanat</span> Sacré
+                  L'<span className="font-semibold bg-gradient-to-r from-amber-700 to-amber-500 bg-clip-text text-transparent">Équipe</span> Fondatrice
                 </h2>
                 
                 <div className="max-w-2xl mx-auto">
@@ -388,7 +426,6 @@ export default function AboutPage() {
                   </p>
                 </div>
                 
-                {/* Séparateur décoratif */}
                 <div className="flex justify-center gap-2 mt-6">
                   <div className="w-2 h-2 rounded-full bg-amber-300"></div>
                   <div className="w-2 h-2 rounded-full bg-amber-500"></div>
@@ -396,7 +433,7 @@ export default function AboutPage() {
                 </div>
               </div>
 
-              {/* Grille des membres - Layout Magazine */}
+              {/* Grille des membres */}
               <div className="grid lg:grid-cols-2 gap-8">
                 {[
                   {
@@ -410,7 +447,7 @@ export default function AboutPage() {
                     expertise: ["Stratégie", "Vision", "Éthique"],
                     bibleVerse: "« Bâtis sur le fondement des apôtres et des prophètes »",
                     verseRef: "Éphésiens 2:20",
-                    description: "Visionnaire et guide spirituel de l'atelier. Son leadership s'inspire des pères fondateurs, alliant sagesse ancestrale et innovation.",
+                    description: "Visionnaire et guide spirituel de l'entreprise. Son leadership s'inspire des pères fondateurs, alliant sagesse ancestrale et innovation.",
                     quote: "L'excellence est notre offrande, la foi notre fondation."
                   },
                   {
@@ -429,21 +466,21 @@ export default function AboutPage() {
                   },
                   {
                     name: "Miantsatiana Rahendrison",
-                    role: "Maître d'Atelier",
+                    role: "Directeur Opérationnel",
                     border: "border-amber-400/30",
                     bg: "from-amber-50/50 to-amber-100/30",
                     text: "text-amber-900",
                     accent: "amber",
                     image: "/profiles/miantsatiana.jpg",
-                    expertise: ["Précision", "Métier", "Transmission"],
+                    expertise: ["Logistique", "Flotte", "Organisation"],
                     bibleVerse: "« Tout ce que ta main trouve à faire, fais-le avec ta force »",
                     verseRef: "Ecclésiaste 9:10",
-                    description: "Héritier des techniques ancestrales, il veille à l'excellence de chaque production avec la rigueur d'un maître artisan.",
-                    quote: "La main qui travaille prie deux fois."
+                    description: "Responsable de la flotte ByGagoos Trans et de la coordination opérationnelle. Sa rigueur garantit l'efficacité de nos services.",
+                    quote: "L'ordre et la discipline sont les clés du succès."
                   },
                   {
                     name: "Tia Faniry Rahendrison",
-                    role: "Relations & Harmonie",
+                    role: "Directrice Communication & Accueil",
                     border: "border-amber-400/30",
                     bg: "from-amber-50/50 to-amber-100/30",
                     text: "text-amber-900",
@@ -452,7 +489,7 @@ export default function AboutPage() {
                     expertise: ["Accueil", "Service", "Bienveillance"],
                     bibleVerse: "« Que votre lumière luise devant les hommes »",
                     verseRef: "Matthieu 5:16",
-                    description: "Son approche chaleureuse transforme chaque relation client en rencontre authentique, reflétant l'hospitalité malgache.",
+                    description: "Son approche chaleureuse transforme chaque relation client en rencontre authentique, reflétant l'hospitalité malgache. Elle veille à l'expérience client chez ByGagoos CDA.",
                     quote: "Chaque rencontre est une bénédiction."
                   }
                 ].map((member, index) => (
@@ -464,20 +501,15 @@ export default function AboutPage() {
                     whileHover={{ y: -8 }}
                     className="group relative"
                   >
-                    {/* Cadre doré au survol */}
                     <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-300 via-amber-500 to-amber-300 rounded-2xl opacity-0 group-hover:opacity-100 blur transition duration-500"></div>
                     
-                    {/* Carte principale */}
                     <div className={`relative bg-gradient-to-br ${member.bg} backdrop-blur-sm rounded-2xl overflow-hidden border border-amber-200/50 shadow-xl`}>
-                      
-                      {/* Motif décoratif de fond */}
                       <div className="absolute inset-0 opacity-5">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-amber-200 rounded-full blur-3xl"></div>
                         <div className="absolute bottom-0 left-0 w-32 h-32 bg-amber-300 rounded-full blur-3xl"></div>
                       </div>
 
                       <div className="relative flex flex-col md:flex-row">
-                        {/* Section Photo - Version luxe */}
                         <div className="md:w-2/5 relative overflow-hidden">
                           <div className="aspect-[4/5] md:aspect-auto md:h-full">
                             <img
@@ -486,11 +518,7 @@ export default function AboutPage() {
                               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                             />
                           </div>
-                          
-                          {/* Overlay dégradé */}
                           <div className="absolute inset-0 bg-gradient-to-t from-amber-900/60 via-transparent to-transparent"></div>
-                          
-                          {/* Badge expertise */}
                           <div className="absolute bottom-4 left-4 flex flex-wrap gap-2">
                             {member.expertise.map((exp, i) => (
                               <span
@@ -503,9 +531,7 @@ export default function AboutPage() {
                           </div>
                         </div>
 
-                        {/* Section Contenu */}
                         <div className="md:w-3/5 p-6 md:p-8">
-                          {/* Citation biblique */}
                           <div className="mb-4">
                             <div className="inline-block bg-amber-100/80 backdrop-blur-sm px-4 py-2 rounded-full">
                               <p className="text-xs text-amber-800 italic">
@@ -517,7 +543,6 @@ export default function AboutPage() {
                             </div>
                           </div>
 
-                          {/* Nom et rôle */}
                           <h3 className="text-2xl font-light text-gray-800 mb-1">
                             {member.name.split(' ')[0]} <span className="font-semibold">{member.name.split(' ')[1]}</span>
                           </h3>
@@ -525,12 +550,10 @@ export default function AboutPage() {
                             {member.role}
                           </p>
 
-                          {/* Description */}
                           <p className="text-gray-600 text-sm leading-relaxed mb-4">
                             {member.description}
                           </p>
 
-                          {/* Citation personnelle */}
                           <div className="relative">
                             <div className="absolute -top-2 -left-2 text-4xl text-amber-300/50 font-serif">"</div>
                             <p className="relative text-base italic text-gray-700 pl-4 border-l-2 border-amber-400">
@@ -538,7 +561,6 @@ export default function AboutPage() {
                             </p>
                           </div>
 
-                          {/* Signature spirituelle */}
                           <div className="mt-4 flex items-center gap-2">
                             <div className="w-8 h-px bg-amber-300"></div>
                             <Cross className="h-3 w-3 text-amber-400" />
@@ -551,14 +573,13 @@ export default function AboutPage() {
                 ))}
               </div>
 
-              {/* Message d'unité sacrée - Version luxe */}
+              {/* Message d'unité sacrée */}
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.8 }}
                 className="mt-12 text-center relative"
               >
-                {/* Fond décoratif */}
                 <div className="absolute inset-0 bg-gradient-to-r from-amber-100/0 via-amber-100/50 to-amber-100/0 rounded-3xl"></div>
                 
                 <div className="relative bg-white/60 backdrop-blur-sm border border-amber-200 rounded-3xl p-8 max-w-3xl mx-auto shadow-xl">
@@ -584,7 +605,7 @@ export default function AboutPage() {
                     </span>
                     <span className="flex items-center gap-2 text-gray-600">
                       <Cross className="h-3 w-3 text-amber-500" />
-                      <span>Une mission</span>
+                      <span>Trois activités</span>
                     </span>
                   </div>
                 </div>
@@ -597,7 +618,6 @@ export default function AboutPage() {
               transition={{ duration: 0.6 }}
               className="grid md:grid-cols-2 gap-6 mb-12"
             >
-              {/* Mission */}
               <motion.div 
                 whileHover={{ scale: 1.02 }}
                 className="bg-gradient-to-r from-blue-50 to-indigo-50 p-8 rounded-2xl border border-blue-200 shadow-lg"
@@ -609,12 +629,10 @@ export default function AboutPage() {
                       Notre Mission
                     </h4>
                     <blockquote className="text-blue-700 text-lg italic border-l-4 border-blue-400 pl-4 py-2">
-                      "Créer des pièces uniques qui racontent une histoire, tout
-                      en préservant les techniques artisanales malgaches et en
-                      valorisant le travail familial. Depuis notre inauguration le 
-                      18 mai 2025, notre engagement reste le même : transformer 
-                      votre vision en réalité tangible, avec la chaleur et 
-                      l'authenticité qui font notre signature."
+                      "Créer des services et des produits uniques qui racontent une histoire, tout
+                      en préservant les valeurs familiales malgaches. Depuis notre inauguration le 
+                      18 mai 2025, nous avons grandi avec foi et détermination pour offrir le meilleur 
+                      dans trois domaines complémentaires."
                     </blockquote>
                     <p className="text-blue-600 font-semibold mt-4">
                       — La Famille Rahendrison
@@ -623,7 +641,6 @@ export default function AboutPage() {
                 </div>
               </motion.div>
 
-              {/* Action de Grâce */}
               <motion.div 
                 whileHover={{ scale: 1.02 }}
                 className="bg-amber-50 p-8 rounded-2xl border border-amber-200 shadow-lg"
@@ -643,7 +660,7 @@ export default function AboutPage() {
                         pour la patience dans les épreuves et la joie dans les réussites.
                       </p>
                       <p className="text-amber-700">
-                        Que chaque vêtement qui sort de notre atelier soit imprégné de l'amour que nous 
+                        Que chaque service rendu et chaque plat préparé soit imprégné de l'amour que nous 
                         mettons à le créer. Que nos clients ressentent, à travers notre travail, 
                         un reflet de Ta bonté.
                       </p>
@@ -682,24 +699,32 @@ export default function AboutPage() {
                 <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
                   Depuis le 18 mai 2025, nous écrivons notre histoire jour après jour, 
                   guidés par la foi et l'amour du travail bien fait. 
-                  Nous serions honorés de compter parmi nos clients.
+                  Découvrez nos trois activités et laissez-vous inspirer.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <div className="flex flex-wrap gap-4 justify-center">
                   <motion.a
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    href="/gallery"
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                    href="/ink"
+                    className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
                   >
-                    Voir nos réalisations
+                    Découvrir ByGagoos Ink
                   </motion.a>
                   <motion.a
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    href="/contact"
-                    className="border-2 border-blue-600 text-blue-600 hover:bg-blue-50 px-6 py-3 rounded-lg font-medium transition-colors"
+                    href="/trans"
+                    className="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
                   >
-                    Discuter de mon projet
+                    Découvrir ByGagoos Trans
+                  </motion.a>
+                  <motion.a
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    href="/cda"
+                    className="bg-amber-600 hover:bg-amber-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                  >
+                    Découvrir ByGagoos CDA
                   </motion.a>
                 </div>
                 <motion.p 

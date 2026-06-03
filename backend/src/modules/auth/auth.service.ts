@@ -7,6 +7,7 @@ import bcrypt from 'bcrypt';
 import { AppError } from '../../core/utils/errors/AppError';
 import { HTTP_STATUS } from '../../core/constants/httpStatus';
 import logger from '../../core/utils/logger';
+import { buildAvatarUrl } from '../../core/utils/urlBuilder';
 import { OAuth2Client } from 'google-auth-library';
 import { RegisterDto, LoginDto, GoogleLoginDto, UpdateProfileDto } from './dto';
 import { env } from '../../config/env';
@@ -37,14 +38,9 @@ export class AuthService {
   private formatUserResponse(user: Document) {
     const userObj = user.toObject() as Record<string, unknown>;
     const avatarPath = userObj.avatar as string | undefined;
-    let fullAvatarUrl = avatarPath || null;
+    const fullAvatarUrl = buildAvatarUrl(avatarPath);
     const email = String(userObj.email || '').trim().toLowerCase();
     const familyMember = familyMemberByEmail.get(email);
-
-    if (avatarPath && !avatarPath.startsWith('http')) {
-      const baseUrl = env.API_URL;
-      fullAvatarUrl = `${baseUrl}${avatarPath.startsWith('/') ? '' : '/'}${avatarPath}`;
-    }
 
     return {
       id: userObj._id,

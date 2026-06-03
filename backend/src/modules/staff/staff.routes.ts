@@ -9,6 +9,7 @@ import Staff from './staff.model';
 import logger from '../../core/utils/logger';
 import { upload, handleMulterError } from '../../config/multer';
 import path from 'path';
+import env from '../../config/env';
 
 const router = Router();
 
@@ -230,7 +231,9 @@ router.post('/:id/avatar',
       }
 
       // Construire l'URL de l'avatar
-      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const baseUrl = env.API_URL && !env.API_URL.includes('localhost')
+        ? env.API_URL
+        : `${req.protocol}://${req.get('host')}`;
       const avatarUrl = `${baseUrl}/uploads/avatars/${req.file.filename}`;
 
       // Mettre à jour l'avatar du membre

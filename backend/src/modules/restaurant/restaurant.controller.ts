@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { RestaurantService } from './restaurant.service';
 import { HTTP_STATUS } from '../../core/constants/httpStatus';
 import logger from '../../core/utils/logger';
+import { UserRole } from '../../core/types/userRoles';
+import { notificationService } from '../notifications/notification.service';
 
 const restaurantService = new RestaurantService();
 
@@ -119,6 +121,14 @@ export class RestaurantController {
   async createReservation(req: Request, res: Response) {
     try {
       const reservation = await restaurantService.createReservation(req.body);
+      notificationService.notifyRoles([UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MANAGER], {
+        title: 'Nouvelle réservation CDA',
+        body: `${reservation.guestName} a réservé pour ${reservation.partySize} personne(s).`,
+        url: '/cda/dashboard',
+        tag: `reservation-${reservation._id.toString()}`,
+      }).catch((error) => {
+        logger.warn('Push notification reservation error:', error);
+      });
       res.status(HTTP_STATUS.CREATED).json(reservation);
     } catch (error) {
       logger.error('Error in createReservation:', error);

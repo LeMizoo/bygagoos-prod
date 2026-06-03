@@ -20,7 +20,7 @@ const users = [
     "role": "super-admin",
     "name": "Tovoniaina Rahendrison",
     "avatar": "/images/profiles/tovoniaina.jpg",
-    "phone": "+261 34 43 593 30",
+    "phone": "+261 34 43 359 30",
     "isActive": true,
     "createdAt": new Date("2026-02-03T08:10:09.078Z"),
     "updatedAt": new Date("2026-02-03T08:10:09.078Z")

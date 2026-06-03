@@ -1,10 +1,15 @@
-# ByGagoos-Ink
+# ByGagoos Prod
 
-> Plateforme de gestion pour atelier artisanal familial
+> Plateforme de gestion multi-activités pour ByGagoos Prod
 
 ## Description
 
-ByGagoos-Ink est une application web complète pour gérer notre atelier artisanal familial. Elle permet de gérer les produits, les commandes, les clients et la communication, tout en préservant nos valeurs familiales et notre excellence artisanale.
+ByGagoos Prod est une plateforme web complète qui regroupe trois activités complémentaires :
+- **ByGagoos Ink** : Sérigraphie textile & design personnalisé
+- **ByGagoos Trans** : Taxi-Moto & gestion de flotte
+- **ByGagoos CDA** : Restaurant & Bar (Cuisine, Dégustation, Accueil)
+
+La plateforme permet de gérer les produits, les commandes, les clients, les véhicules, les conducteurs, les réservations et la communication, tout en préservant nos valeurs familiales et notre excellence artisanale.
 
 ## Stack Technique
 
@@ -16,6 +21,7 @@ ByGagoos-Ink est une application web complète pour gérer notre atelier artisan
 - React Router pour la navigation
 - Axios pour les appels API
 - Lucide React pour les icônes
+- Framer Motion pour les animations
 
 ### Backend
 
@@ -29,7 +35,7 @@ ByGagoos-Ink est une application web complète pour gérer notre atelier artisan
 ### Déploiement
 
 - Frontend : Vercel
-- Backend : Railway
+- Backend : Render
 - Base de données : MongoDB Atlas
 
 ## Installation
@@ -45,154 +51,5 @@ ByGagoos-Ink est une application web complète pour gérer notre atelier artisan
 1. Cloner le repository
 
 ```bash
-git clone https://github.com/VOTRE-USERNAME/bygagoos-ink.git
-cd bygagoos-ink
-```
-
-1. Installer le backend
-
-```bash
-cd backend
-npm install
-cp .env.example .env  # Puis configurer les variables
-npm run dev
-```
-
-1. Installer le frontend
-
-```bash
-cd ../frontend
-npm install
-npm run dev
-```
-
-## Structure du projet
-
-```
-bygagoos-ink/
-├── frontend/           # Application React
-├── backend/            # API Node.js/Express
-├── GUIDE_DEMARRAGE.md  # Guide détaillé
-└── README.md           # Ce fichier
-```
-
-## Fonctionnalités
-
-### Phase 1 (Novembre 2025)
-
-- [x] Authentification JWT
-- [x] Gestion des utilisateurs (4 rôles)
-- [ ] Dashboard familial
-- [ ] Gestion des produits
-
-### Phase 2 (Décembre 2025)
-
-- [ ] Module Production
-- [ ] Contrôle Qualité
-- [ ] Gestion des stocks
-
-### Phase 3 (Janvier 2026)
-
-- [ ] Portail Client
-- [ ] Suivi des commandes
-- [ ] Notifications
-
-### Phase 4 (Février 2026)
-
-- [ ] Gestion Financière
-- [ ] Rapports et statistiques
-
-## Équipe
-
-- **Tovoniaina RAHENDRISON** - Super Admin & Infrastructure
-- **Volatiana RANDRIANARISOA** - Admin Inspiration & Créativité
-- **Miantsatiana RAHENDRISON** - Admin Production & Design
-- **Tia Faniry RAHENDRISON** - Admin Communication & Relations
-
-## Variables d'environnement
-
-### Backend (.env)
-
-```
-PORT=5000
-MONGODB_URI=mongodb+srv://...
-JWT_SECRET=votre_secret_tres_long_et_securise
-NODE_ENV=development
-FRONTEND_URL=http://localhost:5173
-```
-
-### Frontend (.env)
-
-```
-VITE_API_URL=http://localhost:5000/api
-```
-
-## Scripts disponibles
-
-### Backend
-
-```bash
-npm run dev      # Développement avec hot reload
-npm run build    # Compiler TypeScript
-npm start        # Production
-<!-- markdownlint-disable MD022 MD032 MD031 MD029 MD040 MD024 MD025 MD034 -->
-
-## 🚀 Redis Integration
-
-### Prérequis
-- Redis (local, Docker, ou Memurai sur Windows)
-
-### Points de stabilité importants
-
-- Une route de vérification d'état est exposée à `/health` et `/api/health`.
-  La version `/api/health` renvoie également l'état du client Redis (ping, mode
-  fallback) et peut servir pour les probes Kubernetes.
-- Le backend utilise `morgan` connecté à Winston pour des logs HTTP standards
-  accompagnés de fichiers rotatifs en production.
-- Gestion globale des erreurs via un middleware dédié et écoute des
-  `uncaughtException`/`unhandledRejection` dans `src/index.ts`.
-- Redis est configuré avec un fallback en mémoire et un utilitaire de cache
-  (voir `src/core/utils/cache.ts`).
-
-
-### Installation
-
-#### Option 1: Redis local (Linux/Mac)
-```bash
-# Ubuntu/Debian
-sudo apt-get install redis-server
-sudo systemctl enable redis-server
-sudo systemctl start redis-server
-
-# MacOS
-brew install redis
-brew services start redis
-
-```
-
-### Frontend
-```bash
-npm run dev      # Développement
-npm run build    # Build production
-npm run preview  # Preview du build
-```
-
-## Contribution
-
-Ce projet est privé et réservé à la famille ByGagoos.
-
-## Support
-
-- Tovoniaina : +261 34 43 593 30
-- Email : positifaid@live.fr
-
-## Licence
-
-Propriétaire - ByGagoos Family © 2025
-
----
-
-**« Tout doit se faire avec bienséance et avec ordre. » - 1 Corinthiens 14:40**
-# bygagoos-final
-# bygagoos-final
-# bygagoos-final
+git clone https://github.com/LeMizoo/bygagoos-prod.git
+cd bygagoos-prod

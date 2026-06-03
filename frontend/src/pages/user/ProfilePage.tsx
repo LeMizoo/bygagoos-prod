@@ -13,6 +13,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { useAuthStore } from "../../stores/authStore";
+import { normalizeResourceUrl } from "../../api";
 import { dev } from "../../utils/devLogger";
 
 export default function ProfilePage() {
@@ -210,7 +211,7 @@ export default function ProfilePage() {
                 <div className="h-32 w-32 rounded-full bg-blue-100 flex items-center justify-center">
                   {user?.avatar ? (
                     <img
-                      src={user.avatar}
+                      src={normalizeResourceUrl(user.avatar)}
                       alt={user.name}
                       className="h-32 w-32 rounded-full object-cover"
                     />
@@ -285,16 +286,17 @@ export default function ProfilePage() {
                     Prénom
                   </label>
                   {isEditing ? (
-                    <input
-                      type="text"
-                      value={formData.firstName}
-                      onChange={(e) =>
-                        setFormData({ ...formData, firstName: e.target.value })
-                      }
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Votre prénom"
-                    />
-                  ) : (
+                      <input
+                        id="profile-firstName"
+                        type="text"
+                        value={formData.firstName}
+                        onChange={(e) =>
+                          setFormData({ ...formData, firstName: e.target.value })
+                        }
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Votre prénom"
+                      />
+                    ) : (
                     <div className="flex items-center px-4 py-3 bg-gray-50 rounded-lg">
                       <User className="h-5 w-5 text-gray-400 mr-3" />
                       <span>{getFirstName() || "Non renseigné"}</span>
@@ -308,6 +310,7 @@ export default function ProfilePage() {
                   </label>
                   {isEditing ? (
                     <input
+                      id="profile-lastName"
                       type="text"
                       value={formData.lastName}
                       onChange={(e) =>
@@ -344,6 +347,7 @@ export default function ProfilePage() {
                 </label>
                 {isEditing ? (
                   <input
+                    id="profile-phone"
                     type="tel"
                     value={formData.phone}
                     onChange={(e) =>
@@ -366,6 +370,7 @@ export default function ProfilePage() {
                 </label>
                 {isEditing ? (
                   <input
+                    id="profile-address"
                     type="text"
                     value={formData.address}
                     onChange={(e) =>
@@ -439,6 +444,7 @@ export default function ProfilePage() {
                     Mot de passe actuel
                   </label>
                   <input
+                    id="current-password"
                     type="password"
                     value={passwordData.currentPassword}
                     onChange={(e) =>
@@ -457,6 +463,7 @@ export default function ProfilePage() {
                     Nouveau mot de passe
                   </label>
                   <input
+                    id="new-password"
                     type="password"
                     value={passwordData.newPassword}
                     onChange={(e) =>
@@ -475,6 +482,7 @@ export default function ProfilePage() {
                     Confirmer le nouveau mot de passe
                   </label>
                   <input
+                    id="confirm-password"
                     type="password"
                     value={passwordData.confirmPassword}
                     onChange={(e) =>

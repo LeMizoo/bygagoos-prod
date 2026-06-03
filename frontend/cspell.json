@@ -1,0 +1,50 @@
+{
+  "version": "0.2",
+  "language": "fr,en",
+  "words": [
+    "bygagoos",
+    "gagoos",
+    "tananarive",
+    "antananarivo",
+    "mvola",
+    "thb",
+    "tovon",
+    "razafy",
+    "randria",
+    "rakoto",
+    "andria",
+    "rabe",
+    "voahangy",
+    "mahamasina",
+    "analakely",
+    "andraharo",
+    "andry",
+    "rapex",
+    "lemito",
+    "lemizoo",
+    "bygagoosprod",
+    "bygagoos-prod",
+    "jspdv",
+    "jspdf",
+    "autotable",
+    "chartjs",
+    "mockées"    
+  ],
+  "ignorePaths": [
+    "node_modules",
+    "dist",
+    "build",
+    "coverage",
+    "cypress/screenshots",
+    "cypress/videos",
+    ".git",
+    "*.log",
+    "package-lock.json",
+    "yarn.lock"
+  ],
+  "ignoreRegExpList": [
+    "mailto:.*",
+    "https?://.*",
+    "data:image/.*"
+  ]
+}

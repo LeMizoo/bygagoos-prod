@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { restaurantController } from './restaurant.controller';
+import stockRoutes from './stock.routes';
 import { protect } from '../../middlewares/auth.middleware';
 import { authorize } from '../../middlewares/role.middleware';
 
@@ -21,5 +22,8 @@ router.get('/menu/featured', (req, res) => restaurantController.getFeaturedMenu(
 router.get('/stock/alerts', (req, res) => restaurantController.getStockAlerts(req, res));
 
 router.get('/stats', (req, res) => restaurantController.getRestaurantStats(req, res));
+
+// Routes pour la gestion des stocks
+router.use('/stock', stockRoutes);
 
 export default router;

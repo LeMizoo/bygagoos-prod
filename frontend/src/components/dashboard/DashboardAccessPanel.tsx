@@ -58,7 +58,11 @@ export default function DashboardAccessPanel({
                 </div>
 
                 <h3 className="mt-5 text-lg font-bold text-gray-900">{link.label}</h3>
-                <p className="mt-2 text-sm leading-6 text-gray-600">{link.description}</p>
+                {link.description && (
+                  <p className="mt-2 text-sm leading-6 text-gray-600">
+                    {link.description.length > 80 ? `${link.description.slice(0, 77)}...` : link.description}
+                  </p>
+                )}
 
                 <div className="mt-auto inline-flex items-center gap-2 pt-5 text-sm font-semibold text-amber-700">
                   Ouvrir

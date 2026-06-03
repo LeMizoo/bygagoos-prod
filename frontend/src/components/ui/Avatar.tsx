@@ -1,6 +1,7 @@
 // frontend/src/components/ui/Avatar.tsx
 
 import React, { useState } from 'react';
+import { normalizeResourceUrl } from '../../api';
 // 🔥 CORRECTION: Importer l'objet API par défaut
 import adminStaffApi from '../../api/adminStaff.api';
 import { User, Camera } from 'lucide-react';
@@ -39,8 +40,9 @@ export const Avatar: React.FC<AvatarProps> = ({
     xl: 24,
   };
 
+  const normalizedSrc = src ? normalizeResourceUrl(src) : null;
   // 🔥 CORRECTION: Utiliser adminStaffApi.getOptimizedAvatarUrl()
-  const optimizedSrc = src ? adminStaffApi.getOptimizedAvatarUrl(src, {
+  const optimizedSrc = normalizedSrc ? adminStaffApi.getOptimizedAvatarUrl(normalizedSrc, {
     width: size === 'sm' ? 32 : size === 'md' ? 40 : size === 'lg' ? 64 : 96,
     height: size === 'sm' ? 32 : size === 'md' ? 40 : size === 'lg' ? 64 : 96,
     radius: 999, // Pour les avatars ronds

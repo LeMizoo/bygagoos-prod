@@ -9,13 +9,14 @@ import {
   Instagram,
   Facebook,
   Linkedin,
-  Map,
   CheckCircle,
   Cross,
   Church,
   Bike,
   UtensilsCrossed,
-  Palette
+  Palette,
+  MapPin,
+  X
 } from "lucide-react";
 
 export default function ContactPage() {
@@ -30,6 +31,7 @@ export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<{ src: string; alt: string; title: string } | null>(null);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -100,6 +102,13 @@ export default function ContactPage() {
     }
   };
 
+  // Images de l'écosystème
+  const ecosystemImages = [
+    { src: "/ecosyst/ink.png", alt: "ByGagoos Ink - Sérigraphie", title: "ByGagoos Ink", color: "purple" },
+    { src: "/ecosyst/trans.png", alt: "ByGagoos Trans - Taxi-Moto", title: "ByGagoos Trans", color: "cyan" },
+    { src: "/ecosyst/cda.png", alt: "ByGagoos CDA - Restaurant", title: "ByGagoos CDA", color: "amber" },
+  ];
+
   const contactInfo = [
     {
       icon: Palette,
@@ -122,7 +131,7 @@ export default function ContactPage() {
     {
       icon: UtensilsCrossed,
       title: "ByGagoos CDA",
-      subtitle: "Restaurant & Bar",
+      subtitle: "Cuisine, Dégustation, Accueil",
       details: ["Réservations", "Menu varié", "Ambiance chaleureuse"],
       bg: "bg-amber-50",
       iconColor: "text-amber-600",
@@ -152,7 +161,7 @@ export default function ContactPage() {
   const activities = [
     { value: "ink", label: "ByGagoos Ink - Sérigraphie", icon: Palette, color: "text-purple-600" },
     { value: "trans", label: "ByGagoos Trans - Taxi-Moto", icon: Bike, color: "text-cyan-600" },
-    { value: "cda", label: "ByGagoos CDA - Restaurant/Bar", icon: UtensilsCrossed, color: "text-amber-600" },
+    { value: "cda", label: "ByGagoos CDA - Cuisine, Dégustation, Accueil", icon: UtensilsCrossed, color: "text-amber-600" },
     { value: "general", label: "Demande générale / Autre", icon: Mail, color: "text-gray-600" },
   ];
 
@@ -276,21 +285,48 @@ export default function ContactPage() {
                   </div>
                 </motion.div>
 
-                {/* Carte miniature */}
+                {/* Miniatures des trois activités - côte à côte sur fond noir */}
                 <motion.div
                   variants={fadeInUp}
-                  className="relative h-48 rounded-2xl overflow-hidden shadow-lg group cursor-pointer"
+                  className="bg-black rounded-2xl p-4 shadow-xl"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-t from-amber-900/80 to-transparent z-10"></div>
-                  <img
-                    src="/production/atelier-serigraphie.jpg"
-                    alt="Notre atelier"
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                    onError={(e) => { (e.target as HTMLImageElement).src = "/images/logo.png"; }}
-                  />
-                  <div className="absolute bottom-4 left-4 z-20 flex items-center gap-2 text-white">
-                    <Map className="h-5 w-5" />
-                    <span className="font-medium">Antananarivo, Madagascar</span>
+                  <h3 className="text-white text-sm font-semibold mb-3 text-center">Nos activités</h3>
+                  <div className="grid grid-cols-3 gap-2">
+                    {ecosystemImages.map((image, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setSelectedImage(image)}
+                        className="group relative overflow-hidden rounded-xl cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      >
+                        <img
+                          src={image.src}
+                          alt={image.alt}
+                          className="w-full h-24 object-cover transition-transform duration-300 group-hover:scale-110"
+                          onError={(e) => { (e.target as HTMLImageElement).src = "/images/logo.png"; }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="absolute bottom-0 left-0 right-0 p-1 text-center">
+                          <span className={`text-[10px] font-medium text-white opacity-0 group-hover:opacity-100 transition-opacity`}>
+                            {image.title}
+                          </span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-gray-500 text-xs text-center mt-3">
+                    Cliquez sur une image pour l'agrandir
+                  </p>
+                </motion.div>
+
+                {/* Localisation */}
+                <motion.div
+                  variants={fadeInUp}
+                  className="bg-gradient-to-r from-gray-800 to-gray-900 rounded-2xl p-4 text-white flex items-center gap-3"
+                >
+                  <MapPin className="h-5 w-5 text-amber-400 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium">Antananarivo, Madagascar</p>
+                    <p className="text-xs text-gray-400">ByGagoos Prod</p>
                   </div>
                 </motion.div>
               </motion.div>
@@ -512,6 +548,45 @@ export default function ContactPage() {
           </div>
         </div>
       </div>
+
+      {/* Modal pour agrandir l'image */}
+      <AnimatePresence>
+        {selectedImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedImage(null)}
+            className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 cursor-pointer"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: "spring", damping: 25 }}
+              className="relative max-w-4xl w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setSelectedImage(null)}
+                className="absolute -top-12 right-0 text-white hover:text-amber-400 transition-colors"
+                aria-label="Fermer"
+              >
+                <X className="h-8 w-8" />
+              </button>
+              <img
+                src={selectedImage.src}
+                alt={selectedImage.alt}
+                className="w-full h-auto rounded-2xl shadow-2xl"
+              />
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6 rounded-b-2xl">
+                <h3 className="text-white text-2xl font-bold">{selectedImage.title}</h3>
+                <p className="text-gray-300 text-sm mt-1">{selectedImage.alt}</p>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

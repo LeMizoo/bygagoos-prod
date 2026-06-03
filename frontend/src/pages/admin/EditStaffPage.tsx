@@ -12,6 +12,7 @@ import { InlineError } from "../../components/ui/InlineError";
 import toast from "react-hot-toast";
 import { useAuthStore } from "../../stores/authStore";
 import { UserRole, canEdit } from "../../types/roles";
+import { normalizeResourceUrl } from "../../api";
 import dev from '../../utils/devLogger';
 
 interface FormData {
@@ -375,7 +376,7 @@ export default function EditStaffPage() {
               <div className="relative">
                 {avatarPreview ? (
                   <img
-                    src={avatarPreview}
+                    src={normalizeResourceUrl(avatarPreview)}
                     alt="Avatar preview"
                     className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
                   />

@@ -56,7 +56,4 @@ const DynamicFormSchema: Schema = new Schema({
   timestamps: true // Gère automatiquement createdAt et updatedAt
 });
 
-// Indexation pour des recherches rapides par slug
-DynamicFormSchema.index({ slug: 1 });
-
 export default mongoose.model<IDynamicForm>('DynamicForm', DynamicFormSchema);

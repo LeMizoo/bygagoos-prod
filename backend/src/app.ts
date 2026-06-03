@@ -25,6 +25,7 @@ import taxiRoutes from './modules/taxi/taxi.routes';
 import restaurantRoutes from './modules/restaurant/restaurant.routes';
 import formRoutes from './modules/forms/form.routes';
 import settingsRoutes from './modules/settings/settings.routes';
+import notificationRoutes from './modules/notifications/notification.routes';
 
 // Import des listeners des designs
 import {
@@ -236,6 +237,7 @@ console.log('✅ Restaurant routes montées');
 
 app.use('/api/forms', formRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // ==================== INITIALISATION DES LISTENERS ====================
 

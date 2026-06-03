@@ -7,6 +7,7 @@ import { AppError } from '../../core/utils/errors/AppError';
 import { catchAsync } from '../../core/utils/catchAsync';
 import { ImageService } from '../../services/image.service';
 import logger from '../../core/utils/logger';
+import env from '../../config/env';
 
 // Upload d'un seul fichier
 export const uploadFile = catchAsync(async (req: Request, res: Response) => {
@@ -15,7 +16,9 @@ export const uploadFile = catchAsync(async (req: Request, res: Response) => {
   }
 
   const file = req.file;
-  const baseUrl = `${req.protocol}://${req.get('host')}`;
+  const baseUrl = env.API_URL && !env.API_URL.includes('localhost')
+    ? env.API_URL
+    : `${req.protocol}://${req.get('host')}`;
   const folder = req.params.folder || req.body.folder || 'temp';
   
   // Construire l'URL du fichier
@@ -58,7 +61,9 @@ export const uploadMultiple = catchAsync(async (req: Request, res: Response) => 
   }
 
   const files = req.files as Express.Multer.File[];
-  const baseUrl = `${req.protocol}://${req.get('host')}`;
+  const baseUrl = env.API_URL && !env.API_URL.includes('localhost')
+    ? env.API_URL
+    : `${req.protocol}://${req.get('host')}`;
   const folder = req.params.folder || req.body.folder || 'temp';
   
   const uploadedFiles = await Promise.all(files.map(async (file) => {
