@@ -48,7 +48,7 @@ const activitiesHero = [
     image: "/home/trans-card.jpg"
   },
   {
-    name: "ByGagoos CDA (Cuisine, Dégustation, Accueil)",
+    name: "ByGagoos CDA",
     icon: UtensilsCrossed,
     color: "from-amber-500 to-amber-600",
     bgGradient: "bg-gradient-to-br from-amber-500/20 to-amber-600/10",
@@ -99,14 +99,19 @@ export default function HomePage() {
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Hero Section - Avec image de fond */}
       <section 
-        className="relative overflow-hidden text-white bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('/ecosyst/slide-bygagoos.jpg')" }}
+        className="relative overflow-hidden text-white"
+        style={{
+          backgroundImage: "url('/ecosyst/slide-bygagoos.jpg')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat"
+        }}
       >
         {/* Overlay pour assombrir l'image et rendre le texte lisible */}
-        <div className="absolute inset-0 bg-black/60" />
+        <div className="absolute inset-0 bg-black/50" />
         
         {/* Effet de lumière */}
-        <div className="absolute inset-0 opacity-30">
+        <div className="absolute inset-0 opacity-20">
           <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-purple-500 blur-3xl" />
           <div className="absolute top-1/2 -left-40 w-80 h-80 rounded-full bg-cyan-500 blur-3xl" />
           <div className="absolute -bottom-40 right-1/3 w-80 h-80 rounded-full bg-amber-500 blur-3xl" />
@@ -126,10 +131,10 @@ export default function HomePage() {
                 </span>{" "}
                 Prod
               </h1>
-              <p className="mt-6 text-lg leading-8 text-white/80 max-w-2xl">
+              <p className="mt-6 text-lg leading-8 text-white/90 max-w-2xl">
                 {prodBrand.tagline}
               </p>
-              <p className="mt-4 text-base leading-7 text-white/60 max-w-2xl">
+              <p className="mt-4 text-base leading-7 text-white/70 max-w-2xl">
                 {prodBrand.summary}
               </p>
 
@@ -195,7 +200,7 @@ export default function HomePage() {
                       </div>
 
                       <div className="flex-1">
-                        <h3 className="text-lg font-bold">{activity.name === "ByGagoos CDA (Cuisine, Dégustation, Accueil)" ? "ByGagoos CDA" : activity.name}</h3>
+                        <h3 className="text-lg font-bold">{activity.name}</h3>
                         <p className="text-sm text-white/70 line-clamp-1">{activity.description}</p>
                       </div>
 
@@ -287,7 +292,7 @@ export default function HomePage() {
                   </div>
                   <ArrowUpRight className="h-5 w-5 text-gray-400 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
                 </div>
-                <h2 className="mt-6 text-2xl font-bold text-gray-900">{activity.name === "ByGagoos CDA (Cuisine, Dégustation, Accueil)" ? "ByGagoos CDA" : activity.name}</h2>
+                <h2 className="mt-6 text-2xl font-bold text-gray-900">{activity.name}</h2>
                 <p className="mt-3 text-sm leading-6 text-gray-600">{activity.description}</p>
                 <p className="mt-6 text-sm font-semibold text-amber-700">Découvrir l'activité</p>
               </Link>
