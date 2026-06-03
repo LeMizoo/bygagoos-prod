@@ -5,7 +5,6 @@ import {
   User,
   LogOut,
   LogIn,
-  ShoppingBag,
   Settings,
   ChevronDown,
   Palette,
@@ -66,7 +65,7 @@ export default function Navbar() {
     setUserMenuOpen(false);
   };
 
-  // Liens principaux (sans Galerie - elle est dans ByGagoos Ink)
+  // Liens principaux
   const mainLinks = [
     { to: "/home", label: "Accueil", icon: Home },
     { to: "/about", label: "À propos", icon: Info },
@@ -208,12 +207,10 @@ export default function Navbar() {
                           </div>
 
                           <div className="py-2">
-                            {/* Ordre modifié : Mon profil en premier */}
                             <Link to="/user/profile" className="flex items-center px-4 py-2.5 text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}>
                               <User className="h-4 w-4 mr-3 text-gray-400" />
                               Mon profil
                             </Link>
-                            {/* Séparateur après Mon profil */}
                             <div className="border-t border-gray-100 my-2"></div>
                             {(user.role === "ADMIN" || user.role === "SUPER_ADMIN") && (
                               <>
@@ -221,7 +218,6 @@ export default function Navbar() {
                                   <Crown className="h-4 w-4 mr-3 text-amber-600" />
                                   Direction Générale
                                 </Link>
-                                {/* Séparateur après Direction Générale */}
                                 <div className="border-t border-gray-100 my-2"></div>
                                 <Link to="/admin/settings" className="flex items-center px-4 py-2.5 text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}>
                                   <Settings className="h-4 w-4 mr-3 text-gray-400" />
@@ -267,12 +263,11 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* Menu Mobile */}
+      {/* Menu Mobile - sans style inline */}
       <div
-        className={`fixed inset-0 bg-white z-40 transform transition-transform duration-300 ease-in-out md:hidden ${
+        className={`fixed inset-0 bg-white z-40 transform transition-transform duration-300 ease-in-out md:hidden top-16 ${
           mobileMenuOpen ? "translate-x-0" : "translate-x-full"
         }`}
-        style={{ top: "64px" }}
       >
         <div className="h-full overflow-y-auto pb-20">
           <div className="px-4 py-6 space-y-6">
@@ -292,12 +287,10 @@ export default function Navbar() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  {/* Ordre modifié : Mon profil en premier */}
                   <Link to="/user/profile" className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg" onClick={closeAllMenus}>
                     <User className="h-4 w-4" />
                     Mon profil
                   </Link>
-                  {/* Pas de Mes commandes - supprimé */}
                   {(user.role === "ADMIN" || user.role === "SUPER_ADMIN") && (
                     <>
                       <div className="border-t border-gray-200 my-2"></div>
@@ -400,11 +393,10 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Overlay */}
+      {/* Overlay - sans style inline */}
       {mobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-30 md:hidden"
-          style={{ top: "64px" }}
+          className="fixed inset-0 bg-black/50 z-30 md:hidden top-16"
           onClick={closeAllMenus}
         />
       )}
