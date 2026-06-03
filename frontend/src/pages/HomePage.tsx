@@ -97,7 +97,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      {/* Hero Section - Avec image de fond */}
+      {/* Hero Section - AVEC IMAGE DE FOND */}
       <section 
         className="relative overflow-hidden text-white"
         style={{
